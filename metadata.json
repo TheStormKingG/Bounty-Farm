@@ -1,0 +1,5 @@
+{
+  "name": "Bounty Farm Hatchery MIS",
+  "description": "A comprehensive Management Information System (MIS) web application for Bounty Farm Limited’s hatchery, encompassing all stages from egg procurement to chick sales. It provides real-time data, role-based access, and detailed operational tracking.",
+  "requestFramePermissions": []
+}
