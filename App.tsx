@@ -2,11 +2,8 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import EggProcurement from './pages/EggProcurement';
 import HatchCycleList from './pages/HatchCycleList';
-import ChickProcessing from './pages/ChickProcessing';
 import Sales from './pages/Sales';
-import NonViableEggs from './pages/NonViableEggs';
 import Login from './pages/Login';
 import { useAuth } from './context/AuthContext';
 import { Role } from './types';
@@ -22,7 +19,7 @@ const mapSupabaseUserToAppUser = (u: any) => ({
   email: (u.email ?? '') as string,
   name: (u.user_metadata?.name ?? u.email ?? 'User') as string,
   // Expecting your Role enum; default to User if none set in metadata
-  role: ((u.user_metadata?.role as Role) ?? Role.User) as Role,
+  role: ((u.user_metadata?.role as Role) ?? Role['User']) as Role,
 });
 
 const App: React.FC = () => {
@@ -85,10 +82,7 @@ const App: React.FC = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin, Role.HatcheryClerk]} />}>
-          <Route path="/egg-procurement" element={<EggProcurement />} />
           <Route path="/hatch-cycles" element={<HatchCycleList />} />
-          <Route path="/chick-processing" element={<ChickProcessing />} />
-          <Route path="/non-viable-eggs" element={<NonViableEggs />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin, Role.SalesClerk]} />}>

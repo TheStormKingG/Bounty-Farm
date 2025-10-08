@@ -24,12 +24,7 @@ const Sidebar: React.FC = () => {
 
 
         {hasRole([Role.Admin, Role.HatcheryClerk]) && (
-          <>
-            <NavLink to="/egg-procurement" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Egg Procurement</NavLink>
-            <NavLink to="/hatch-cycles" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Hatch Cycles</NavLink>
-            <NavLink to="/chick-processing" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Chick Processing</NavLink>
-            <NavLink to="/non-viable-eggs" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Non-Viable Eggs</NavLink>
-          </>
+          <NavLink to="/hatch-cycles" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Hatch Cycles</NavLink>
         )}
         
         {hasRole([Role.Admin, Role.SalesClerk]) && (
