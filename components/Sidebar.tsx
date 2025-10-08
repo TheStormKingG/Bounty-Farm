@@ -14,7 +14,7 @@ const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-bounty-blue-900 text-white flex-shrink-0 p-4 flex flex-col">
       <div className="text-2xl font-bold mb-10 text-center">
-        <img src="https://i.imgur.com/JBqf48x.png" alt="Bounty Farm Logo" className="mx-auto rounded mb-2 w-20 h-20 object-contain"/>
+        <img src="https://picsum.photos/80/80" alt="Bounty Farm Logo" className="mx-auto rounded mb-2 w-20 h-20 object-contain"/>
         <span className="mt-2 block text-xl">Hatchery MIS</span>
       </div>
       <nav className="space-y-2">
