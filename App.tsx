@@ -10,43 +10,65 @@ import { Role } from './types';
 import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
 
-// ✅ NEW: supabase client (installed via `npm i @supabase/supabase-js`)
+// ✅ Supabase client
 import { supabase } from './src/supabase';
 
-// ✅ NEW: map Supabase user → your app's user shape
-const mapSupabaseUserToAppUser = (u: any) => ({
-  id: u.id as string,
-  email: (u.email ?? '') as string,
-  name: (u.user_metadata?.name ?? u.email ?? 'User') as string,
-  // Expecting your Role enum; default to User if none set in metadata
-  role: ((u.user_metadata?.role as Role) ?? Role['User']) as Role,
-});
-
 const App: React.FC = () => {
-  // ⬇️ assumes AuthContext provides setUser
   const { user, setUser } = useAuth();
 
-  // ✅ NEW: bootstrap session + subscribe to auth changes once
+  // 🔐 Always read role from DB profile, never from user_metadata
+  const setUserFromSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    const su = data.session?.user;
+    if (!su) {
+      setUser(null);
+      return;
+    }
+
+    const { data: p } = await supabase
+      .from('profiles')
+      .select('name, role')
+      .eq('id', su.id)
+      .single();
+
+    setUser({
+      id: su.id,
+      email: su.email ?? '',
+      name: p?.name ?? su.email ?? 'User',
+      role: (p?.role as Role) ?? Role.User
+    });
+  };
+
   useEffect(() => {
     let unsub: (() => void) | undefined;
 
     // Initial load
-    supabase.auth.getSession().then(({ data }) => {
-      const su = data.session?.user;
-      if (su) setUser(mapSupabaseUserToAppUser(su));
-    });
+    setUserFromSession();
 
-    // Live updates: SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+    // Live updates
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_evt, session) => {
       const su = session?.user;
-      if (su) setUser(mapSupabaseUserToAppUser(su));
-      else setUser(null);
+      if (!su) {
+        setUser(null);
+        return;
+      }
+      // re-fetch profile on every auth change
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('name, role')
+        .eq('id', su.id)
+        .single();
+
+      setUser({
+        id: su.id,
+        email: su.email ?? '',
+        name: p?.name ?? su.email ?? 'User',
+        role: (p?.role as Role) ?? Role.User
+      });
     });
 
     unsub = () => sub.subscription.unsubscribe();
-    return () => {
-      if (unsub) unsub();
-    };
+    return () => { if (unsub) unsub(); };
   }, [setUser]);
 
   if (!user) {
