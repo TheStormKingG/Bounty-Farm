@@ -14,7 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
 
 // ✅ NEW: supabase client (installed via `npm i @supabase/supabase-js`)
-import { supabase } from './lib/supabase';
+import { supabase } from './src/supabase';
 
 // ✅ NEW: map Supabase user → your app's user shape
 const mapSupabaseUserToAppUser = (u: any) => ({
