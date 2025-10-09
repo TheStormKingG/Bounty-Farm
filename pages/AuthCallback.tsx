@@ -1,68 +1,159 @@
-// pages/AuthCallback.tsx
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../src/supabase';
 import { Role } from '../types';
 
-const homeFor = (role: Role) =>
-  role === Role.Admin ? '/dashboard'
-  : role === Role.HatcheryClerk ? '/hatch-cycles'
-  : role === Role.SalesClerk ? '/sales' : '/';
-
-async function routeByProfile(navigate: (p: string)=>void) {
-  const { data } = await supabase.auth.getUser();
-  const uid = data.user?.id;
-  if (!uid) return navigate('/login');
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', uid).single();
-  const role = (profile?.role as Role) ?? Role.User;
-  navigate(homeFor(role));
-}
-
-const SetPassword: React.FC<{ onDone: () => void }> = ({ onDone }) => {
-  const [p1, setP1] = useState(''); const [p2, setP2] = useState('');
-  const [err, setErr] = useState<string|null>(null); const [busy, setBusy] = useState(false);
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setErr(null);
-    if (p1.length < 8) return setErr('Password must be at least 8 characters.');
-    if (p1 !== p2) return setErr('Passwords do not match.');
-    setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: p1 });
-    setBusy(false);
-    if (error) setErr(error.message); else onDone();
-  };
-  return (
-    <form onSubmit={submit} className="max-w-md mx-auto bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-semibold mb-3">Set your password</h2>
-      <input className="input mb-2 w-full border rounded px-3 py-2" type="password"
-             placeholder="New password" value={p1} onChange={e=>setP1(e.target.value)} required/>
-      <input className="input mb-3 w-full border rounded px-3 py-2" type="password"
-             placeholder="Confirm password" value={p2} onChange={e=>setP2(e.target.value)} required/>
-      {err && <div className="text-red-600 text-sm mb-3">{err}</div>}
-      <button className="w-full bg-bounty-blue-600 text-white py-2 rounded disabled:opacity-60" disabled={busy}>
-        {busy ? 'Saving…' : 'Save password'}
-      </button>
-    </form>
-  );
-};
+const getHome = (r: Role) =>
+  r === Role.Admin ? '/dashboard' :
+  r === Role.HatcheryClerk ? '/hatch-cycles' :
+  r === Role.SalesClerk ? '/sales' : '/';
 
 const AuthCallback: React.FC = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const params = useMemo(() => new URLSearchParams(search), [search]);
-  const type = params.get('type'); // 'invite' | 'recovery' | null
-  const [ready, setReady] = useState(false);
+
+  const [mode, setMode] = useState<'checking'|'set_password'|'error'|'done'>('checking');
+  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const routeByProfile = async (userId: string) => {
+    const { data: p } = await supabase.from('profiles').select('role').eq('id', userId).single();
+    const role = (p?.role as Role) ?? Role.User;
+    navigate(getHome(role), { replace: true });
+  };
 
   useEffect(() => {
-    // Ensure Supabase has processed URL tokens and created a session
-    supabase.auth.getSession().then(() => setReady(true));
+    (async () => {
+      try {
+        const qs = new URLSearchParams(location.search);
+        const hs = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+
+        const access_token  = hs.get('access_token');
+        const refresh_token = hs.get('refresh_token');
+        const hashType      = hs.get('type');     // invite/recovery/magiclink…
+        const queryType     = qs.get('type');     // invite/recovery…
+        const token_hash    = qs.get('token');    // when Supabase sends ?token=…&type=…
+
+        // 1) If hash has tokens → set session
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
+        } else if (token_hash && queryType) {
+          // 2) If query has token/type → verify the OTP (invite/recovery)
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash,
+            type: queryType as any,  // 'invite' | 'recovery' | 'signup' | 'magiclink' | 'email_change'
+          });
+          if (error) throw error;
+        } else {
+          // 3) Nothing usable in URL → fail fast
+          setError('Invalid or expired link. Please request a new invite or password reset.');
+          setMode('error');
+          return;
+        }
+
+        // 4) We should now have a session
+        const { data: userRes } = await supabase.auth.getUser();
+        const user = userRes?.user;
+        if (!user) {
+          setError('Session could not be established. The link may have expired.');
+          setMode('error');
+          return;
+        }
+
+        // 5) If invite/recovery → ask the user to set a password
+        const finalType = (hashType || queryType || '').toLowerCase();
+        if (finalType === 'invite' || finalType === 'recovery') {
+          setMode('set_password');
+          return;
+        }
+
+        // 6) Otherwise route by role
+        await routeByProfile(user.id);
+        setMode('done');
+      } catch (e: any) {
+        setError(e?.message ?? 'Unexpected error while validating the link.');
+        setMode('error');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onDone = async () => { await routeByProfile(navigate); };
+  const onSetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      if (!password || password.length < 8) {
+        setError('Password must be at least 8 characters.');
+        setBusy(false);
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      const { data: userRes } = await supabase.auth.getUser();
+      const user = userRes?.user;
+      if (!user) throw new Error('Lost session. Please sign in.');
+      await routeByProfile(user.id);
+      setMode('done');
+    } catch (e: any) {
+      setError(e?.message ?? 'Failed to set password.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  if (!ready) return <div className="p-6">Signing you in…</div>;
-  if (type === 'invite' || type === 'recovery') return <SetPassword onDone={onDone} />;
-  onDone(); // magic link / email confirm
-  return <div className="p-6">Redirecting…</div>;
+  if (mode === 'checking') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="p-6 bg-white rounded shadow">Validating link…</div>
+      </div>
+    );
+  }
+
+  if (mode === 'set_password') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow w-full max-w-md">
+          <h2 className="text-2xl font-bold mb-4">Set your password</h2>
+          {error && <div className="mb-3 bg-red-100 border border-red-300 text-red-700 px-3 py-2 rounded text-sm">{error}</div>}
+          <form onSubmit={onSetPassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">New password</label>
+              <input
+                type="password"
+                className="mt-1 block w-full border-gray-300 rounded px-3 py-2"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={busy}
+              className="w-full bg-bounty-blue-600 text-white py-2.5 rounded hover:bg-bounty-blue-700 disabled:opacity-60"
+            >
+              {busy ? 'Saving…' : 'Save password'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white p-6 rounded shadow w-full max-w-md">
+          <h2 className="text-xl font-semibold mb-2">Invite / recovery link problem</h2>
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default AuthCallback;

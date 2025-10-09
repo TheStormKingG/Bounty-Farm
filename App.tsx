@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
@@ -9,75 +9,25 @@ import { useAuth } from './context/AuthContext';
 import { Role } from './types';
 import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
-import AuthCallback from './pages/AuthCallback';
-
-// ✅ Supabase client
-import { supabase } from './src/supabase';
+import FlockManagement from './pages/FlockManagement';
 
 const App: React.FC = () => {
-  const { user, setUser } = useAuth();
+  const { user, loading } = useAuth();
 
-  // 🔐 Always read role from DB profile, never from user_metadata
-  const setUserFromSession = async () => {
-    const { data } = await supabase.auth.getSession();
-    const su = data.session?.user;
-    if (!su) {
-      setUser(null);
-      return;
-    }
-
-    const { data: p } = await supabase
-      .from('profiles')
-      .select('name, role')
-      .eq('id', su.id)
-      .single();
-
-    setUser({
-      id: su.id,
-      email: su.email ?? '',
-      name: p?.name ?? su.email ?? 'User',
-      role: (p?.role as Role) ?? Role.User
-    });
-  };
-
-  useEffect(() => {
-    let unsub: (() => void) | undefined;
-
-    // Initial load
-    setUserFromSession();
-
-    // Live updates
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_evt, session) => {
-      const su = session?.user;
-      if (!su) {
-        setUser(null);
-        return;
-      }
-      // re-fetch profile on every auth change
-      const { data: p } = await supabase
-        .from('profiles')
-        .select('name, role')
-        .eq('id', su.id)
-        .single();
-
-      setUser({
-        id: su.id,
-        email: su.email ?? '',
-        name: p?.name ?? su.email ?? 'User',
-        role: (p?.role as Role) ?? Role.User
-      });
-    });
-
-    unsub = () => sub.subscription.unsubscribe();
-    return () => { if (unsub) unsub(); };
-  }, [setUser]);
+  // Show loading while checking for existing session
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="*" element={<Navigate to="/login" />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     );
   }
@@ -90,6 +40,8 @@ const App: React.FC = () => {
         return '/hatch-cycles';
       case Role.SalesClerk:
         return '/sales';
+      case Role.User:
+        return '/';
       default:
         return '/login';
     }
@@ -98,10 +50,12 @@ const App: React.FC = () => {
   return (
     <Layout>
       <Routes>
+        {/* Only redirect to home route if on root path, otherwise preserve current route */}
         <Route path="/" element={<Navigate to={getHomeRouteForRole(user.role)} />} />
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/flock-management" element={<FlockManagement />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 

@@ -5,59 +5,103 @@ import React, {
   useContext,
   ReactNode,
   useMemo,
+  useEffect,
 } from 'react';
-import { UserProfile, Role } from '../types';
+import { Role, UserProfile } from '../types';
+import { supabase } from '../src/supabase';
 
 interface AuthContextType {
   user: UserProfile | null;
-  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>; // ✅ needed by App.tsx
-  login: (role: Role) => void;
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const mockUsers: Record<Role, UserProfile> = {
-  [Role.Admin]: {
-    uid: 'admin-01',
-    email: 'admin@bounty.farm',
-    role: Role.Admin,
-    name: 'Admin User',
-  },
-  [Role.HatcheryClerk]: {
-    uid: 'clerk-01',
-    email: 'hatchery.clerk@bounty.farm',
-    role: Role.HatcheryClerk,
-    name: 'Hatchery Clerk',
-  },
-  [Role.SalesClerk]: {
-    uid: 'sales-01',
-    email: 'sales.clerk@bounty.farm',
-    role: Role.SalesClerk,
-    name: 'Sales Clerk',
-  },
-};
+const Ctx = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (role: Role) => {
-    const mockUser = mockUsers[role];
-    if (mockUser) setUser(mockUser);
+  // Custom login function that checks staff_table
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      
+      // Get user from staff_table
+      const { data: staffData, error } = await supabase
+        .from('staff_table')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error || !staffData) {
+        console.error('User not found:', error);
+        return false;
+      }
+
+      // Check password from database
+      const isValidPassword = password === staffData.password;
+      
+      if (!isValidPassword) {
+        console.error('Invalid password');
+        return false;
+      }
+
+      // Set user in context
+      const userData = {
+        id: staffData.id,
+        email: staffData.email,
+        name: staffData.name,
+        role: staffData.role as Role,
+        password: staffData.password,
+      };
+      
+      setUser(userData);
+      
+      // Store in localStorage for persistence across refreshes
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+  };
+
+  // Check for existing session on app load
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
 
   const value = useMemo(
-    () => ({ user, setUser, login, logout }),
-    [user]
+    () => ({ user, setUser, login, logout, loading }),
+    [user, loading]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 };
 
 export const useAuth = () => {
-  const ctx = useContext(AuthContext);
+  const ctx = useContext(Ctx);
   if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
   return ctx;
 };

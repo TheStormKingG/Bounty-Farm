@@ -34,6 +34,9 @@ const Sidebar: React.FC = () => {
         {hasRole([Role.Admin]) && (
           <>
             <div className="pt-4 mt-4 border-t border-bounty-blue-700"></div>
+            <NavLink to="/flock-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+                Flock Management
+            </NavLink>
             <NavLink to="/settings" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
                 Settings
             </NavLink>

@@ -5,13 +5,15 @@ export enum Role {
   Admin = 'Admin',
   HatcheryClerk = 'HatcheryClerk',
   SalesClerk = 'SalesClerk',
+  User = 'User',
 }
 
 export interface UserProfile {
-  uid: string;
+  id: string;
   email: string;
   role: Role;
   name: string;
+  password?: string;
 }
 
 // Settings-related types
@@ -75,6 +77,8 @@ export interface HatchCycle {
 
   // Egg Reception
   flocksRecd?: string[];
+  supplierFlockNumber?: string;
+  supplierName?: string;
   casesRecd?: number;
   eggsRecd?: number;
   avgEggWgt?: number; // in grams
@@ -110,6 +114,8 @@ export interface HatchCycle {
   status: 'OPEN' | 'CLOSED';
   createdBy: string;
   createdAt: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 

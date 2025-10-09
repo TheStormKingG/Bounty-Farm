@@ -85,12 +85,14 @@ const HighlightedCell: React.FC<{ children: React.ReactNode }> = ({ children }) 
 // --- helpers to keep UI <> DB clean -----------------------------------------
 const colourLabel = (v?: string) => (v ? String(v).split('-').pop() ?? v : '-');
 
-// Map from view row (hatch_cycles_app) => UI type
-const mapViewRowToCycle = (r: any): HatchCycle => ({
-  id: r.hatch_no,
+// Map from table row (hatch_cycles) => UI type
+const mapTableRowToCycle = (r: any): HatchCycle => ({
+  id: r.id,
   hatchNo: r.hatch_no,
   colourCode: (r.hatch_colour as HatchColourCode) ?? (r.hatch_colour as any),
   flocksRecd: r.flocks_recvd ? String(r.flocks_recvd).split(',').map((s: string) => s.trim()) : [],
+  supplierFlockNumber: r.supplier_flock_number ?? undefined,
+  supplierName: r.supplier_name ?? undefined,
   casesRecd: r.cases_recvd ?? undefined,
   eggsRecd: r.eggs_recvd ?? undefined,
   avgEggWgt: r.avg_egg_wgt ?? undefined,
@@ -99,11 +101,14 @@ const mapViewRowToCycle = (r: any): HatchCycle => ({
   datePacked: r.date_packed ?? undefined,
   setDate: r.date_set ?? undefined,
   dateCandled: r.date_candled ?? undefined,
-  candling: {}, // not modeled in base table
+  candling: {
+    clears: r.candling_clears ?? undefined,
+    earlyDead: r.candling_early_dead ?? undefined,
+  },
   expHatchQty: r.exp_hatch_qty ?? undefined,
   pctAdj: r.pct_adj ?? undefined,
   expHatchQtyAdj: r.exp_hatch_qty_adj ?? undefined,
-  hatchDate: r.date_hatched ?? undefined,
+  hatchDate: r.hatch_date ?? undefined,
   avgChicksWgt: r.avg_chicks_wgt ?? undefined,
   outcome: {
     hatched: r.chicks_hatched ?? undefined,
@@ -111,34 +116,41 @@ const mapViewRowToCycle = (r: any): HatchCycle => ({
   },
   vaccinationProfile: r.vaccination_profile ?? undefined,
   chicksSold: r.chicks_sold ?? undefined,
-  status: r.status ?? 'OPEN',
-  createdBy: undefined,
+  status: (r.status as 'OPEN' | 'CLOSED') ?? 'OPEN',
+  createdBy: r.created_by ?? 'admin',
   createdAt: r.created_at ? new Date(r.created_at).toISOString() : undefined,
+  updatedBy: r.updated_by ?? undefined,
+  updatedAt: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
 });
 
 // Map from UI newCycle => base table payload with quoted keys
 const toBaseTablePayload = (c: HatchCycle) => ({
-  'Hatch No': c.hatchNo,
-  'Hatch Colour': c.colourCode ? String(c.colourCode).split('-').pop() : null,
-  "Flocks Rec'd": (c.flocksRecd ?? []).join(', '),
-  "Cases Rec'd": c.casesRecd ?? null,
-  "Eggs Rec'd": c.eggsRecd ?? null,
-  'Avg Egg Wgt': c.avgEggWgt ?? null,
-  'Eggs Cracked': c.eggsCracked ?? null,
-  'Eggs Set': c.eggsSet ?? 0,
-  'Date Packed': c.datePacked ?? null,
-  'Date Set': c.setDate ?? null,
-  'Date Candled': c.dateCandled ?? null,
-  'Exp Hatch Qty': c.expHatchQty ?? null,
-  'Pct Adj': c.pctAdj ?? null,
-  'Exp Hatch Qty Adj': c.expHatchQtyAdj ?? null,
-  'Date Hatched': c.hatchDate ?? null,
-  'Avg Chicks Wgt': c.avgChicksWgt ?? null,
-  'Chicks Hatched': c.outcome?.hatched ?? null,
-  'Chicks Culled': c.outcome?.culled ?? null,
-  'Vaccination Profile': c.vaccinationProfile ?? null,
-  'Chicks Sold': c.chicksSold ?? null,
-  Status: c.status ?? 'OPEN',
+  hatch_no: c.hatchNo,
+  hatch_colour: c.colourCode ? String(c.colourCode).split('-').pop() : null,
+  flocks_recvd: (c.flocksRecd ?? []).join(', '),
+  supplier_flock_number: c.supplierFlockNumber ?? null,
+  supplier_name: c.supplierName ?? null,
+  cases_recvd: c.casesRecd ?? null,
+  eggs_recvd: c.eggsRecd ?? null,
+  avg_egg_wgt: c.avgEggWgt ?? null,
+  eggs_cracked: c.eggsCracked ?? null,
+  eggs_set: c.eggsSet ?? 0,
+  date_packed: c.datePacked ?? null,
+  date_set: c.setDate ?? null,
+  date_candled: c.dateCandled ?? null,
+  candling_clears: c.candling?.clears ?? null,
+  candling_early_dead: c.candling?.earlyDead ?? null,
+  exp_hatch_qty: c.expHatchQty ?? null,
+  pct_adj: c.pctAdj ?? null,
+  exp_hatch_qty_adj: c.expHatchQtyAdj ?? null,
+  hatch_date: c.hatchDate ?? null,
+  avg_chicks_wgt: c.avgChicksWgt ?? null,
+  chicks_hatched: c.outcome?.hatched ?? null,
+  chicks_culled: c.outcome?.culled ?? null,
+  vaccination_profile: c.vaccinationProfile ?? null,
+  chicks_sold: c.chicksSold ?? null,
+  status: c.status ?? 'OPEN',
+  created_by: c.createdBy ?? 'admin',
 });
 // -----------------------------------------------------------------------------
 
@@ -152,8 +164,124 @@ const HatchCycleList: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Sorting and filtering state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [showFilters, setShowFilters] = useState<Record<string, boolean>>({});
 
-  // Fetch hatch cycles from Supabase (from the CLEAN VIEW)
+  // Sorting function
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Filtering function
+  const handleFilter = (column: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [column]: value
+    }));
+  };
+
+  // Clear filter function
+  const clearFilter = (column: string) => {
+    setFilters(prev => {
+      const newFilters = { ...prev };
+      delete newFilters[column];
+      return newFilters;
+    });
+  };
+
+  // Toggle filter visibility
+  const toggleFilter = (column: string) => {
+    setShowFilters(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
+
+  // Helper function to get cell value for sorting/filtering
+  const getCellValue = (cycle: HatchCycle, column: string): string | number | null => {
+    switch (column) {
+      case 'HATCH NO': return cycle.hatchNo;
+      case 'HATCH COLOUR': return cycle.colourCode || null;
+      case 'FLOCKS RECVD': return cycle.flocksRecd?.join(', ') || null;
+      case 'SUPPLIER FLOCK NUMBER': return cycle.supplierFlockNumber || null;
+      case 'SUPPLIER NAME': return cycle.supplierName || null;
+      case 'CASES RECVD': return cycle.casesRecd || null;
+      case 'EGGS RECVD': return cycle.eggsRecd || null;
+      case 'AVG EGG WGT': return cycle.avgEggWgt || null;
+      case 'EGGS CRACKED': return cycle.eggsCracked || null;
+      case 'EGGS SET': return cycle.eggsSet || null;
+      case 'DATE PACKED': return cycle.datePacked || null;
+      case 'DATE SET': return cycle.setDate || null;
+      case 'DATE CANDLED': return cycle.dateCandled || null;
+      case 'EXP HATCH QTY': return cycle.expHatchQty || null;
+      case 'PCT ADJ': return cycle.pctAdj || null;
+      case 'EXP HATCH QTY ADJ': return cycle.expHatchQtyAdj || null;
+      case 'HATCH DATE': return cycle.hatchDate || null;
+      case 'AVG CHICKS WGT': return cycle.avgChicksWgt || null;
+      case 'CHICKS HATCHED': return cycle.outcome.hatched || null;
+      case 'CHICKS CULLED': return cycle.outcome.culled || null;
+      case 'VACCINATION PROFILE': return cycle.vaccinationProfile || null;
+      case 'CHICKS SOLD': return cycle.chicksSold || null;
+      case 'STATUS': return cycle.status;
+      case 'CREATED BY': return cycle.createdBy || null;
+      case 'CREATED AT': return cycle.createdAt || null;
+      case 'UPDATED BY': return cycle.updatedBy || null;
+      case 'UPDATED AT': return cycle.updatedAt || null;
+      default: return null;
+    }
+  };
+
+  // Helper function to safely convert cell value to string for filtering
+  const cellValueToString = (value: string | number | null): string => {
+    if (value == null) return '';
+    return String(value);
+  };
+
+  // Process data with sorting and filtering
+  const processedCycles = React.useMemo(() => {
+    let filtered = cycles;
+
+    // Apply filters
+    Object.keys(filters).forEach((column) => {
+      const value = filters[column];
+      if (value) {
+        filtered = filtered.filter(cycle => {
+          const cellValue = getCellValue(cycle, column);
+          if (cellValue === null || cellValue === undefined) return false;
+          const searchText = String(cellValue).toLowerCase();
+          return searchText.includes(value.toLowerCase());
+        });
+      }
+    });
+
+    // Apply sorting
+    if (sortColumn) {
+      filtered = [...filtered].sort((a, b) => {
+        const aValue = getCellValue(a, sortColumn);
+        const bValue = getCellValue(b, sortColumn);
+        
+        if (aValue === bValue) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+        
+        const comparison = aValue < bValue ? -1 : 1;
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [cycles, filters, sortColumn, sortDirection]);
+
+  // Fetch hatch cycles from Supabase (from the new hatch_cycles table)
   useEffect(() => {
     const fetchHatchCycles = async () => {
       try {
@@ -161,22 +289,22 @@ const HatchCycleList: React.FC = () => {
         setError(null);
 
         const { data, error } = await supabase
-          .from('hatch_cycles_app') // <<< view with snake_case + created_at
+          .from('hatch_cycles') // <<< new table with proper structure
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching hatch cycles:', error);
           setError('Failed to fetch hatch cycles. Please check your connection.');
-          setCycles(initialCycles);
+          setCycles([]); // Don't fall back to mock data
         } else {
-          const mapped = (data ?? []).map(mapViewRowToCycle);
+          const mapped = (data ?? []).map(mapTableRowToCycle);
           setCycles(mapped);
         }
       } catch (err) {
         console.error('Unexpected error:', err);
         setError('An unexpected error occurred.');
-        setCycles(initialCycles);
+        setCycles([]); // Don't fall back to mock data
       } finally {
         setLoading(false);
       }
@@ -206,6 +334,52 @@ const HatchCycleList: React.FC = () => {
         [name]: value === '' ? undefined : Number(value),
       },
     }));
+  };
+
+  // Handle supplier flock number change and auto-fill supplier name
+  const handleSupplierFlockNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const flockNumber = e.target.value.trim();
+    
+    // Update the form data
+    setNewCycleData((prev) => ({
+      ...prev,
+      supplierFlockNumber: flockNumber,
+    }));
+
+    // If flock number is provided, fetch supplier name
+    if (flockNumber) {
+      try {
+        const { data, error } = await supabase
+          .from('flocks')
+          .select('supplier')
+          .eq('flock_number', flockNumber)
+          .single();
+
+        if (error) {
+          console.log('No flock found for number:', flockNumber);
+          setNewCycleData((prev) => ({
+            ...prev,
+            supplierName: '',
+          }));
+        } else {
+          setNewCycleData((prev) => ({
+            ...prev,
+            supplierName: data.supplier,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching supplier:', err);
+        setNewCycleData((prev) => ({
+          ...prev,
+          supplierName: '',
+        }));
+      }
+    } else {
+      setNewCycleData((prev) => ({
+        ...prev,
+        supplierName: '',
+      }));
+    }
   };
 
   const handleAddNewCycle = async (e: React.FormEvent) => {
@@ -240,18 +414,18 @@ const HatchCycleList: React.FC = () => {
         return;
       }
 
-      // Read back from the VIEW to get normalized fields
-      const { data: vrow, error: vErr } = await supabase
-        .from('hatch_cycles_app')
+      // Read back from the table to get normalized fields
+      const { data: trow, error: tErr } = await supabase
+        .from('hatch_cycles')
         .select('*')
         .eq('hatch_no', hatchNo)
         .single();
 
-      if (vErr || !vrow) {
-        // Fall back to local object if view fetch fails
+      if (tErr || !trow) {
+        // Fall back to local object if table fetch fails
         setCycles((prev) => [newCycle, ...prev]);
       } else {
-        setCycles((prev) => [mapViewRowToCycle(vrow), ...prev]);
+        setCycles((prev) => [mapTableRowToCycle(trow), ...prev]);
       }
 
       setIsNewCycleModalVisible(false);
@@ -371,39 +545,86 @@ const HatchCycleList: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr className="text-gray-600">
                   {[
-                    'Hatch No',
-                    'Hatch Colour',
-                    "Flocks Rec'd",
-                    "Cases Rec'd",
-                    "Eggs Rec'd",
-                    'Avg Egg Wgt',
-                    'Eggs Cracked',
-                    'Eggs Set',
-                    'Date Packed',
-                    'Date Set',
-                    'Date Candled',
-                    'Exp Hatch Qty',
-                    'Pct Adj',
-                    'Exp Hatch Qty Adj',
-                    'Date Hatched',
-                    'Avg Chicks Wgt',
-                    'Chicks Hatched',
-                    'Chicks Culled',
-                    'Vaccination Profile',
-                    'Chicks Sold',
-                    'Status',
+                    'HATCH NO',
+                    'HATCH COLOUR',
+                    'FLOCKS RECVD',
+                    'SUPPLIER FLOCK NUMBER',
+                    'SUPPLIER NAME',
+                    'CASES RECVD',
+                    'EGGS RECVD',
+                    'AVG EGG WGT',
+                    'EGGS CRACKED',
+                    'EGGS SET',
+                    'DATE PACKED',
+                    'DATE SET',
+                    'DATE CANDLED',
+                    'EXP HATCH QTY',
+                    'PCT ADJ',
+                    'EXP HATCH QTY ADJ',
+                    'HATCH DATE',
+                    'AVG CHICKS WGT',
+                    'CHICKS HATCHED',
+                    'CHICKS CULLED',
+                    'VACCINATION PROFILE',
+                    'CHICKS SOLD',
+                    'STATUS',
+                    'CREATED BY',
+                    'CREATED AT',
+                    'UPDATED BY',
+                    'UPDATED AT',
                   ].map((header) => (
                     <th
                       key={header}
                       className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider"
                     >
-                      {header}
+                      <div className="flex items-center justify-between">
+                        <span>{header}</span>
+                        <div className="flex items-center space-x-1 ml-2">
+                          <button
+                            onClick={() => handleSort(header)}
+                            className="p-1 hover:bg-gray-200 rounded"
+                            title={`Sort by ${header}`}
+                          >
+                            {sortColumn === header ? (
+                              sortDirection === 'asc' ? '↑' : '↓'
+                            ) : (
+                              '↕'
+                            )}
+                          </button>
+                          <button
+                            onClick={() => toggleFilter(header)}
+                            className="p-1 hover:bg-gray-200 rounded"
+                            title={`Filter ${header}`}
+                          >
+                            🔍
+                          </button>
+                        </div>
+                      </div>
+                      {showFilters[header] && (
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            placeholder={`Filter ${header}...`}
+                            value={filters[header] || ''}
+                            onChange={(e) => handleFilter(header, e.target.value)}
+                            className="w-full px-2 py-1 text-xs border rounded"
+                          />
+                          {filters[header] && (
+                            <button
+                              onClick={() => clearFilter(header)}
+                              className="mt-1 text-xs text-red-600 hover:text-red-800"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {cycles.map((cycle) => (
+                {processedCycles.map((cycle) => (
                   <tr key={cycle.id} className="text-sm text-gray-900">
                     <td className="px-2 py-2 whitespace-nowrap font-medium text-bounty-blue-700">
                       {cycle.hatchNo}
@@ -413,6 +634,12 @@ const HatchCycleList: React.FC = () => {
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap">
                       {cycle.flocksRecd?.join(', ') || '-'}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.supplierFlockNumber || '-'}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.supplierName || '-'}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap">
                       {cycle.casesRecd?.toLocaleString() || '-'}
@@ -471,6 +698,18 @@ const HatchCycleList: React.FC = () => {
                           Closed
                         </span>
                       )}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.createdBy || '-'}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.updatedBy || '-'}
+                    </td>
+                    <td className="px-2 py-2 whitespace-nowrap">
+                      {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}
                     </td>
                   </tr>
                 ))}
@@ -546,6 +785,28 @@ const HatchCycleList: React.FC = () => {
                       }))
                     }
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-700">Supplier Flock Number</label>
+                  <input
+                    type="text"
+                    name="supplierFlockNumber"
+                    onChange={handleSupplierFlockNumberChange}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    placeholder="Enter flock number"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-700">Supplier Name</label>
+                  <input
+                    type="text"
+                    name="supplierName"
+                    value={newCycleData.supplierName || ''}
+                    onChange={handleFormChange}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50"
+                    placeholder="Auto-filled from flock number"
+                    readOnly
                   />
                 </div>
                 <div>

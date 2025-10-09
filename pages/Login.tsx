@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Role } from '../types';
+import { Role, UserProfile } from '../types';
 import { supabase } from '../src/supabase';
 
 const getHomeRouteForRole = (role: Role) => {
@@ -12,6 +12,8 @@ const getHomeRouteForRole = (role: Role) => {
       return '/hatch-cycles';
     case Role.SalesClerk:
       return '/sales';
+    case Role.User:
+      return '/';
     default:
       return '/';
   }
@@ -35,6 +37,7 @@ const Login: React.FC = () => {
   const [isSendingMagic, setIsSendingMagic] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const routeByProfile = async (userId: string) => {
     const { data: profile, error: profErr } = await supabase
@@ -58,20 +61,31 @@ const Login: React.FC = () => {
     setError(null);
     setNotice(null);
     setIsLoading(true);
+    
     try {
-      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInErr) {
-        setError(signInErr.message);
-        return;
+      const success = await login(email, password);
+      
+      if (success) {
+        // Get user role to determine redirect and validate role
+        const { data: staffData } = await supabase
+          .from('staff_table')
+          .select('role')
+          .eq('email', email)
+          .single();
+        
+        const userRole = (staffData?.role as Role) || Role.User;
+        
+        // Validate that the user's role matches the selected login type
+        if (selectedRole && userRole !== selectedRole) {
+          setError(`This account is for ${userRole} role, but you selected ${selectedRole} login.`);
+          setIsLoading(false);
+          return;
+        }
+        
+        navigate(getHomeRouteForRole(userRole));
+      } else {
+        setError('Invalid email or password');
       }
-      if (!data.user) {
-        setError('Login failed: no user returned.');
-        return;
-      }
-      await routeByProfile(data.user.id);
     } catch (err: any) {
       setError(err?.message ?? 'Unexpected error during login.');
     } finally {
@@ -128,10 +142,57 @@ const Login: React.FC = () => {
     }
   };
 
+  // Handle role selection
+  const handleRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+    setError(null);
+    setNotice(null);
+    
+    // Clear email and password fields
+    setEmail('');
+    setPassword('');
+  };
+
   // Dev-only mock role buttons (keep for local testing)
-  const handleMockLogin = (role: Role) => {
-    login(role);
-    navigate(getHomeRouteForRole(role));
+  const handleMockLogin = async (role: Role) => {
+    // For Hatchery and Sales roles, we need to find a user with that role from Supabase
+    if (role === Role.HatcheryClerk || role === Role.SalesClerk) {
+      try {
+        const { data: staffData, error } = await supabase
+          .from('staff_table')
+          .select('*')
+          .eq('role', role)
+          .limit(1)
+          .single();
+
+        if (error || !staffData) {
+          setError(`No ${role} users found in database. Please add a user with ${role} role.`);
+          return;
+        }
+
+        // Use the first user found with this role
+        const success = await login(staffData.email, staffData.password);
+        
+        if (success) {
+          navigate(getHomeRouteForRole(role));
+        } else {
+          setError('Login failed');
+        }
+      } catch (err) {
+        console.error('Error finding user:', err);
+        setError('Error finding user for this role');
+      }
+    } else {
+      // For Admin role, use Stefan's credentials
+      const email = 'stefan.gravesande@gmail.com';
+      const success = await login(email, '1234');
+      
+      if (success) {
+        navigate(getHomeRouteForRole(role));
+      } else {
+        setError('Admin login failed');
+      }
+    }
   };
 
   return (
@@ -143,102 +204,224 @@ const Login: React.FC = () => {
             alt="Bounty Farm Logo"
             className="mx-auto rounded mb-4"
           />
-        <h1 className="text-3xl font-bold text-gray-800">Hatchery MIS</h1>
-          <p className="text-gray-500">Sign in with your account</p>
+          <h1 className="text-3xl font-bold text-gray-800">Hatchery MIS</h1>
+          <p className="text-gray-500">Select your role to sign in</p>
         </div>
 
-        {/* Email/Password */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Role Selection Buttons */}
+        <div className="space-y-3 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-              placeholder="you@bounty.farm"
-              required
-            />
+            <button
+              onClick={() => handleRoleSelect(Role.Admin)}
+              className={`w-full py-3 px-4 rounded-lg transition-colors ${
+                selectedRole === Role.Admin 
+                  ? 'bg-bounty-blue-700 text-white' 
+                  : 'bg-gray-800 text-white hover:bg-gray-900'
+              }`}
+            >
+              Admin
+            </button>
+            {/* Admin Login Form */}
+            {selectedRole === Role.Admin && (
+              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      autoComplete="username"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+                      {error}
+                    </div>
+                  )}
+                  {notice && (
+                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
+                      {notice}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-bounty-blue-600 text-white py-2 px-4 rounded-lg hover:bg-bounty-blue-700 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
+                  >
+                    {isLoading ? 'Signing in…' : 'Sign In'}
+                  </button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="text-sm text-bounty-blue-600 hover:underline"
+                      disabled={isSendingReset}
+                    >
+                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-              placeholder="••••••••"
-            />
-            <div className="flex items-center justify-between mt-2">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="text-sm text-bounty-blue-600 hover:underline"
-                disabled={isSendingReset}
-              >
-                {isSendingReset ? 'Sending…' : 'Forgot password?'}
-              </button>
-              <button
-                type="button"
-                onClick={handleMagicLink}
-                className="text-sm text-gray-600 hover:underline"
-                disabled={isSendingMagic}
-              >
-                {isSendingMagic ? 'Sending…' : 'Email me a magic link'}
-              </button>
-            </div>
+            <button
+              onClick={() => handleRoleSelect(Role.HatcheryClerk)}
+              className={`w-full py-3 px-4 rounded-lg transition-colors ${
+                selectedRole === Role.HatcheryClerk 
+                  ? 'bg-green-700 text-white' 
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              Hatchery
+            </button>
+            {/* Hatchery Login Form */}
+            {selectedRole === Role.HatcheryClerk && (
+              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      autoComplete="username"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+                      {error}
+                    </div>
+                  )}
+                  {notice && (
+                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
+                      {notice}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
+                  >
+                    {isLoading ? 'Signing in…' : 'Sign In'}
+                  </button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="text-sm text-green-600 hover:underline"
+                      disabled={isSendingReset}
+                    >
+                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
 
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
-              {error}
-            </div>
-          )}
-          {notice && (
-            <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
-              {notice}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-bounty-blue-600 text-white py-3 px-4 rounded-lg hover:bg-bounty-blue-700 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
-          >
-            {isLoading ? 'Signing in…' : 'Sign In'}
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-grow h-px bg-gray-200" />
-          <span className="mx-3 text-xs uppercase text-gray-400">or</span>
-          <div className="flex-grow h-px bg-gray-200" />
-        </div>
-
-        {/* Dev Mock Login (local testing) */}
-        <p className="text-xs text-gray-500 mb-2">Development quick login</p>
-        <div className="space-y-3">
-          <button
-            onClick={() => handleMockLogin(Role.Admin)}
-            className="w-full bg-gray-800 text-white py-2.5 px-4 rounded-lg hover:bg-gray-900 transition"
-          >
-            Login as Admin (Dev)
-          </button>
-          <button
-            onClick={() => handleMockLogin(Role.HatcheryClerk)}
-            className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 transition"
-          >
-            Login as Hatchery Clerk (Dev)
-          </button>
-          <button
-            onClick={() => handleMockLogin(Role.SalesClerk)}
-            className="w-full bg-yellow-500 text-white py-2.5 px-4 rounded-lg hover:bg-yellow-600 transition"
-          >
-            Login as Sales Clerk (Dev)
-          </button>
+          <div>
+            <button
+              onClick={() => handleRoleSelect(Role.SalesClerk)}
+              className={`w-full py-3 px-4 rounded-lg transition-colors ${
+                selectedRole === Role.SalesClerk 
+                  ? 'bg-yellow-600 text-white' 
+                  : 'bg-yellow-500 text-white hover:bg-yellow-600'
+              }`}
+            >
+              Sales
+            </button>
+            {/* Sales Login Form */}
+            {selectedRole === Role.SalesClerk && (
+              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      autoComplete="username"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
+                      {error}
+                    </div>
+                  )}
+                  {notice && (
+                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
+                      {notice}
+                    </div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
+                  >
+                    {isLoading ? 'Signing in…' : 'Sign In'}
+                  </button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="text-sm text-yellow-600 hover:underline"
+                      disabled={isSendingReset}
+                    >
+                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
