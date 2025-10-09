@@ -9,6 +9,7 @@ import { useAuth } from './context/AuthContext';
 import { Role } from './types';
 import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
+import AuthCallback from './pages/AuthCallback';
 
 // ✅ Supabase client
 import { supabase } from './src/supabase';
@@ -76,6 +77,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="*" element={<Navigate to="/login" />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     );
   }
