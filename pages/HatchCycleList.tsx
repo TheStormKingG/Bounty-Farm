@@ -133,21 +133,21 @@ const toBaseTablePayload = (c: HatchCycle) => ({
   supplier_flock_number: c.supplierFlockNumber ?? null,
   supplier_name: c.supplierName ?? null,
   cases_recvd: c.casesRecd ?? null,
-  eggs_recvd: c.eggsRecd ?? null,
+  eggs_recvd: c.eggsRecd ?? null, // Auto-calculated (cases recd × 360)
   avg_egg_wgt: c.avgEggWgt ?? null,
-  eggs_cracked: c.eggsCracked ?? null,
+  eggs_cracked: c.eggsCracked ?? null, // Auto-calculated (eggs recd - eggs set)
   eggs_set: c.eggsSet ?? 0,
   date_packed: c.datePacked ?? null,
   date_set: c.setDate ?? null,
   date_candled: c.dateCandled ?? null,
   // Note: candling_clears and candling_early_dead columns don't exist in current table
-  // exp_hatch_qty: c.expHatchQty ?? null,
+  exp_hatch_qty: c.expHatchQty ?? null, // Auto-calculated (eggs set × 0.8)
   // pct_adj: c.pctAdj ?? null,
   // exp_hatch_qty_adj: c.expHatchQtyAdj ?? null,
   hatch_date: c.hatchDate ?? null,
   avg_chicks_wgt: c.avgChicksWgt ?? null,
   chicks_hatched: c.outcome?.hatched ?? null,
-  chicks_culled: c.outcome?.culled ?? null,
+  chicks_culled: c.outcome?.culled ?? null, // Auto-calculated (chicks hatched - chicks sold)
   vaccination_profile: c.vaccinationProfile ?? null,
   chicks_sold: c.chicksSold ?? null,
   status: c.status ?? 'OPEN',
@@ -499,6 +499,32 @@ const HatchCycleList: React.FC = () => {
     }
   };
 
+  const handleCloseCycle = async (cycleId: string) => {
+    try {
+      // Update the cycle status to CLOSED in Supabase
+      const { error } = await supabase
+        .from('hatch_cycles')
+        .update({ status: 'CLOSED' })
+        .eq('hatch_no', cycleId);
+
+      if (error) {
+        console.error('Error closing cycle:', error);
+        setError('Failed to close cycle. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setCycles(prev => prev.map(cycle => 
+        cycle.id === cycleId 
+          ? { ...cycle, status: 'CLOSED' as const }
+          : cycle
+      ));
+    } catch (err) {
+      console.error('Unexpected error closing cycle:', err);
+      setError('An unexpected error occurred while closing the cycle.');
+    }
+  };
+
   const handleAddNewCycle = async (e: React.FormEvent) => {
         e.preventDefault();
     try {
@@ -507,16 +533,32 @@ const HatchCycleList: React.FC = () => {
         newCycleData.hatchNo ||
         `2025-${String(13 + nextIndex).padStart(3, '0')}-BFL`;
 
+        // Calculate auto-filled values
+        const casesRecd = newCycleData.casesRecd ?? 0;
+        const eggsRecd = casesRecd * 360; // Auto-calculate eggs recd
+        const eggsSet = newCycleData.eggsSet ?? 0;
+        const eggsCracked = eggsRecd - eggsSet; // Auto-calculate eggs cracked
+        const expHatchQty = Math.round(eggsSet * 0.8); // Auto-calculate exp hatch qty (80% of eggs set)
+        const chicksHatched = newCycleData.outcome?.hatched ?? 0;
+        const chicksSold = newCycleData.chicksSold ?? 0;
+        const chicksCulled = chicksHatched - chicksSold; // Auto-calculate chicks culled
+
         const newCycle: HatchCycle = {
         id: hatchNo, // use hatchNo as stable id (base table has no id)
         hatchNo,
             ...newCycleData,
-        eggsSet: newCycleData.eggsSet ?? 0,
+        eggsRecd, // Auto-calculated
+        eggsCracked, // Auto-calculated
+        eggsSet: eggsSet,
+        expHatchQty, // Auto-calculated
         setDate:
           newCycleData.setDate || new Date().toISOString().split('T')[0],
-            status: newCycleData.status || 'OPEN',
+            status: 'OPEN', // Always OPEN for new entries
             candling: newCycleData.candling || {},
-            outcome: newCycleData.outcome || {},
+            outcome: {
+              ...newCycleData.outcome,
+              culled: chicksCulled, // Auto-calculated
+            },
         createdBy: 'clerk-01', // mock user (not stored in DB)
             createdAt: new Date().toISOString(),
         };
@@ -807,9 +849,18 @@ const HatchCycleList: React.FC = () => {
                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap">
                                         {cycle.status === 'OPEN' ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Open
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Open
+                          </span>
+                          <button
+                            onClick={() => handleCloseCycle(cycle.id)}
+                            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                            title="Close Cycle"
+                          >
+                            ×
+                          </button>
+                        </div>
                                         ) : (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                           Closed
@@ -876,18 +927,7 @@ const HatchCycleList: React.FC = () => {
                     ))}
                                     </select>
                                 </div>
-                                 <div>
-                                    <label className="block font-medium text-gray-700">Status</label>
-                  <select
-                    name="status"
-                    value={newCycleData.status}
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  >
-                                        <option value="OPEN">Open</option>
-                                        <option value="CLOSED">Closed</option>
-                                    </select>
-                                </div>
+                                 {/* Status field removed - all new entries default to OPEN */}
                                 <div className="lg:col-span-4 border-t my-2"></div>
                                 {/* Reception */}
                 <div>
@@ -944,18 +984,7 @@ const HatchCycleList: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-700">Supplier Name</label>
-                  <input
-                    type="text"
-                    name="supplierName"
-                    value={newCycleData.supplierName || ''}
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50"
-                    placeholder="Auto-filled from flock number"
-                    readOnly
-                  />
-                </div>
+                {/* Supplier Name field removed - auto-filled from flock number logic */}
                 <div>
                   <label className="block font-medium text-gray-700">Cases Rec'd</label>
                   <input
@@ -965,15 +994,7 @@ const HatchCycleList: React.FC = () => {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Eggs Rec'd</label>
-                  <input
-                    type="number"
-                    name="eggsRecd"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Eggs Rec'd field removed - auto-calculated (cases recd × 360) */}
                 <div>
                   <label className="block font-medium text-gray-700">Avg Egg Wgt</label>
                   <input
@@ -984,15 +1005,7 @@ const HatchCycleList: React.FC = () => {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Eggs Cracked</label>
-                  <input
-                    type="number"
-                    name="eggsCracked"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Eggs Cracked field removed - auto-calculated (eggs recd - eggs set) */}
                                 <div className="lg:col-span-4 border-t my-2"></div>
                                 {/* Setting */}
                 <div>
@@ -1037,15 +1050,7 @@ const HatchCycleList: React.FC = () => {
                 </div>
                                 <div className="lg:col-span-4 border-t my-2"></div>
                                 {/* Expectation */}
-                <div>
-                  <label className="block font-medium text-gray-700">Exp Hatch Qty</label>
-                  <input
-                    type="number"
-                    name="expHatchQty"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Exp Hatch Qty field removed - auto-calculated (eggs set × 0.8) */}
                 <div>
                   <label className="block font-medium text-gray-700">Pct Adj</label>
                   <input
@@ -1095,15 +1100,7 @@ const HatchCycleList: React.FC = () => {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
                   />
                 </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Chicks Culled</label>
-                  <input
-                    type="number"
-                    name="culled"
-                    onChange={(e) => handleNestedChange(e, 'outcome')}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Chicks Culled field removed - auto-calculated (chicks hatched - chicks sold) */}
                 <div>
                   <label className="block font-medium text-gray-700">Vaccination Profile</label>
                   <input
