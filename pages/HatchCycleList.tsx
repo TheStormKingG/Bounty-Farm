@@ -216,6 +216,22 @@ const HatchCycleList: React.FC = () => {
     }));
   };
 
+  // Helper function to determine cell background color based on column
+  const getCellBackgroundColor = (column: string, isHovered: boolean = false) => {
+    const yellowBackgroundFields = [
+      'HATCH NO', 'HATCH COLOUR', 'FLOCKS RECVD', 'SUPPLIER FLOCK NUMBER', 
+      'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
+      'EGGS CRACKED', 'EGGS SET', 'DATE PACKED', 'DATE SET', 'DATE CANDLED', 
+      'EXP HATCH QTY', 'PCT ADJ', 'EXP HATCH QTY ADJ'
+    ];
+    
+    if (yellowBackgroundFields.includes(column)) {
+      return isHovered ? '#fff3c2' : '#ffeb99';
+    } else {
+      return isHovered ? '#e3f3e7' : 'white';
+    }
+  };
+
   // Helper function to get cell value for sorting/filtering
   const getCellValue = (cycle: HatchCycle, column: string): string | number | null => {
     switch (column) {
@@ -835,70 +851,70 @@ const HatchCycleList: React.FC = () => {
                         </thead>
                         <tbody>
                 {processedCycles.map((cycle) => (
-                                <tr key={cycle.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B]">
+                                <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.hatchNo}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.colourCode || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.flocksRecd?.join(', ') || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.supplierFlockNumber || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.supplierName || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.casesRecd?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.eggsRecd?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.avgEggWgt ?? '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.eggsCracked?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       <HighlightedCell>{(cycle.eggsSet ?? 0).toLocaleString()}</HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{cycle.datePacked || '-'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{cycle.setDate}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{cycle.dateCandled || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.datePacked || '-'}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.setDate}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.dateCandled || '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {cycle.expHatchQty?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       {typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
                       <HighlightedCell>
                         {cycle.expHatchQtyAdj?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{cycle.hatchDate || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{cycle.avgChicksWgt ?? '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>{cycle.hatchDate || '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>{cycle.avgChicksWgt ?? '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       <HighlightedCell>
                         {cycle.outcome.hatched?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.outcome.culled?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.vaccinationProfile || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       <HighlightedCell>
                         {cycle.chicksSold?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                                         {cycle.status === 'OPEN' ? (
                         <div className="flex items-center gap-2">
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -927,16 +943,16 @@ const HatchCycleList: React.FC = () => {
                         </div>
                                         )}
                                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.createdBy || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.updatedBy || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
                       {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}
                                     </td>
                                 </tr>
@@ -964,22 +980,22 @@ const HatchCycleList: React.FC = () => {
                             <div className="grid grid-cols-3 gap-6 text-sm">
                                 {/* Column 1 */}
                                 <div className="space-y-4">
-                                    <div>
+                                <div>
                                         <label className="block font-bold text-gray-700 mb-2">Hatch Colour</label>
                                         <select
                                             name="colourCode"
                                             onChange={handleFormChange}
                                             className="modern-select w-full"
                                         >
-                                            <option value="">Select Colour</option>
+                                        <option value="">Select Colour</option>
                                             {Object.values(HatchColourCode).map((c) => (
                                                 <option key={c} value={c}>
                                                     {c}
                                                 </option>
                                             ))}
-                                        </select>
-                                    </div>
-                                    <div>
+                                    </select>
+                                </div>
+                                 <div>
                                         <label className="block font-bold text-gray-700 mb-2">Cases</label>
                                         <input
                                             type="number"
