@@ -985,7 +985,17 @@ const HatchCycleList: React.FC = () => {
                                 {/* Column 3 */}
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block font-bold text-gray-700 mb-2">Flock Number</label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <label className="font-bold text-gray-700">Flock Number</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsAddFlockModalVisible(true)}
+                                                className="w-6 h-6 bg-[#5c3a6b] hover:bg-[#4a2f56] text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
+                                                title="Add New Flock"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
                                         <div className="relative">
                                             <input
                                                 type="text"
@@ -1012,14 +1022,6 @@ const HatchCycleList: React.FC = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsAddFlockModalVisible(true)}
-                                            className="w-8 h-8 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
-                                            title="Add New Flock"
-                                        >
-                                            +
-                                        </button>
                                     </div>
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Eggs Set</label>
@@ -1055,7 +1057,7 @@ const HatchCycleList: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors shadow-sm font-semibold"
+                                    className="px-6 py-2 bg-[#5c3a6b] hover:bg-[#4a2f56] text-white rounded-md transition-colors shadow-sm font-semibold"
                                 >
                                     Save
                                 </button>
