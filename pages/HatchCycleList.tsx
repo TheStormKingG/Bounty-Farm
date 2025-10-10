@@ -1015,9 +1015,10 @@ const HatchCycleList: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => setIsAddFlockModalVisible(true)}
-                                            className="btn-primary px-3 py-2 text-sm mt-2"
+                                            className="w-8 h-8 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
+                                            title="Add New Flock"
                                         >
-                                            + Add New Flock
+                                            +
                                         </button>
                                     </div>
                                     <div>
@@ -1054,7 +1055,7 @@ const HatchCycleList: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors shadow-sm"
+                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors shadow-sm font-semibold"
                                 >
                                     Save
                                 </button>
