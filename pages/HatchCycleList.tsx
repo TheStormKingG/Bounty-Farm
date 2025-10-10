@@ -895,9 +895,9 @@ const HatchCycleList: React.FC = () => {
              {/* New Hatch Cycle Modal */}
             {isNewCycleModalVisible && (
                 <div className="modern-modal fixed inset-0 flex items-center justify-center z-50">
-                    <div className="modern-modal-content p-8 w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+                    <div className="modern-modal-content p-8 w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col bg-gradient-to-r from-yellow-50 to-white rounded-2xl">
                         <div className="flex justify-between items-center mb-6 border-b border-[#F5F0EE] pb-4">
-                            <h3 className="heading-tertiary text-[#333333]">Add New Hatchery Cycle</h3>
+                            <h3 className="heading-tertiary text-[#333333]">New Hatch Cycle</h3>
               <button
                 onClick={() => setIsNewCycleModalVisible(false)}
                 className="text-[#AAAAAA] hover:text-[#333333] text-2xl transition-colors"
@@ -906,190 +906,158 @@ const HatchCycleList: React.FC = () => {
               </button>
                         </div>
                         <form onSubmit={handleAddNewCycle} className="flex-grow overflow-y-auto pr-2">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 text-sm">
-                                {/* Auto-generated fields shown for info */}
-                                <div className="lg:col-span-2">
-                                    <label className="block font-semibold text-[#333333] mb-2">Hatch No (Auto-generated)</label>
-                  <input
-                    type="text"
-                    value={`2025-${String(13 + cycles.length + 1).padStart(3, '0')}-BFL`}
-                    className="modern-input w-full bg-[#F5F0EE]"
-                    readOnly
-                  />
+                            <div className="grid grid-cols-3 gap-6 text-sm">
+                                {/* Column 1 */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Hatch Colour</label>
+                                        <select
+                                            name="colourCode"
+                                            onChange={handleFormChange}
+                                            className="modern-select w-full"
+                                        >
+                                            <option value="">Select Colour</option>
+                                            {Object.values(HatchColourCode).map((c) => (
+                                                <option key={c} value={c}>
+                                                    {c}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Cases</label>
+                                        <input
+                                            type="number"
+                                            name="casesRecd"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Packed</label>
+                                        <input
+                                            type="date"
+                                            name="datePacked"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block font-semibold text-[#333333] mb-2">Hatch Colour</label>
-                  <select
-                    name="colourCode"
-                    onChange={handleFormChange}
-                    className="modern-select w-full"
-                  >
-                                        <option value="">Select Colour</option>
-                    {Object.values(HatchColourCode).map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                                    </select>
+
+                                {/* Column 2 */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Flocks Received</label>
+                                        <input
+                                            type="text"
+                                            name="flocksRecd"
+                                            onChange={(e) =>
+                                                setNewCycleData((p) => ({
+                                                    ...p,
+                                                    flocksRecd: e.target.value.split(',').map((f) => f.trim()),
+                                                }))
+                                            }
+                                            className="modern-input w-full"
+                                            placeholder="Comma separated"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Egg Weight</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            name="avgEggWgt"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Candled</label>
+                                        <input
+                                            type="date"
+                                            name="dateCandled"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                        />
+                                    </div>
                                 </div>
-                                 {/* Status field removed - all new entries default to OPEN */}
-                                <div className="lg:col-span-4 border-t my-2"></div>
-                                {/* Reception */}
-                <div>
-                  <label className="block font-bold text-gray-700">Flocks Rec'd (comma-sep)</label>
-                  <input
-                    type="text"
-                    name="flocksRecd"
-                    onChange={(e) =>
-                      setNewCycleData((p) => ({
-                        ...p,
-                        flocksRecd: e.target.value.split(',').map((f) => f.trim()),
-                      }))
-                    }
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-700">Supplier Flock Number</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      name="supplierFlockNumber"
-                      value={newCycleData.supplierFlockNumber || ''}
-                      onChange={handleSupplierFlockNumberChange}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                      placeholder="Enter flock number"
-                    />
-                    
-                    {/* Suggestions Dropdown */}
-                    {showSuggestions && flockSuggestions.length > 0 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        {flockSuggestions.map((flock, index) => (
-                          <div
-                            key={index}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100"
-                            onClick={() => handleSuggestionSelect(flock)}
-                          >
-                            <div className="font-medium text-gray-900">{flock.flock_number}</div>
-                            <div className="text-sm text-gray-500">{flock.supplier}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Add New Flock Button */}
-                    <div className="mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsAddFlockModalVisible(true)}
-                        className="btn-green px-4 py-2 text-sm"
-                      >
-                        + Add New Flock
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                {/* Supplier Name field removed - auto-filled from flock number logic */}
-                <div>
-                  <label className="block font-medium text-gray-700">Cases Rec'd</label>
-                  <input
-                    type="number"
-                    name="casesRecd"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                {/* Eggs Rec'd field removed - auto-calculated (cases recd × 360) */}
-                <div>
-                  <label className="block font-medium text-gray-700">Avg Egg Wgt</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    name="avgEggWgt"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                {/* Eggs Cracked field removed - auto-calculated (eggs recd - eggs set) */}
-                                <div className="lg:col-span-4 border-t my-2"></div>
-                                {/* Setting */}
-                <div>
-                  <label className="block font-bold text-gray-700">Eggs Set</label>
-                  <input
-                    type="number"
-                    name="eggsSet"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Date Packed</label>
-                  <input
-                    type="date"
-                    name="datePacked"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Date Set</label>
-                  <input
-                    type="date"
-                    name="setDate"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                    required
-                  />
-                </div>
-                                <div className="lg:col-span-4 border-t my-2"></div>
-                                {/* Candling */}
-                <div>
-                  <label className="block font-medium text-gray-700">Date Candled</label>
-                  <input
-                    type="date"
-                    name="dateCandled"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                                <div className="lg:col-span-4 border-t my-2"></div>
-                                {/* Expectation */}
-                {/* Exp Hatch Qty field removed - auto-calculated (eggs set × 0.8) */}
-                {/* Pct Adj field removed - submitted as blank */}
-                {/* Exp Hatch Qty Adj field removed - submitted as blank */}
-                                <div className="lg:col-span-4 border-t my-2"></div>
-                                {/* Outcome */}
-                {/* Date Hatched field removed - submitted as blank */}
-                {/* Avg Chicks Wgt field removed - submitted as blank */}
-                {/* Chicks Hatched field removed - submitted as blank */}
-                {/* Chicks Culled field removed - auto-calculated (chicks hatched - chicks sold) */}
-                {/* Vaccination Profile field removed - submitted as blank */}
-                <div>
-                  <label className="block font-medium text-gray-700">Chicks Sold</label>
-                  <input
-                    type="number"
-                    name="chicksSold"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+
+                                {/* Column 3 */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Flock Number</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                name="supplierFlockNumber"
+                                                value={newCycleData.supplierFlockNumber || ''}
+                                                onChange={handleSupplierFlockNumberChange}
+                                                className="modern-input w-full"
+                                                placeholder="Enter flock number"
+                                            />
+                                            
+                                            {/* Suggestions Dropdown */}
+                                            {showSuggestions && flockSuggestions.length > 0 && (
+                                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto modern-card">
+                                                    {flockSuggestions.map((flock, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100"
+                                                            onClick={() => handleSuggestionSelect(flock)}
+                                                        >
+                                                            <div className="font-medium text-gray-900">{flock.flock_number}</div>
+                                                            <div className="text-sm text-gray-500">{flock.supplier}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsAddFlockModalVisible(true)}
+                                            className="btn-primary px-3 py-2 text-sm mt-2"
+                                        >
+                                            + Add New Flock
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Eggs Set</label>
+                                        <input
+                                            type="number"
+                                            name="eggsSet"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Set</label>
+                                        <input
+                                            type="date"
+                                            name="setDate"
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full"
+                                            required
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsNewCycleModalVisible(false)}
-                  className="btn-secondary px-6 py-3"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary px-6 py-3"
-                >
-                  Save Cycle
-                </button>
+                            {/* Action Buttons */}
+                            <div className="flex justify-center gap-4 mt-8">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsNewCycleModalVisible(false)}
+                                    className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors shadow-sm"
+                                >
+                                    Save
+                                </button>
                             </div>
                         </form>
                     </div>

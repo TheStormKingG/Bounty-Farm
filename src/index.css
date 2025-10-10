@@ -350,6 +350,50 @@ body {
   animation: fadeInUp 0.6s ease-out;
 }
 
+/* Modern Input Styles */
+.modern-input {
+  background: var(--color-white);
+  border: 2px solid var(--color-beige-grey);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  color: var(--color-charcoal);
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 4px rgba(92, 58, 107, 0.1);
+}
+
+.modern-input::placeholder {
+  color: var(--color-light-grey);
+}
+
+/* Modern Select Styles */
+.modern-select {
+  background: var(--color-white);
+  border: 2px solid var(--color-beige-grey);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  color: var(--color-charcoal);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.modern-select:focus {
+  outline: none;
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 4px rgba(92, 58, 107, 0.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modern-card {
