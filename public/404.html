@@ -4,27 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bounty Farm Hatchery MIS</title>
-    <script>
-        // GitHub Pages SPA redirect - handle all cases
-        (function() {
-            var l = window.location;
-            var pathSegmentsToKeep = 1;
-            
-            // Extract the path after /Bounty-Farm/
-            var pathAfterBase = l.pathname.split('/').slice(2).join('/');
-            
-            // Build the redirect URL
-            var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-                '/Bounty-Farm/?/' + pathAfterBase.replace(/&/g, '~and~') +
-                (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-                l.hash;
-            
-            // Use replace to avoid adding to history
-            window.location.replace(redirectUrl);
-        })();
-    </script>
 </head>
 <body>
-    <p>Redirecting...</p>
+    <p>Page not found. <a href="/">Go to home</a></p>
 </body>
 </html>
