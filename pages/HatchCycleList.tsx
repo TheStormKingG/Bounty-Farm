@@ -166,6 +166,10 @@ const HatchCycleList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Editable cell state
+  const [editableCell, setEditableCell] = useState<{cycleId: string, column: string} | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
+  
   // Flock suggestions state
   const [flocks, setFlocks] = useState<any[]>([]);
   const [flockSuggestions, setFlockSuggestions] = useState<any[]>([]);
@@ -230,6 +234,148 @@ const HatchCycleList: React.FC = () => {
     } else {
       return isHovered ? '#e3f3e7' : 'white';
     }
+  };
+
+  // Cell editing functions
+  const handleCellClick = (cycleId: string, column: string, currentValue: any) => {
+    setEditableCell({ cycleId, column });
+    setEditingValue(currentValue?.toString() || '');
+  };
+
+  const handleCellKeyDown = (e: React.KeyboardEvent, cycleId: string, column: string) => {
+    if (e.key === 'Enter') {
+      saveCellEdit(cycleId, column);
+    } else if (e.key === 'Escape') {
+      cancelCellEdit();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      navigateToNextCell(cycleId, column);
+    }
+  };
+
+  const navigateToNextCell = (currentCycleId: string, currentColumn: string) => {
+    const columns = [
+      'HATCH NO', 'HATCH COLOUR', 'FLOCKS RECVD', 'SUPPLIER FLOCK NUMBER', 
+      'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
+      'EGGS CRACKED', 'EGGS SET', 'DATE PACKED', 'DATE SET', 'DATE CANDLED', 
+      'EXP HATCH QTY', 'PCT ADJ', 'EXP HATCH QTY ADJ', 'HATCH DATE', 
+      'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINATION PROFILE', 
+      'CHICKS SOLD', 'STATUS', 'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
+    ];
+    
+    const currentIndex = columns.indexOf(currentColumn);
+    if (currentIndex < columns.length - 1) {
+      const nextColumn = columns[currentIndex + 1];
+      const currentCycle = cycles.find(c => c.id === currentCycleId);
+      const nextValue = getCellValue(currentCycle!, nextColumn);
+      setEditableCell({ cycleId: currentCycleId, column: nextColumn });
+      setEditingValue(nextValue?.toString() || '');
+    }
+  };
+
+  const saveCellEdit = async (cycleId: string, column: string) => {
+    try {
+      const cycle = cycles.find(c => c.id === cycleId);
+      if (!cycle) return;
+
+      // Map column names to database field names
+      const columnToFieldMap: { [key: string]: string } = {
+        'HATCH NO': 'hatch_no',
+        'HATCH COLOUR': 'hatch_colour',
+        'FLOCKS RECVD': 'flocks_recvd',
+        'SUPPLIER FLOCK NUMBER': 'supplier_flock_number',
+        'SUPPLIER NAME': 'supplier_name',
+        'CASES RECVD': 'cases_recvd',
+        'EGGS RECVD': 'eggs_recd',
+        'AVG EGG WGT': 'avg_egg_wgt',
+        'EGGS CRACKED': 'eggs_cracked',
+        'EGGS SET': 'eggs_set',
+        'DATE PACKED': 'date_packed',
+        'DATE SET': 'date_set',
+        'DATE CANDLED': 'date_candled',
+        'EXP HATCH QTY': 'exp_hatch_qty',
+        'PCT ADJ': 'pct_adj',
+        'EXP HATCH QTY ADJ': 'exp_hatch_qty_adj',
+        'HATCH DATE': 'hatch_date',
+        'AVG CHICKS WGT': 'avg_chicks_wgt',
+        'CHICKS HATCHED': 'chicks_hatched',
+        'CHICKS CULLED': 'chicks_culled',
+        'VACCINATION PROFILE': 'vaccination_profile',
+        'CHICKS SOLD': 'chicks_sold',
+        'STATUS': 'status'
+      };
+
+      const fieldName = columnToFieldMap[column];
+      if (!fieldName) return;
+
+      // Convert value based on column type
+      let convertedValue: any = editingValue;
+      if (column.includes('DATE')) {
+        convertedValue = editingValue || null;
+      } else if (column.includes('WGT') || column.includes('ADJ') || column.includes('QTY') || column.includes('SET') || column.includes('CRACKED') || column.includes('RECVD') || column.includes('HATCHED') || column.includes('CULLED') || column.includes('SOLD')) {
+        convertedValue = editingValue ? parseFloat(editingValue) : null;
+      } else if (column === 'FLOCKS RECVD') {
+        convertedValue = editingValue ? editingValue.split(',').map((f: string) => f.trim()).join(',') : null;
+      }
+
+      // Update in Supabase
+      const { error } = await supabase
+        .from('hatch_cycles')
+        .update({ [fieldName]: convertedValue })
+        .eq('id', cycleId);
+
+      if (error) {
+        console.error('Error updating cell:', error);
+        setError('Failed to update cell. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setCycles(prev => prev.map(c => 
+        c.id === cycleId 
+          ? { ...c, [fieldName]: convertedValue }
+          : c
+      ));
+
+      setEditableCell(null);
+      setEditingValue('');
+    } catch (err) {
+      console.error('Unexpected error updating cell:', err);
+      setError('An unexpected error occurred while updating the cell.');
+    }
+  };
+
+  const cancelCellEdit = () => {
+    setEditableCell(null);
+    setEditingValue('');
+  };
+
+  // Helper function to render editable cell content
+  const renderEditableCell = (cycle: HatchCycle, column: string, value: any, cellClass: string) => {
+    const isEditing = editableCell?.cycleId === cycle.id && editableCell?.column === column;
+    
+    if (isEditing) {
+      return (
+        <input
+          type={column.includes('DATE') ? 'date' : column.includes('WGT') || column.includes('ADJ') || column.includes('QTY') || column.includes('SET') || column.includes('CRACKED') || column.includes('RECVD') || column.includes('HATCHED') || column.includes('CULLED') || column.includes('SOLD') ? 'number' : 'text'}
+          value={editingValue}
+          onChange={(e) => setEditingValue(e.target.value)}
+          onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+          onBlur={() => saveCellEdit(cycle.id, column)}
+          className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          autoFocus
+        />
+      );
+    }
+    
+    return (
+      <span 
+        className="cursor-pointer hover:bg-blue-100 px-1 py-1 rounded"
+        onClick={() => handleCellClick(cycle.id, column, value)}
+      >
+        {value || '-'}
+      </span>
+    );
   };
 
   // Helper function to get cell value for sorting/filtering
@@ -853,65 +999,65 @@ const HatchCycleList: React.FC = () => {
                 {processedCycles.map((cycle) => (
                                 <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
-                      {cycle.hatchNo}
+                      {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.colourCode || '-'}
+                      {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.flocksRecd?.join(', ') || '-'}
+                      {renderEditableCell(cycle, 'FLOCKS RECVD', cycle.flocksRecd?.join(', '), 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.supplierFlockNumber || '-'}
+                      {renderEditableCell(cycle, 'SUPPLIER FLOCK NUMBER', cycle.supplierFlockNumber, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.supplierName || '-'}
+                      {renderEditableCell(cycle, 'SUPPLIER NAME', cycle.supplierName, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.casesRecd?.toLocaleString() || '-'}
+                      {renderEditableCell(cycle, 'CASES RECVD', cycle.casesRecd?.toLocaleString(), 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.eggsRecd?.toLocaleString() || '-'}
+                      {renderEditableCell(cycle, 'EGGS RECVD', cycle.eggsRecd?.toLocaleString(), 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.avgEggWgt ?? '-'}
+                      {renderEditableCell(cycle, 'AVG EGG WGT', cycle.avgEggWgt, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.eggsCracked?.toLocaleString() || '-'}
+                      {renderEditableCell(cycle, 'EGGS CRACKED', cycle.eggsCracked?.toLocaleString(), 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      <HighlightedCell>{(cycle.eggsSet ?? 0).toLocaleString()}</HighlightedCell>
+                      <HighlightedCell>{renderEditableCell(cycle, 'EGGS SET', (cycle.eggsSet ?? 0).toLocaleString(), 'yellow-cell')}</HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.datePacked || '-'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.setDate}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.dateCandled || '-'}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {cycle.expHatchQty?.toLocaleString() || '-'}
+                      {renderEditableCell(cycle, 'EXP HATCH QTY', cycle.expHatchQty?.toLocaleString(), 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : '-'}
+                      {renderEditableCell(cycle, 'PCT ADJ', typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : cycle.pctAdj, 'yellow-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       <HighlightedCell>
-                        {cycle.expHatchQtyAdj?.toLocaleString() || '-'}
+                        {renderEditableCell(cycle, 'EXP HATCH QTY ADJ', cycle.expHatchQtyAdj?.toLocaleString(), 'yellow-cell')}
                       </HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap white-cell">{cycle.hatchDate || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">{cycle.avgChicksWgt ?? '-'}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
                       <HighlightedCell>
-                        {cycle.outcome.hatched?.toLocaleString() || '-'}
+                        {renderEditableCell(cycle, 'CHICKS HATCHED', cycle.outcome.hatched?.toLocaleString(), 'white-cell')}
                       </HighlightedCell>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.outcome.culled?.toLocaleString() || '-'}
+                      {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.vaccinationProfile || '-'}
+                      {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
                       <HighlightedCell>
-                        {cycle.chicksSold?.toLocaleString() || '-'}
+                        {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
                       </HighlightedCell>
                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap white-cell">
@@ -944,16 +1090,16 @@ const HatchCycleList: React.FC = () => {
                                         )}
                                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.createdBy || '-'}
+                      {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}
+                      {renderEditableCell(cycle, 'CREATED AT', cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : null, 'white-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.updatedBy || '-'}
+                      {renderEditableCell(cycle, 'UPDATED BY', cycle.updatedBy, 'white-cell')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}
+                      {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
                                     </td>
                                 </tr>
                             ))}
