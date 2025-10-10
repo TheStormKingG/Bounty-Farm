@@ -75,15 +75,15 @@
   <body class="bg-gray-100">
     <div id="root"></div>
     <script>
-      // GitHub Pages SPA redirect handler
+      // GitHub Pages SPA redirect handler for /Bounty-Farm/ base path
       (function(l) {
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
           }).join('?');
-          window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
-          );
+          // Ensure the path starts with /Bounty-Farm/
+          var newPath = '/Bounty-Farm/' + decoded;
+          window.history.replaceState(null, null, newPath + l.hash);
         }
       }(window.location))
     </script>

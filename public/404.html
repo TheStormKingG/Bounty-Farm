@@ -5,19 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bounty Farm Hatchery MIS</title>
     <script>
-        // GitHub Pages SPA redirect
-        // This script takes the current URL and redirects to index.html with the path as a query parameter
-        // Then index.html will handle the client-side routing
-        
-        var pathSegmentsToKeep = 0;
+        // GitHub Pages SPA redirect for /Bounty-Farm/ base path
+        var pathSegmentsToKeep = 1; // Keep the first segment (/Bounty-Farm/)
         var l = window.location;
-        l.replace(
-            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-            l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        
+        // Extract the path after /Bounty-Farm/
+        var pathAfterBase = l.pathname.split('/').slice(2).join('/');
+        
+        // Build the redirect URL
+        var redirectUrl = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            '/Bounty-Farm/?/' + pathAfterBase.replace(/&/g, '~and~') +
             (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-            l.hash
-        );
+            l.hash;
+            
+        l.replace(redirectUrl);
     </script>
 </head>
 <body>
