@@ -128,7 +128,7 @@ const mapTableRowToCycle = (r: any): HatchCycle => ({
 // Map from UI newCycle => base table payload with quoted keys
 const toBaseTablePayload = (c: HatchCycle) => ({
   hatch_no: c.hatchNo,
-  hatch_colour: c.colourCode ? String(c.colourCode).split('-').pop() : null,
+  hatch_colour: c.colourCode ?? null, // Store full format (1-BLUE, 2-ORANGE, etc.)
   flocks_recvd: (c.flocksRecd ?? []).join(', '),
   supplier_flock_number: c.supplierFlockNumber ?? null,
   supplier_name: c.supplierName ?? null,
@@ -387,8 +387,8 @@ const HatchCycleList: React.FC = () => {
                 ...(prev[parentKey] as object),
                 [name]: value === '' ? undefined : Number(value),
       },
-    }));
-  };
+        }));
+    };
 
   // Handle supplier flock number change and auto-fill supplier name
   const handleSupplierFlockNumberChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -747,7 +747,7 @@ const HatchCycleList: React.FC = () => {
                       {cycle.hatchNo}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {colourLabel(cycle.colourCode as any)}
+                      {cycle.colourCode || '-'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {cycle.flocksRecd?.join(', ') || '-'}
@@ -871,7 +871,7 @@ const HatchCycleList: React.FC = () => {
                                         <option value="">Select Colour</option>
                     {Object.values(HatchColourCode).map((c) => (
                       <option key={c} value={c}>
-                        {colourLabel(c)}
+                        {c}
                       </option>
                     ))}
                                     </select>
