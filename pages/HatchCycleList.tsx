@@ -142,8 +142,8 @@ const toBaseTablePayload = (c: HatchCycle) => ({
   date_candled: c.dateCandled ?? null,
   // Note: candling_clears and candling_early_dead columns don't exist in current table
   exp_hatch_qty: c.expHatchQty ?? null, // Auto-calculated (eggs set × 0.8)
-  // pct_adj: c.pctAdj ?? null,
-  // exp_hatch_qty_adj: c.expHatchQtyAdj ?? null,
+  pct_adj: c.pctAdj ?? null, // Submitted as blank
+  exp_hatch_qty_adj: c.expHatchQtyAdj ?? null, // Submitted as blank
   hatch_date: c.hatchDate ?? null,
   avg_chicks_wgt: c.avgChicksWgt ?? null,
   chicks_hatched: c.outcome?.hatched ?? null,
@@ -539,7 +539,7 @@ const HatchCycleList: React.FC = () => {
         const eggsSet = newCycleData.eggsSet ?? 0;
         const eggsCracked = eggsRecd - eggsSet; // Auto-calculate eggs cracked
         const expHatchQty = Math.round(eggsSet * 0.8); // Auto-calculate exp hatch qty (80% of eggs set)
-        const chicksHatched = newCycleData.outcome?.hatched ?? 0;
+        const chicksHatched = 0; // Submitted as blank
         const chicksSold = newCycleData.chicksSold ?? 0;
         const chicksCulled = chicksHatched - chicksSold; // Auto-calculate chicks culled
 
@@ -551,12 +551,17 @@ const HatchCycleList: React.FC = () => {
         eggsCracked, // Auto-calculated
         eggsSet: eggsSet,
         expHatchQty, // Auto-calculated
+        hatchDate: undefined, // Submitted as blank
+        avgChicksWgt: undefined, // Submitted as blank
+        vaccinationProfile: undefined, // Submitted as blank
+        pctAdj: undefined, // Submitted as blank
+        expHatchQtyAdj: undefined, // Submitted as blank
         setDate:
           newCycleData.setDate || new Date().toISOString().split('T')[0],
             status: 'OPEN', // Always OPEN for new entries
             candling: newCycleData.candling || {},
             outcome: {
-              ...newCycleData.outcome,
+              hatched: chicksHatched, // Submitted as blank
               culled: chicksCulled, // Auto-calculated
             },
         createdBy: 'clerk-01', // mock user (not stored in DB)
@@ -1051,65 +1056,15 @@ const HatchCycleList: React.FC = () => {
                                 <div className="lg:col-span-4 border-t my-2"></div>
                                 {/* Expectation */}
                 {/* Exp Hatch Qty field removed - auto-calculated (eggs set × 0.8) */}
-                <div>
-                  <label className="block font-medium text-gray-700">Pct Adj</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    name="pctAdj"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Exp Hatch Qty Adj</label>
-                  <input
-                    type="number"
-                    name="expHatchQtyAdj"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Pct Adj field removed - submitted as blank */}
+                {/* Exp Hatch Qty Adj field removed - submitted as blank */}
                                 <div className="lg:col-span-4 border-t my-2"></div>
                                 {/* Outcome */}
-                <div>
-                  <label className="block font-medium text-gray-700">Date Hatched</label>
-                  <input
-                    type="date"
-                    name="hatchDate"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium text-gray-700">Avg Chicks Wgt</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    name="avgChicksWgt"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-700">Chicks Hatched</label>
-                  <input
-                    type="number"
-                    name="hatched"
-                    onChange={(e) => handleNestedChange(e, 'outcome')}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Date Hatched field removed - submitted as blank */}
+                {/* Avg Chicks Wgt field removed - submitted as blank */}
+                {/* Chicks Hatched field removed - submitted as blank */}
                 {/* Chicks Culled field removed - auto-calculated (chicks hatched - chicks sold) */}
-                <div>
-                  <label className="block font-medium text-gray-700">Vaccination Profile</label>
-                  <input
-                    type="text"
-                    name="vaccinationProfile"
-                    onChange={handleFormChange}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  />
-                </div>
+                {/* Vaccination Profile field removed - submitted as blank */}
                 <div>
                   <label className="block font-medium text-gray-700">Chicks Sold</label>
                   <input
