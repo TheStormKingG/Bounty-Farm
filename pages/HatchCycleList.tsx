@@ -501,17 +501,21 @@ const HatchCycleList: React.FC = () => {
 
   const handleCloseCycle = async (cycleId: string) => {
     try {
+      console.log('Attempting to close cycle with ID:', cycleId);
+      
       // Update the cycle status to CLOSED in Supabase
       const { error } = await supabase
         .from('hatch_cycles')
         .update({ status: 'CLOSED' })
-        .eq('hatch_no', cycleId);
+        .eq('id', cycleId);
 
       if (error) {
         console.error('Error closing cycle:', error);
         setError('Failed to close cycle. Please try again.');
         return;
       }
+
+      console.log('Successfully closed cycle in Supabase');
 
       // Update local state
       setCycles(prev => prev.map(cycle => 
@@ -527,17 +531,21 @@ const HatchCycleList: React.FC = () => {
 
   const handleReopenCycle = async (cycleId: string) => {
     try {
+      console.log('Attempting to reopen cycle with ID:', cycleId);
+      
       // Update the cycle status to OPEN in Supabase
       const { error } = await supabase
         .from('hatch_cycles')
         .update({ status: 'OPEN' })
-        .eq('hatch_no', cycleId);
+        .eq('id', cycleId);
 
       if (error) {
         console.error('Error reopening cycle:', error);
         setError('Failed to reopen cycle. Please try again.');
         return;
       }
+
+      console.log('Successfully reopened cycle in Supabase');
 
       // Update local state
       setCycles(prev => prev.map(cycle => 
