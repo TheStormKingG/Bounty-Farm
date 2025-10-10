@@ -525,6 +525,32 @@ const HatchCycleList: React.FC = () => {
     }
   };
 
+  const handleReopenCycle = async (cycleId: string) => {
+    try {
+      // Update the cycle status to OPEN in Supabase
+      const { error } = await supabase
+        .from('hatch_cycles')
+        .update({ status: 'OPEN' })
+        .eq('hatch_no', cycleId);
+
+      if (error) {
+        console.error('Error reopening cycle:', error);
+        setError('Failed to reopen cycle. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setCycles(prev => prev.map(cycle => 
+        cycle.id === cycleId 
+          ? { ...cycle, status: 'OPEN' as const }
+          : cycle
+      ));
+    } catch (err) {
+      console.error('Unexpected error reopening cycle:', err);
+      setError('An unexpected error occurred while reopening the cycle.');
+    }
+  };
+
   const handleAddNewCycle = async (e: React.FormEvent) => {
         e.preventDefault();
     try {
@@ -867,9 +893,18 @@ const HatchCycleList: React.FC = () => {
                           </button>
                         </div>
                                         ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          Closed
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Closed
+                          </span>
+                          <button
+                            onClick={() => handleReopenCycle(cycle.id)}
+                            className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                            title="Reopen Cycle"
+                          >
+                            &lt;
+                          </button>
+                        </div>
                                         )}
                                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
