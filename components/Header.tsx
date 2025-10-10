@@ -12,17 +12,17 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-md p-4 flex justify-end items-center">
-      <div className="flex items-center space-x-4">
+    <header className="modern-header p-6 flex justify-end items-center">
+      <div className="flex items-center space-x-6">
         {user && (
           <div className="text-right">
-            <p className="font-semibold text-gray-700">{user.name}</p>
-            <p className="text-sm text-gray-500">{user.role}</p>
+            <p className="font-semibold text-[#333333] text-lg">{user.name}</p>
+            <p className="text-sm text-[#AAAAAA] font-medium">{user.role}</p>
           </div>
         )}
         <button
           onClick={handleLogout}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+          className="btn-secondary px-6 py-2 text-sm"
         >
           Logout
         </button>

@@ -132,7 +132,7 @@ const AuthCallback: React.FC = () => {
             <button
               type="submit"
               disabled={busy}
-              className="w-full bg-bounty-blue-600 text-white py-2.5 rounded hover:bg-bounty-blue-700 disabled:opacity-60"
+              className="w-full btn-blue py-3 disabled:opacity-60"
             >
               {busy ? 'Saving…' : 'Save password'}
             </button>

@@ -258,73 +258,73 @@ const Settings: React.FC = () => {
     // The alert is a placeholder for the add/edit functionality.
 
     return (
-        <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-800">Settings</h2>
+        <div className="space-y-8 animate-fade-in-up">
+            <h1 className="heading-primary">Settings</h1>
             
             {/* User Management Section - Only visible to Admin */}
             {user?.role === Role.Admin && (
                 <Card title="Manage Users">
                     {/* Error Message */}
                     {error && (
-                        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
                             {error}
                         </div>
                     )}
 
-                    <div className="mb-4">
+                    <div className="mb-6">
                         <button 
                             onClick={() => setIsUserModalVisible(true)} 
-                            className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 text-sm"
+                            className="btn-primary px-6 py-3 text-sm"
                         >
-                            + Add User
+                            <span>+</span> Add User
                         </button>
                     </div>
 
                     {/* Loading State */}
                     {loading ? (
                         <div className="flex justify-center items-center py-8">
-                            <div className="text-lg text-gray-600">Loading users...</div>
+                            <div className="text-lg text-[#AAAAAA]">Loading users...</div>
                         </div>
                     ) : (
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="modern-table min-w-full">
+                        <thead>
                             <tr>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Password</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Name</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Email</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Password</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Role</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody>
                             {users.map(u => (
-                                <tr key={u.id}>
-                                    <td className="px-4 py-2 text-sm">{u.name}</td>
-                                    <td className="px-4 py-2 text-sm">{u.email}</td>
-                                    <td className="px-4 py-2 text-sm">
-                                        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                <tr key={u.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                                    <td className="px-4 py-3 text-sm">{u.name}</td>
+                                    <td className="px-4 py-3 text-sm">{u.email}</td>
+                                    <td className="px-4 py-3 text-sm">
+                                        <span className="font-mono text-xs bg-[#F5F0EE] px-2 py-1 rounded">
                                             {u.password || 'N/A'}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 text-sm">
+                                    <td className="px-4 py-3 text-sm">
                                         <span className={`px-2 py-1 text-xs rounded-full ${
-                                            u.role === Role.Admin ? 'bg-red-100 text-red-800' :
-                                            u.role === Role.HatcheryClerk ? 'bg-green-100 text-green-800' :
-                                            'bg-yellow-100 text-yellow-800'
+                                            u.role === Role.Admin ? 'bg-[#FFE4D6] text-[#5C3A6B]' :
+                                            u.role === Role.HatcheryClerk ? 'bg-[#FFE4D6] text-[#F86F6F]' :
+                                            'bg-[#FFE4D6] text-[#FFB366]'
                                         }`}>
                                             {u.role}
                                         </span>
                                     </td>
-                                    <td className="px-4 py-2 text-sm space-x-2">
+                                    <td className="px-4 py-3 text-sm space-x-2">
                                         <button 
                                             onClick={() => handleEditUser(u)} 
-                                            className="text-bounty-blue-600 hover:underline"
+                                            className="text-[#5C3A6B] hover:underline font-medium"
                                         >
                                             Edit
                                         </button>
                                         <button 
                                             onClick={() => handleDeleteUser(u.id)} 
-                                            className="text-red-600 hover:underline"
+                                            className="text-[#F86F6F] hover:underline font-medium"
                                             disabled={u.id === user?.id}
                                         >
                                             Delete
@@ -411,7 +411,7 @@ const Settings: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700"
+                                    className="btn-blue px-6 py-3"
                                 >
                                     Update User
                                 </button>
@@ -426,7 +426,9 @@ const Settings: React.FC = () => {
                 {/* Manage Suppliers */}
                 <Card title="Manage Suppliers">
                     <div className="mb-4">
-                        <button onClick={() => alert('Supplier form would open here.')} className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 text-sm">+ Add Supplier</button>
+                        <button onClick={() => alert('Supplier form would open here.')} className="btn-blue px-6 py-3 text-sm">
+                            <span>+</span> Add Supplier
+                        </button>
                     </div>
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -454,7 +456,9 @@ const Settings: React.FC = () => {
                 {/* Manage Breeds */}
                 <Card title="Manage Breeds">
                     <div className="mb-4">
-                        <button onClick={() => alert('Breed form would open here.')} className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 text-sm">+ Add Breed</button>
+                        <button onClick={() => alert('Breed form would open here.')} className="btn-blue px-6 py-3 text-sm">
+                            <span>+</span> Add Breed
+                        </button>
                     </div>
                     <table className="min-w-full divide-y divide-gray-200">
                          <thead className="bg-gray-50">
@@ -480,7 +484,9 @@ const Settings: React.FC = () => {
                 {/* Manage Vaccines */}
                 <Card title="Manage Vaccines">
                      <div className="mb-4">
-                        <button onClick={() => alert('Vaccine form would open here.')} className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 text-sm">+ Add Vaccine</button>
+                        <button onClick={() => alert('Vaccine form would open here.')} className="btn-blue px-6 py-3 text-sm">
+                            <span>+</span> Add Vaccine
+                        </button>
                     </div>
                     <table className="min-w-full divide-y divide-gray-200">
                          <thead className="bg-gray-50">
@@ -508,7 +514,9 @@ const Settings: React.FC = () => {
                 {/* Manage Customers */}
                 <Card title="Manage Customers">
                     <div className="mb-4">
-                        <button onClick={() => alert('Customer form would open here.')} className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 text-sm">+ Add Customer</button>
+                        <button onClick={() => alert('Customer form would open here.')} className="btn-blue px-6 py-3 text-sm">
+                            <span>+</span> Add Customer
+                        </button>
                     </div>
                     <table className="min-w-full divide-y divide-gray-200">
                          <thead className="bg-gray-50">
@@ -610,7 +618,7 @@ const Settings: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700"
+                                    className="btn-blue px-6 py-3"
                                 >
                                     Add User
                                 </button>

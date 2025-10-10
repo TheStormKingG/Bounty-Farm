@@ -6,39 +6,56 @@ import { Role } from '../types';
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
 
-  const navLinkClasses = "flex items-center px-4 py-2 text-gray-100 hover:bg-bounty-blue-700 rounded-md transition-colors";
-  const activeNavLinkClasses = "bg-bounty-blue-700";
+  const navLinkClasses = "flex items-center px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium";
+  const activeNavLinkClasses = "bg-[#FFE4D6] text-[#5C3A6B] font-semibold";
 
   const hasRole = (roles: Role[]) => user && roles.includes(user.role);
 
   return (
-    <aside className="w-64 bg-bounty-blue-900 text-white flex-shrink-0 p-4 flex flex-col">
-      <div className="text-2xl font-bold mb-10 text-center">
-        <img src="https://picsum.photos/80/80" alt="Bounty Farm Logo" className="mx-auto rounded mb-2 w-20 h-20 object-contain"/>
-        <span className="mt-2 block text-xl">Hatchery MIS</span>
+    <aside className="modern-sidebar w-64 flex-shrink-0 p-6 flex flex-col">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <span className="text-white font-bold text-xl">BF</span>
+        </div>
+        <h1 className="heading-tertiary text-[#333333]">Hatchery MIS</h1>
       </div>
-      <nav className="space-y-2">
+      
+      <nav className="space-y-2 flex-1">
         {hasRole([Role.Admin]) && (
-            <NavLink to="/dashboard" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Dashboard</NavLink>
+            <NavLink to="/dashboard" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">📊</span>
+              Dashboard
+            </NavLink>
         )}
 
-
         {hasRole([Role.Admin, Role.HatcheryClerk]) && (
-          <NavLink to="/hatch-cycles" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Hatch Cycles</NavLink>
+          <NavLink to="/hatch-cycles" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+            <span className="mr-3">🥚</span>
+            Hatch Cycles
+          </NavLink>
         )}
         
         {hasRole([Role.Admin, Role.SalesClerk]) && (
-          <NavLink to="/sales" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>Sales & Dispatch</NavLink>
+          <NavLink to="/sales" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+            <span className="mr-3">💰</span>
+            Sales & Dispatch
+          </NavLink>
         )}
 
         {hasRole([Role.Admin]) && (
           <>
-            <div className="pt-4 mt-4 border-t border-bounty-blue-700"></div>
+            <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
             <NavLink to="/flock-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
-                Flock Management
+              <span className="mr-3">🐔</span>
+              Flock Management
+            </NavLink>
+            <NavLink to="/breed-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🧬</span>
+              Breed Management
             </NavLink>
             <NavLink to="/settings" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
-                Settings
+              <span className="mr-3">⚙️</span>
+              Settings
             </NavLink>
           </>
         )}

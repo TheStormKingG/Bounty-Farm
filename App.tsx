@@ -10,6 +10,7 @@ import { Role } from './types';
 import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
 import FlockManagement from './pages/FlockManagement';
+import BreedManagement from './pages/BreedManagement';
 
 const App: React.FC = () => {
   const { user, loading } = useAuth();
@@ -56,6 +57,7 @@ const App: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/flock-management" element={<FlockManagement />} />
+          <Route path="/breed-management" element={<BreedManagement />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 

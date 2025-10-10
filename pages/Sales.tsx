@@ -139,9 +139,9 @@ const Sales: React.FC = () => {
                 <h2 className="text-3xl font-bold text-gray-800">Sales & Dispatch</h2>
                 <button
                   onClick={handleNewOrderClick}
-                  className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700 transition-colors"
+                  className="btn-blue px-6 py-3"
                 >
-                  + New Order
+                  <span>+</span> New Order
                 </button>
             </div>
 
@@ -359,7 +359,7 @@ const Sales: React.FC = () => {
                             </div>
                             <div className="mt-6 pt-4 border-t flex justify-end space-x-3">
                                 <button type="button" onClick={() => setIsNewOrderModalVisible(false)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Order</button>
+                                <button type="submit" className="btn-green px-6 py-3">Save Order</button>
                             </div>
                         </form>
                     </div>
@@ -424,7 +424,7 @@ const Sales: React.FC = () => {
                             </div>
                             <div className="mt-6 pt-4 border-t flex justify-end space-x-3">
                                 <button type="button" onClick={() => setEditModalOrder(null)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700">Save Changes</button>
+                                <button type="submit" className="btn-blue px-6 py-3">Save Changes</button>
                             </div>
                         </form>
                     </div>

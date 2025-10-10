@@ -20,45 +20,52 @@ const orderFulfillmentData = [
     { name: 'Shortage', value: 1200 },
 ];
 
-const COLORS_PIE = ['#1d4ed8', '#f59e0b'];
+const COLORS_PIE = ['#5C3A6B', '#F86F6F'];
 
 const Dashboard: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
+    <div className="space-y-8 animate-fade-in-up">
+      <h1 className="heading-primary">Dashboard</h1>
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <h4 className="text-gray-500 text-sm font-medium">Avg. Hatchability (30d)</h4>
-            <p className="text-3xl font-bold text-bounty-blue-700">90.2%</p>
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <h4 className="text-[#AAAAAA] text-sm font-medium mb-2">Avg. Hatchability (30d)</h4>
+            <p className="text-4xl font-bold text-[#5C3A6B]">90.2%</p>
         </div>
-         <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <h4 className="text-gray-500 text-sm font-medium">Chick Cull Rate</h4>
-            <p className="text-3xl font-bold text-orange-500">0.4%</p>
+         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <h4 className="text-[#AAAAAA] text-sm font-medium mb-2">Chick Cull Rate</h4>
+            <p className="text-4xl font-bold text-[#F86F6F]">0.4%</p>
         </div>
-         <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <h4 className="text-gray-500 text-sm font-medium">Order Fulfillment</h4>
-            <p className="text-3xl font-bold text-green-600">95.4%</p>
+         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <h4 className="text-[#AAAAAA] text-sm font-medium mb-2">Order Fulfillment</h4>
+            <p className="text-4xl font-bold text-[#FFB366]">95.4%</p>
         </div>
-         <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <h4 className="text-gray-500 text-sm font-medium">Upcoming Hatch</h4>
-            <p className="text-3xl font-bold text-gray-700">3 days</p>
+         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <h4 className="text-[#AAAAAA] text-sm font-medium mb-2">Upcoming Hatch</h4>
+            <p className="text-4xl font-bold text-[#333333]">3 days</p>
         </div>
       </div>
       
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card title="Weekly Hatchability Trend">
             <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={hatchData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis unit="%" />
-                    <Tooltip />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F5F0EE" />
+                    <XAxis dataKey="name" stroke="#333333" />
+                    <YAxis unit="%" stroke="#333333" />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #F5F0EE',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                      }}
+                    />
                     <Legend />
-                    <Bar dataKey="hatchability" fill="#1d4ed8" name="Hatchability" />
-                    <Bar dataKey="fertileHatch" fill="#2563eb" name="Fertile Hatch" />
+                    <Bar dataKey="hatchability" fill="#5C3A6B" name="Hatchability" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="fertileHatch" fill="#F86F6F" name="Fertile Hatch" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </Card>
@@ -67,10 +74,25 @@ const Dashboard: React.FC = () => {
             <Card title="Chick Grading (Last Hatch)">
                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                        <Pie data={chickGradingData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                        <Pie 
+                          data={chickGradingData} 
+                          dataKey="value" 
+                          nameKey="name" 
+                          cx="50%" 
+                          cy="50%" 
+                          outerRadius={80} 
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
                             {chickGradingData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS_PIE[index % COLORS_PIE.length]} />)}
                         </Pie>
-                         <Tooltip />
+                         <Tooltip 
+                           contentStyle={{
+                             backgroundColor: '#FFFFFF',
+                             border: '1px solid #F5F0EE',
+                             borderRadius: '12px',
+                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                           }}
+                         />
                          <Legend />
                     </PieChart>
                 </ResponsiveContainer>
@@ -78,10 +100,27 @@ const Dashboard: React.FC = () => {
              <Card title="Order Fulfillment (Month)">
                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
-                        <Pie data={orderFulfillmentData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} label>
+                        <Pie 
+                          data={orderFulfillmentData} 
+                          dataKey="value" 
+                          nameKey="name" 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius={50} 
+                          outerRadius={80} 
+                          paddingAngle={5} 
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
                             {orderFulfillmentData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS_PIE[index % COLORS_PIE.length]} />)}
                         </Pie>
-                         <Tooltip />
+                         <Tooltip 
+                           contentStyle={{
+                             backgroundColor: '#FFFFFF',
+                             border: '1px solid #F5F0EE',
+                             borderRadius: '12px',
+                             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)'
+                           }}
+                         />
                          <Legend />
                     </PieChart>
                 </ResponsiveContainer>

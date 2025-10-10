@@ -178,3 +178,16 @@ export interface NonViableEgg {
   createdBy: string;
   createdAt: string;
 }
+
+export interface Flock {
+  id: string;
+  flockNumber: string;
+  flockName?: string;
+  supplier: string;
+  breed?: string;
+  remarks?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy?: string;
+  updatedAt?: string;
+}

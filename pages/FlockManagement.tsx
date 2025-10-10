@@ -1,19 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/supabase';
 import Card from '../components/Card';
-
-interface Flock {
-  id: string;
-  flockNumber: string;
-  flockName?: string;
-  supplier: string;
-  breed?: string;
-  remarks?: string;
-  createdBy: string;
-  createdAt: string;
-  updatedBy?: string;
-  updatedAt?: string;
-}
+import AddFlockForm from '../components/AddFlockForm';
+import { Flock } from '../types';
 
 const FlockManagement: React.FC = () => {
   const [flocks, setFlocks] = useState<Flock[]>([]);
@@ -21,14 +10,10 @@ const FlockManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [newFlock, setNewFlock] = useState<Partial<Flock>>({
-    flockNumber: '',
-    flockName: '',
-    supplier: '',
-    breed: '',
-    remarks: '',
-  });
-
+  
+  // Breeds state for dropdown
+  const [breeds, setBreeds] = useState<any[]>([]);
+  
   // Sorting and filtering state
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -131,24 +116,40 @@ const FlockManagement: React.FC = () => {
     refreshData();
   }, []);
 
-  const handleAddFlock = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFlock.flockNumber || !newFlock.supplier) {
-      alert('Please fill in Flock Number and Supplier');
-      return;
-    }
+  // Fetch breeds data for dropdown
+  useEffect(() => {
+    const fetchBreeds = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('breeds')
+          .select('breed_name, breed_code')
+          .order('breed_name');
 
+        if (error) {
+          console.error('Error fetching breeds:', error);
+        } else {
+          setBreeds(data || []);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching breeds:', err);
+      }
+    };
+
+    fetchBreeds();
+  }, []);
+
+  const handleAddFlock = async (flockData: Partial<Flock>) => {
     try {
       setError(null);
       
-      const { data: flockData, error: flockError } = await supabase
+      const { data: flockDataResult, error: flockError } = await supabase
         .from('flocks')
         .insert([{
-          flock_number: newFlock.flockNumber,
-          flock_name: newFlock.flockName || null,
-          supplier: newFlock.supplier,
-          breed: newFlock.breed || null,
-          remarks: newFlock.remarks || null,
+          flock_number: flockData.flockNumber,
+          flock_name: flockData.flockName || null,
+          supplier: flockData.supplier,
+          breed: flockData.breed || null,
+          remarks: flockData.remarks || null,
           created_by: 'admin', // TODO: Get from auth context
         }])
         .select()
@@ -162,23 +163,19 @@ const FlockManagement: React.FC = () => {
 
       // Update local state
       const addedFlock: Flock = {
-        id: flockData.id,
-        flockNumber: flockData.flock_number,
-        supplier: flockData.supplier,
-        breed: flockData.breed,
-        remarks: flockData.remarks,
-        createdBy: flockData.created_by,
-        createdAt: flockData.created_at,
+        id: flockDataResult.id,
+        flockNumber: flockDataResult.flock_number,
+        flockName: flockDataResult.flock_name,
+        supplier: flockDataResult.supplier,
+        breed: flockDataResult.breed,
+        remarks: flockDataResult.remarks,
+        createdBy: flockDataResult.created_by,
+        createdAt: flockDataResult.created_at,
+        updatedBy: flockDataResult.updated_by,
+        updatedAt: flockDataResult.updated_at,
       };
 
       setFlocks(prev => [...prev, addedFlock]);
-      setIsModalVisible(false);
-      setNewFlock({
-        flockNumber: '',
-        supplier: '',
-        breed: '',
-        remarks: '',
-      });
       alert(`Flock ${addedFlock.flockNumber} added successfully!`);
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -324,17 +321,17 @@ const FlockManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in-up">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-gray-800">Flock Management</h2>
-        <div className="flex space-x-3">
+        <h1 className="heading-primary">Flock Management</h1>
+        <div className="flex space-x-4">
           <button 
             onClick={refreshData} 
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="btn-secondary px-4 py-2"
           >
             Refresh Data
           </button>
-          <label className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+          <label className="btn-coral px-4 py-2 cursor-pointer">
             {isUploading ? 'Uploading...' : 'Upload CSV'}
             <input
               type="file"
@@ -346,16 +343,16 @@ const FlockManagement: React.FC = () => {
           </label>
           <button 
             onClick={() => setIsModalVisible(true)} 
-            className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700"
+            className="btn-primary px-4 py-2"
           >
-            + Add Flock
+            <span>+</span> Add Flock
           </button>
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
           {error}
         </div>
       )}
@@ -364,12 +361,12 @@ const FlockManagement: React.FC = () => {
         {/* Loading State */}
         {loading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="text-lg text-gray-600">Loading flocks...</div>
+            <div className="text-lg text-[#AAAAAA]">Loading flocks...</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="overflow-x-auto" style={{ maxHeight: '70vh' }}>
+            <table className="modern-table min-w-full">
+              <thead>
                 <tr>
                   {[
                     'FLOCK NUMBER',
@@ -428,17 +425,17 @@ const FlockManagement: React.FC = () => {
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {processedFlocks.map((flock) => (
-                  <tr key={flock.id}>
-                    <td className="px-4 py-2 text-sm font-mono">{flock.flockNumber}</td>
-                    <td className="px-4 py-2 text-sm">{flock.flockName || '-'}</td>
-                    <td className="px-4 py-2 text-sm">{flock.supplier}</td>
-                    <td className="px-4 py-2 text-sm">{flock.breed || '-'}</td>
-                    <td className="px-4 py-2 text-sm">{flock.remarks || '-'}</td>
-                    <td className="px-4 py-2 text-sm">{flock.createdBy}</td>
-                    <td className="px-4 py-2 text-sm">{flock.createdAt ? new Date(flock.createdAt).toLocaleDateString() : '-'}</td>
-                    <td className="px-4 py-2 text-sm">{flock.updatedBy || '-'}</td>
+                  <tr key={flock.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm font-mono">{flock.flockNumber}</td>
+                    <td className="px-4 py-3 text-sm">{flock.flockName || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{flock.supplier}</td>
+                    <td className="px-4 py-3 text-sm">{flock.breed || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{flock.remarks || '-'}</td>
+                    <td className="px-4 py-3 text-sm">{flock.createdBy}</td>
+                    <td className="px-4 py-3 text-sm">{flock.createdAt ? new Date(flock.createdAt).toLocaleDateString() : '-'}</td>
+                    <td className="px-4 py-3 text-sm">{flock.updatedBy || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -448,77 +445,12 @@ const FlockManagement: React.FC = () => {
       </Card>
 
       {/* Add Flock Modal */}
-      {isModalVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add New Flock</h3>
-            <form onSubmit={handleAddFlock} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Flock Number *</label>
-                <input
-                  type="text"
-                  value={newFlock.flockNumber || ''}
-                  onChange={(e) => setNewFlock({...newFlock, flockNumber: e.target.value})}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Flock Name</label>
-                <input
-                  type="text"
-                  value={newFlock.flockName || ''}
-                  onChange={(e) => setNewFlock({...newFlock, flockName: e.target.value})}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Supplier *</label>
-                <input
-                  type="text"
-                  value={newFlock.supplier || ''}
-                  onChange={(e) => setNewFlock({...newFlock, supplier: e.target.value})}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Breed</label>
-                <input
-                  type="text"
-                  value={newFlock.breed || ''}
-                  onChange={(e) => setNewFlock({...newFlock, breed: e.target.value})}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Remarks</label>
-                <textarea
-                  value={newFlock.remarks || ''}
-                  onChange={(e) => setNewFlock({...newFlock, remarks: e.target.value})}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsModalVisible(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-bounty-blue-600 text-white rounded-md hover:bg-bounty-blue-700"
-                >
-                  Add Flock
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddFlockForm
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSave={handleAddFlock}
+        breeds={breeds}
+      />
     </div>
   );
 };

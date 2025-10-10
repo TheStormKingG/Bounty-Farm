@@ -196,231 +196,245 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <div className="text-center mb-8">
-          <img
-            src="https://picsum.photos/150/60"
-            alt="Bounty Farm Logo"
-            className="mx-auto rounded mb-4"
-          />
-          <h1 className="text-3xl font-bold text-gray-800">Hatchery MIS</h1>
-          <p className="text-gray-500">Select your role to sign in</p>
-        </div>
-
-        {/* Role Selection Buttons */}
-        <div className="space-y-3 mb-6">
-          <div>
-            <button
-              onClick={() => handleRoleSelect(Role.Admin)}
-              className={`w-full py-3 px-4 rounded-lg transition-colors ${
-                selectedRole === Role.Admin 
-                  ? 'bg-bounty-blue-700 text-white' 
-                  : 'bg-gray-800 text-white hover:bg-gray-900'
-              }`}
-            >
-              Admin
-            </button>
-            {/* Admin Login Form */}
-            {selectedRole === Role.Admin && (
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      type="email"
-                      autoComplete="username"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
-                      {error}
-                    </div>
-                  )}
-                  {notice && (
-                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
-                      {notice}
-                    </div>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-bounty-blue-600 text-white py-2 px-4 rounded-lg hover:bg-bounty-blue-700 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
-                  >
-                    {isLoading ? 'Signing in…' : 'Sign In'}
-                  </button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="text-sm text-bounty-blue-600 hover:underline"
-                      disabled={isSendingReset}
-                    >
-                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="modern-card w-full max-w-4xl animate-fade-in-up">
+        <div className="flex h-[600px] rounded-2xl overflow-hidden">
+          {/* Left Panel - Welcome Section */}
+          <div className="w-2/5 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] relative flex items-center justify-center p-8">
+            {/* Decorative Spheres */}
+            <div className="decorative-sphere sphere-large top-8 left-8"></div>
+            <div className="decorative-sphere sphere-medium top-16 right-12"></div>
+            <div className="decorative-sphere sphere-small bottom-12 left-16"></div>
+            <div className="decorative-sphere sphere-small bottom-8 right-8"></div>
+            
+            {/* Welcome Content */}
+            <div className="text-center text-white z-10">
+              <h1 className="text-4xl font-bold mb-4">Welcome</h1>
+              <p className="text-xl opacity-90">To the zone of happiness.</p>
+            </div>
           </div>
 
-          <div>
-            <button
-              onClick={() => handleRoleSelect(Role.HatcheryClerk)}
-              className={`w-full py-3 px-4 rounded-lg transition-colors ${
-                selectedRole === Role.HatcheryClerk 
-                  ? 'bg-green-700 text-white' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              Hatchery
-            </button>
-            {/* Hatchery Login Form */}
-            {selectedRole === Role.HatcheryClerk && (
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      type="email"
-                      autoComplete="username"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
-                      {error}
-                    </div>
-                  )}
-                  {notice && (
-                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
-                      {notice}
-                    </div>
-                  )}
+          {/* Right Panel - Login Form */}
+          <div className="w-3/5 bg-[#F5F0EE] p-8 flex flex-col justify-center">
+            <div className="max-w-md mx-auto w-full">
+              <h2 className="heading-secondary mb-8">Hello! Please tell us a little bit about yourself.</h2>
+              
+              {/* Role Selection */}
+              <div className="space-y-4 mb-6">
+                <div>
                   <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
+                    onClick={() => handleRoleSelect(Role.Admin)}
+                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
+                      selectedRole === Role.Admin 
+                        ? 'btn-primary' 
+                        : 'btn-secondary'
+                    }`}
                   >
-                    {isLoading ? 'Signing in…' : 'Sign In'}
+                    Admin
                   </button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="text-sm text-green-600 hover:underline"
-                      disabled={isSendingReset}
-                    >
-                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
+                  {/* Admin Login Form */}
+                  {selectedRole === Role.Admin && (
+                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
+                          <input
+                            type="email"
+                            autoComplete="username"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="stefan.gravesande@gmail.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="Enter your password"
+                            required
+                          />
+                        </div>
+                        {error && (
+                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                            {error}
+                          </div>
+                        )}
+                        {notice && (
+                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+                            {notice}
+                          </div>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full btn-primary py-3 disabled:opacity-50"
+                        >
+                          {isLoading ? 'Signing in…' : 'Sign In'}
+                        </button>
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={handleReset}
+                            className="text-sm text-[#5C3A6B] hover:underline font-medium"
+                            disabled={isSendingReset}
+                          >
+                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
 
-          <div>
-            <button
-              onClick={() => handleRoleSelect(Role.SalesClerk)}
-              className={`w-full py-3 px-4 rounded-lg transition-colors ${
-                selectedRole === Role.SalesClerk 
-                  ? 'bg-yellow-600 text-white' 
-                  : 'bg-yellow-500 text-white hover:bg-yellow-600'
-              }`}
-            >
-              Sales
-            </button>
-            {/* Sales Login Form */}
-            {selectedRole === Role.SalesClerk && (
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg border">
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <input
-                      type="email"
-                      autoComplete="username"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="mt-1 block w-full border-gray-300 rounded-lg shadow-sm px-3 py-2"
-                      placeholder="Enter your password"
-                      required
-                    />
-                  </div>
-                  {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm">
-                      {error}
-                    </div>
-                  )}
-                  {notice && (
-                    <div className="bg-green-50 border border-green-300 text-green-700 px-3 py-2 rounded text-sm">
-                      {notice}
-                    </div>
-                  )}
+                <div>
                   <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-transform transform hover:scale-[1.01] disabled:opacity-60"
+                    onClick={() => handleRoleSelect(Role.HatcheryClerk)}
+                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
+                      selectedRole === Role.HatcheryClerk 
+                        ? 'btn-coral' 
+                        : 'btn-secondary'
+                    }`}
                   >
-                    {isLoading ? 'Signing in…' : 'Sign In'}
+                    Hatchery
                   </button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="text-sm text-yellow-600 hover:underline"
-                      disabled={isSendingReset}
-                    >
-                      {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                    </button>
-                  </div>
-                </form>
+                  {/* Hatchery Login Form */}
+                  {selectedRole === Role.HatcheryClerk && (
+                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
+                          <input
+                            type="email"
+                            autoComplete="username"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="Enter your password"
+                            required
+                          />
+                        </div>
+                        {error && (
+                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                            {error}
+                          </div>
+                        )}
+                        {notice && (
+                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+                            {notice}
+                          </div>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full btn-coral py-3 disabled:opacity-50"
+                        >
+                          {isLoading ? 'Signing in…' : 'Sign In'}
+                        </button>
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={handleReset}
+                            className="text-sm text-[#F86F6F] hover:underline font-medium"
+                            disabled={isSendingReset}
+                          >
+                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => handleRoleSelect(Role.SalesClerk)}
+                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
+                      selectedRole === Role.SalesClerk 
+                        ? 'btn-primary' 
+                        : 'btn-secondary'
+                    }`}
+                  >
+                    Sales
+                  </button>
+                  {/* Sales Login Form */}
+                  {selectedRole === Role.SalesClerk && (
+                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
+                          <input
+                            type="email"
+                            autoComplete="username"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
+                          <input
+                            type="password"
+                            autoComplete="current-password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="modern-input w-full"
+                            placeholder="Enter your password"
+                            required
+                          />
+                        </div>
+                        {error && (
+                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                            {error}
+                          </div>
+                        )}
+                        {notice && (
+                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
+                            {notice}
+                          </div>
+                        )}
+                        <button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full btn-primary py-3 disabled:opacity-50"
+                        >
+                          {isLoading ? 'Signing in…' : 'Sign In'}
+                        </button>
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={handleReset}
+                            className="text-sm text-[#5C3A6B] hover:underline font-medium"
+                            disabled={isSendingReset}
+                          >
+                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
