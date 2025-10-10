@@ -577,6 +577,17 @@ const HatchCycleList: React.FC = () => {
         const chicksSold = newCycleData.chicksSold ?? 0;
         const chicksCulled = chicksHatched - chicksSold; // Auto-calculate chicks culled
 
+        console.log('Auto-calculated values:', {
+          casesRecd,
+          eggsRecd,
+          eggsSet,
+          eggsCracked,
+          expHatchQty,
+          chicksHatched,
+          chicksSold,
+          chicksCulled
+        });
+
         const newCycle: HatchCycle = {
         id: hatchNo, // use hatchNo as stable id (base table has no id)
         hatchNo,
@@ -604,6 +615,7 @@ const HatchCycleList: React.FC = () => {
 
       // Insert into base table with QUOTED column names
       const payload = toBaseTablePayload(newCycle);
+      console.log('Payload being sent to Supabase:', payload);
       const { error } = await supabase.from('hatch_cycles').insert([payload]);
 
       if (error) {
