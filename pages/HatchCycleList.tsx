@@ -107,7 +107,7 @@ const mapTableRowToCycle = (r: any): HatchCycle => ({
     clears: undefined, // r.candling_clears ?? undefined,
     earlyDead: undefined, // r.candling_early_dead ?? undefined,
   },
-  expHatchQty: undefined, // r.exp_hatch_qty ?? undefined,
+  expHatchQty: r.exp_hatch_qty ?? undefined,
   pctAdj: undefined, // r.pct_adj ?? undefined,
   expHatchQtyAdj: undefined, // r.exp_hatch_qty_adj ?? undefined,
   hatchDate: r.hatch_date ?? undefined,
@@ -852,69 +852,69 @@ const HatchCycleList: React.FC = () => {
                         <tbody>
                 {processedCycles.map((cycle) => (
                                 <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
                       {cycle.hatchNo}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.colourCode || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.flocksRecd?.join(', ') || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.supplierFlockNumber || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.supplierName || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.casesRecd?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.eggsRecd?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.avgEggWgt ?? '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.eggsCracked?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       <HighlightedCell>{(cycle.eggsSet ?? 0).toLocaleString()}</HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.datePacked || '-'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.setDate}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>{cycle.dateCandled || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.datePacked || '-'}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.setDate}</td>
+                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{cycle.dateCandled || '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {cycle.expHatchQty?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       {typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#fff3c2] transition-colors" style={{ backgroundColor: '#ffeb99' }}>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
                       <HighlightedCell>
                         {cycle.expHatchQtyAdj?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>{cycle.hatchDate || '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>{cycle.avgChicksWgt ?? '-'}</td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                                    <td className="px-4 py-3 whitespace-nowrap white-cell">{cycle.hatchDate || '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">{cycle.avgChicksWgt ?? '-'}</td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       <HighlightedCell>
                         {cycle.outcome.hatched?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.outcome.culled?.toLocaleString() || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.vaccinationProfile || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       <HighlightedCell>
                         {cycle.chicksSold?.toLocaleString() || '-'}
                       </HighlightedCell>
                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                                         {cycle.status === 'OPEN' ? (
                         <div className="flex items-center gap-2">
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -943,16 +943,16 @@ const HatchCycleList: React.FC = () => {
                         </div>
                                         )}
                                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.createdBy || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.updatedBy || '-'}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap hover:bg-[#e3f3e7] transition-colors" style={{ backgroundColor: 'white' }}>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
                       {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}
                                     </td>
                                 </tr>

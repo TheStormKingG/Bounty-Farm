@@ -394,6 +394,25 @@ body {
   box-shadow: 0 0 0 4px rgba(92, 58, 107, 0.1);
 }
 
+/* Table Cell Background Colors */
+.yellow-cell {
+  background-color: #ffeb99;
+  transition: background-color 0.3s ease;
+}
+
+.yellow-cell:hover {
+  background-color: #fff3c2;
+}
+
+.white-cell {
+  background-color: white;
+  transition: background-color 0.3s ease;
+}
+
+.white-cell:hover {
+  background-color: #e3f3e7;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .modern-card {
