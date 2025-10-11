@@ -347,12 +347,55 @@ const HatchCycleList: React.FC = () => {
         return;
       }
 
-      // Update local state
-      setCycles(prev => prev.map(c => 
-        c.id === cycleId 
-          ? { ...c, [fieldName]: convertedValue }
-          : c
-      ));
+      // Map database field names to TypeScript interface field names
+      const dbToInterfaceMap: { [key: string]: string } = {
+        'hatch_no': 'hatchNo',
+        'hatch_colour': 'colourCode',
+        'flocks_recvd': 'flocksRecd',
+        'supplier_flock_number': 'supplierFlockNumber',
+        'supplier_name': 'supplierName',
+        'cases_recvd': 'casesRecd',
+        'eggs_recd': 'eggsRecd',
+        'avg_egg_wgt': 'avgEggWgt',
+        'eggs_cracked': 'eggsCracked',
+        'eggs_set': 'eggsSet',
+        'date_packed': 'datePacked',
+        'date_set': 'setDate',
+        'date_candled': 'dateCandled',
+        'exp_hatch_qty': 'expHatchQty',
+        'pct_adj': 'pctAdj',
+        'exp_hatch_qty_adj': 'expHatchQtyAdj',
+        'hatch_date': 'hatchDate',
+        'avg_chicks_wgt': 'avgChicksWgt',
+        'chicks_hatched': 'outcome.hatched',
+        'chicks_culled': 'outcome.culled',
+        'vaccination_profile': 'vaccinationProfile',
+        'chicks_sold': 'chicksSold',
+        'status': 'status'
+      };
+
+      const interfaceFieldName = dbToInterfaceMap[fieldName];
+      if (!interfaceFieldName) return;
+
+      // Update local state with proper field mapping
+      setCycles(prev => prev.map(c => {
+        if (c.id === cycleId) {
+          // Handle nested fields like outcome.hatched
+          if (interfaceFieldName.includes('.')) {
+            const [parentField, childField] = interfaceFieldName.split('.');
+            return {
+              ...c,
+              [parentField]: {
+                ...c[parentField as keyof HatchCycle],
+                [childField]: convertedValue
+              }
+            };
+          } else {
+            return { ...c, [interfaceFieldName]: convertedValue };
+          }
+        }
+        return c;
+      }));
 
       setEditableCell(null);
       setEditingValue('');
