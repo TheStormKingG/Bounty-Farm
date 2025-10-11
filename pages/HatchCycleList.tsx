@@ -170,10 +170,6 @@ const HatchCycleList: React.FC = () => {
   const [editableCell, setEditableCell] = useState<{cycleId: string, column: string} | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   
-  // Scroll synchronization refs
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const bodyScrollRef = useRef<HTMLDivElement>(null);
-  
   // Flock suggestions state
   const [flocks, setFlocks] = useState<any[]>([]);
   const [flockSuggestions, setFlockSuggestions] = useState<any[]>([]);
@@ -500,19 +496,6 @@ const HatchCycleList: React.FC = () => {
   const cancelCellEdit = () => {
     setEditableCell(null);
     setEditingValue('');
-  };
-
-  // Scroll synchronization functions
-  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (bodyScrollRef.current) {
-      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
-
-  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
   };
 
   // Helper function to render editable cell content
@@ -1168,14 +1151,188 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Fixed Header */}
-            <div 
-              ref={headerScrollRef}
-              className="overflow-x-auto" 
-              style={{ flexShrink: 0 }}
-              onScroll={handleHeaderScroll}
-            >
+          <div className="overflow-x-auto mt-6" style={{ maxHeight: '70vh' }}>
+            <table className="modern-table min-w-full">
+              <thead className="sticky top-0 bg-white z-10">
+                <tr>
+                  {[
+                    'HATCH NO',
+                    'HATCH COLOUR',
+                    'FLOCKS RECVD',
+                    'SUPPLIER FLOCK NUMBER',
+                    'SUPPLIER NAME',
+                    'CASES RECVD',
+                    'EGGS RECVD',
+                    'AVG EGG WGT',
+                    'EGGS CRACKED',
+                    'EGGS SET',
+                    'DATE PACKED',
+                    'DATE SET',
+                    'DATE CANDLED',
+                    'EXP HATCH QTY',
+                    'PCT ADJ',
+                    'EXP HATCH QTY ADJ',
+                    'HATCH DATE',
+                    'AVG CHICKS WGT',
+                    'CHICKS HATCHED',
+                    'CHICKS CULLED',
+                    'VACCINATION PROFILE',
+                    'CHICKS SOLD',
+                    'STATUS',
+                    'CREATED BY',
+                    'CREATED AT',
+                    'UPDATED BY',
+                    'UPDATED AT'
+                  ].map((header) => (
+                    <th key={header} className="px-4 py-3 text-left text-xs font-medium text-[#5C3A6B] uppercase tracking-wider bg-[#FFE4D6]">
+                      <div className="flex items-center gap-2">
+                        <span>{header}</span>
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => handleSort(header)}
+                            className="text-[#5C3A6B] hover:text-[#8B5A6B] transition-colors"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            onClick={() => handleSort(header, 'desc')}
+                            className="text-[#5C3A6B] hover:text-[#8B5A6B] transition-colors"
+                          >
+                            ↓
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => toggleFilter(header)}
+                          className="text-[#5C3A6B] hover:text-[#8B5A6B] transition-colors"
+                        >
+                          🔍
+                        </button>
+                      </div>
+                      {filters[header] && (
+                        <input
+                          type="text"
+                          placeholder={`Filter ${header}...`}
+                          value={filters[header]}
+                          onChange={(e) => setFilters(prev => ({ ...prev, [header]: e.target.value }))}
+                          className="mt-1 w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {processedCycles.map((cycle) => (
+                  <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
+                      {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'FLOCKS RECVD', cycle.flocksRecd?.join(', '), 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'SUPPLIER FLOCK NUMBER', cycle.supplierFlockNumber, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'SUPPLIER NAME', cycle.supplierName, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'CASES RECVD', cycle.casesRecd?.toLocaleString(), 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'EGGS RECVD', cycle.eggsRecd?.toLocaleString(), 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'AVG EGG WGT', cycle.avgEggWgt, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'EGGS CRACKED', cycle.eggsCracked?.toLocaleString(), 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <HighlightedCell>{renderEditableCell(cycle, 'EGGS SET', (cycle.eggsSet ?? 0).toLocaleString(), 'yellow-cell')}</HighlightedCell>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'EXP HATCH QTY', cycle.expHatchQty?.toLocaleString(), 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      {renderEditableCell(cycle, 'PCT ADJ', typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : cycle.pctAdj, 'yellow-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <HighlightedCell>
+                        {renderEditableCell(cycle, 'EXP HATCH QTY ADJ', cycle.expHatchQtyAdj?.toLocaleString(), 'yellow-cell')}
+                      </HighlightedCell>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <HighlightedCell>
+                        {renderEditableCell(cycle, 'CHICKS HATCHED', cycle.outcome.hatched?.toLocaleString(), 'white-cell')}
+                      </HighlightedCell>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <HighlightedCell>
+                        {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
+                      </HighlightedCell>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {cycle.status === 'OPEN' ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Open
+                          </span>
+                          <button
+                            onClick={() => handleCloseCycle(cycle.id)}
+                            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                            title="Close Cycle"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Closed
+                          </span>
+                          <button
+                            onClick={() => handleReopenCycle(cycle.id)}
+                            className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                            title="Reopen Cycle"
+                          >
+                            &lt;
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'CREATED AT', cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : null, 'white-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'UPDATED BY', cycle.updatedBy, 'white-cell')}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
               <table className="modern-table min-w-full">
                 <thead className="sticky top-0 bg-white z-10">
                   <tr>
