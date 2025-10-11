@@ -263,7 +263,7 @@ const HatchCycleList: React.FC = () => {
       console.log('Saving and navigating from:', { currentCycleId, currentColumn, editingValue });
       
       // Save current edit first
-      await saveCellEdit(currentCycleId, currentColumn);
+      await saveCellEdit(currentCycleId, currentColumn, false);
       
       const columns = [
         'HATCH NO', 'HATCH COLOUR', 'FLOCKS RECVD', 'SUPPLIER FLOCK NUMBER', 
@@ -342,7 +342,7 @@ const HatchCycleList: React.FC = () => {
     }
   };
 
-  const saveCellEdit = async (cycleId: string, column: string) => {
+  const saveCellEdit = async (cycleId: string, column: string, clearEditingState: boolean = true) => {
     try {
       console.log('Saving cell edit:', { cycleId, column, editingValue });
       const cycle = cycles.find(c => c.id === cycleId);
@@ -482,8 +482,10 @@ const HatchCycleList: React.FC = () => {
         return c;
       }));
 
-      setEditableCell(null);
-      setEditingValue('');
+      if (clearEditingState) {
+        setEditableCell(null);
+        setEditingValue('');
+      }
       console.log('Cell edit completed successfully');
     } catch (err) {
       console.error('Unexpected error updating cell:', err);
@@ -1149,10 +1151,12 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="overflow-x-auto mt-6" style={{ maxHeight: '70vh' }}>
-                    <table className="modern-table min-w-full">
-                        <thead>
-                            <tr>
+          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Fixed Header */}
+            <div className="overflow-x-auto" style={{ flexShrink: 0 }}>
+              <table className="modern-table min-w-full">
+                <thead className="sticky top-0 bg-white z-10">
+                  <tr>
                   {[
                     'HATCH NO',
                     'HATCH COLOUR',
@@ -1232,118 +1236,125 @@ const HatchCycleList: React.FC = () => {
                                 ))}
                             </tr>
                         </thead>
-                        <tbody>
-                {processedCycles.map((cycle) => (
-                                <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
-                      {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'FLOCKS RECVD', cycle.flocksRecd?.join(', '), 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'SUPPLIER FLOCK NUMBER', cycle.supplierFlockNumber, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'SUPPLIER NAME', cycle.supplierName, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'CASES RECVD', cycle.casesRecd?.toLocaleString(), 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'EGGS RECVD', cycle.eggsRecd?.toLocaleString(), 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'AVG EGG WGT', cycle.avgEggWgt, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'EGGS CRACKED', cycle.eggsCracked?.toLocaleString(), 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      <HighlightedCell>{renderEditableCell(cycle, 'EGGS SET', (cycle.eggsSet ?? 0).toLocaleString(), 'yellow-cell')}</HighlightedCell>
-                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'EXP HATCH QTY', cycle.expHatchQty?.toLocaleString(), 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      {renderEditableCell(cycle, 'PCT ADJ', typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : cycle.pctAdj, 'yellow-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap yellow-cell">
-                      <HighlightedCell>
-                        {renderEditableCell(cycle, 'EXP HATCH QTY ADJ', cycle.expHatchQtyAdj?.toLocaleString(), 'yellow-cell')}
-                      </HighlightedCell>
-                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      <HighlightedCell>
-                        {renderEditableCell(cycle, 'CHICKS HATCHED', cycle.outcome.hatched?.toLocaleString(), 'white-cell')}
-                      </HighlightedCell>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      <HighlightedCell>
-                        {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
-                      </HighlightedCell>
-                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                                        {cycle.status === 'OPEN' ? (
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Open
-                          </span>
-                          <button
-                            onClick={() => handleCloseCycle(cycle.id)}
-                            className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                            title="Close Cycle"
-                          >
-                            ×
-                          </button>
-                        </div>
-                                        ) : (
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            Closed
-                          </span>
-                          <button
-                            onClick={() => handleReopenCycle(cycle.id)}
-                            className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                            title="Reopen Cycle"
-                          >
-                            &lt;
-                          </button>
-                        </div>
-                                        )}
-                                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'CREATED AT', cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : null, 'white-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'UPDATED BY', cycle.updatedBy, 'white-cell')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap white-cell">
-                      {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                </table>
+              </div>
             </div>
+            
+            {/* Scrollable Body */}
+            <div className="overflow-auto flex-1" style={{ maxHeight: 'calc(70vh - 60px)' }}>
+              <table className="modern-table min-w-full">
+                <tbody>
+                  {processedCycles.map((cycle) => (
+                    <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
+                        {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'FLOCKS RECVD', cycle.flocksRecd?.join(', '), 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'SUPPLIER FLOCK NUMBER', cycle.supplierFlockNumber, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'SUPPLIER NAME', cycle.supplierName, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'CASES RECVD', cycle.casesRecd?.toLocaleString(), 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'EGGS RECVD', cycle.eggsRecd?.toLocaleString(), 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'AVG EGG WGT', cycle.avgEggWgt, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'EGGS CRACKED', cycle.eggsCracked?.toLocaleString(), 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        <HighlightedCell>{renderEditableCell(cycle, 'EGGS SET', (cycle.eggsSet ?? 0).toLocaleString(), 'yellow-cell')}</HighlightedCell>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'EXP HATCH QTY', cycle.expHatchQty?.toLocaleString(), 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        {renderEditableCell(cycle, 'PCT ADJ', typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : cycle.pctAdj, 'yellow-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                        <HighlightedCell>
+                          {renderEditableCell(cycle, 'EXP HATCH QTY ADJ', cycle.expHatchQtyAdj?.toLocaleString(), 'yellow-cell')}
+                        </HighlightedCell>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        <HighlightedCell>
+                          {renderEditableCell(cycle, 'CHICKS HATCHED', cycle.outcome.hatched?.toLocaleString(), 'white-cell')}
+                        </HighlightedCell>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        <HighlightedCell>
+                          {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
+                        </HighlightedCell>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {cycle.status === 'OPEN' ? (
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Open
+                            </span>
+                            <button
+                              onClick={() => handleCloseCycle(cycle.id)}
+                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                              title="Close Cycle"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                              Closed
+                            </span>
+                            <button
+                              onClick={() => handleReopenCycle(cycle.id)}
+                              className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                              title="Reopen Cycle"
+                            >
+                              &lt;
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'CREATED AT', cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : null, 'white-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'UPDATED BY', cycle.updatedBy, 'white-cell')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                        {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
       )}
 
              {/* New Hatch Cycle Modal */}
