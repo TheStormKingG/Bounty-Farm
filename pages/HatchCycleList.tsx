@@ -238,6 +238,10 @@ const HatchCycleList: React.FC = () => {
 
   // Cell editing functions
   const handleCellClick = (cycleId: string, column: string, currentValue: any) => {
+    // Save any existing edit before starting a new one
+    if (editableCell && editableCell.cycleId !== cycleId || editableCell?.column !== column) {
+      saveCellEdit(editableCell.cycleId, editableCell.column);
+    }
     setEditableCell({ cycleId, column });
     setEditingValue(currentValue?.toString() || '');
   };
@@ -254,6 +258,9 @@ const HatchCycleList: React.FC = () => {
   };
 
   const navigateToNextCell = (currentCycleId: string, currentColumn: string) => {
+    // Save current edit first
+    saveCellEdit(currentCycleId, currentColumn);
+    
     const columns = [
       'HATCH NO', 'HATCH COLOUR', 'FLOCKS RECVD', 'SUPPLIER FLOCK NUMBER', 
       'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
@@ -266,10 +273,20 @@ const HatchCycleList: React.FC = () => {
     const currentIndex = columns.indexOf(currentColumn);
     if (currentIndex < columns.length - 1) {
       const nextColumn = columns[currentIndex + 1];
-      const currentCycle = cycles.find(c => c.id === currentCycleId);
-      const nextValue = getCellValue(currentCycle!, nextColumn);
-      setEditableCell({ cycleId: currentCycleId, column: nextColumn });
-      setEditingValue(nextValue?.toString() || '');
+      
+      // Skip HATCH NO column since it's not editable
+      if (nextColumn === 'HATCH NO' && currentIndex + 2 < columns.length) {
+        const skipNextColumn = columns[currentIndex + 2];
+        const currentCycle = cycles.find(c => c.id === currentCycleId);
+        const nextValue = getCellValue(currentCycle!, skipNextColumn);
+        setEditableCell({ cycleId: currentCycleId, column: skipNextColumn });
+        setEditingValue(nextValue?.toString() || '');
+      } else if (nextColumn !== 'HATCH NO') {
+        const currentCycle = cycles.find(c => c.id === currentCycleId);
+        const nextValue = getCellValue(currentCycle!, nextColumn);
+        setEditableCell({ cycleId: currentCycleId, column: nextColumn });
+        setEditingValue(nextValue?.toString() || '');
+      }
     }
   };
 
@@ -353,6 +370,11 @@ const HatchCycleList: React.FC = () => {
   // Helper function to render editable cell content
   const renderEditableCell = (cycle: HatchCycle, column: string, value: any, cellClass: string) => {
     const isEditing = editableCell?.cycleId === cycle.id && editableCell?.column === column;
+    
+    // HATCH NO column is not editable
+    if (column === 'HATCH NO') {
+      return <span className="font-medium text-[#5C3A6B]">{value || '-'}</span>;
+    }
     
     if (isEditing) {
       return (
