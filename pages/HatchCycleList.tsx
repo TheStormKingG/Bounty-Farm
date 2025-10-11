@@ -170,6 +170,10 @@ const HatchCycleList: React.FC = () => {
   const [editableCell, setEditableCell] = useState<{cycleId: string, column: string} | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
   
+  // Scroll synchronization refs
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  
   // Flock suggestions state
   const [flocks, setFlocks] = useState<any[]>([]);
   const [flockSuggestions, setFlockSuggestions] = useState<any[]>([]);
@@ -496,6 +500,19 @@ const HatchCycleList: React.FC = () => {
   const cancelCellEdit = () => {
     setEditableCell(null);
     setEditingValue('');
+  };
+
+  // Scroll synchronization functions
+  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (bodyScrollRef.current) {
+      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (headerScrollRef.current) {
+      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
   };
 
   // Helper function to render editable cell content
@@ -1153,7 +1170,12 @@ const HatchCycleList: React.FC = () => {
 
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
             {/* Fixed Header */}
-            <div className="overflow-x-auto" style={{ flexShrink: 0 }}>
+            <div 
+              ref={headerScrollRef}
+              className="overflow-x-auto" 
+              style={{ flexShrink: 0 }}
+              onScroll={handleHeaderScroll}
+            >
               <table className="modern-table min-w-full">
                 <thead className="sticky top-0 bg-white z-10">
                   <tr>
@@ -1241,7 +1263,12 @@ const HatchCycleList: React.FC = () => {
             </div>
             
             {/* Scrollable Body */}
-            <div className="overflow-auto flex-1" style={{ maxHeight: 'calc(70vh - 60px)' }}>
+            <div 
+              ref={bodyScrollRef}
+              className="overflow-auto flex-1" 
+              style={{ maxHeight: 'calc(70vh - 60px)' }}
+              onScroll={handleBodyScroll}
+            >
               <table className="modern-table min-w-full">
                 <tbody>
                   {processedCycles.map((cycle) => (
