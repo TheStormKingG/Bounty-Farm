@@ -270,23 +270,26 @@ const HatchCycleList: React.FC = () => {
       'CHICKS SOLD', 'STATUS', 'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
     ];
     
+    // Non-editable fields that should be skipped
+    const nonEditableFields = [
+      'HATCH NO', 'EGGS RECVD', 'EGGS CRACKED', 'EXP HATCH QTY', 'CHICKS CULLED',
+      'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
+    ];
+    
     const currentIndex = columns.indexOf(currentColumn);
-    if (currentIndex < columns.length - 1) {
-      const nextColumn = columns[currentIndex + 1];
-      
-      // Skip HATCH NO column since it's not editable
-      if (nextColumn === 'HATCH NO' && currentIndex + 2 < columns.length) {
-        const skipNextColumn = columns[currentIndex + 2];
-        const currentCycle = cycles.find(c => c.id === currentCycleId);
-        const nextValue = getCellValue(currentCycle!, skipNextColumn);
-        setEditableCell({ cycleId: currentCycleId, column: skipNextColumn });
-        setEditingValue(nextValue?.toString() || '');
-      } else if (nextColumn !== 'HATCH NO') {
-        const currentCycle = cycles.find(c => c.id === currentCycleId);
-        const nextValue = getCellValue(currentCycle!, nextColumn);
-        setEditableCell({ cycleId: currentCycleId, column: nextColumn });
-        setEditingValue(nextValue?.toString() || '');
-      }
+    let nextIndex = currentIndex + 1;
+    
+    // Find next editable column
+    while (nextIndex < columns.length && nonEditableFields.includes(columns[nextIndex])) {
+      nextIndex++;
+    }
+    
+    if (nextIndex < columns.length) {
+      const nextColumn = columns[nextIndex];
+      const currentCycle = cycles.find(c => c.id === currentCycleId);
+      const nextValue = getCellValue(currentCycle!, nextColumn);
+      setEditableCell({ cycleId: currentCycleId, column: nextColumn });
+      setEditingValue(nextValue?.toString() || '');
     }
   };
 
@@ -414,15 +417,101 @@ const HatchCycleList: React.FC = () => {
   const renderEditableCell = (cycle: HatchCycle, column: string, value: any, cellClass: string) => {
     const isEditing = editableCell?.cycleId === cycle.id && editableCell?.column === column;
     
-    // HATCH NO column is not editable
-    if (column === 'HATCH NO') {
+    // Non-editable fields (auto-calculated or system fields)
+    const nonEditableFields = [
+      'HATCH NO',           // System field
+      'EGGS RECVD',         // Auto-calculated: Cases Recvd × 360
+      'EGGS CRACKED',       // Auto-calculated: Eggs Rec'd - Eggs Set
+      'EXP HATCH QTY',      // Auto-calculated: Eggs Set × 0.8
+      'CHICKS CULLED',      // Auto-calculated: Chicks Hatched - Chicks Sold
+      'CREATED BY',         // System field
+      'CREATED AT',         // System field
+      'UPDATED BY',         // System field
+      'UPDATED AT'          // System field
+    ];
+    
+    if (nonEditableFields.includes(column)) {
       return <span className="font-medium text-[#5C3A6B]">{value || '-'}</span>;
     }
     
     if (isEditing) {
+      // Hatch Color dropdown
+      if (column === 'HATCH COLOUR') {
+        return (
+          <select
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+            onBlur={() => saveCellEdit(cycle.id, column)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          >
+            <option value="">Select Color</option>
+            <option value="1-BLUE">1-BLUE</option>
+            <option value="2-ORANGE">2-ORANGE</option>
+            <option value="3-GREEN">3-GREEN</option>
+            <option value="4-WHITE">4-WHITE</option>
+            <option value="5-YELLOW">5-YELLOW</option>
+            <option value="6-RED">6-RED</option>
+          </select>
+        );
+      }
+      
+      // Flock Number dropdown (if we have flock suggestions)
+      if (column === 'SUPPLIER FLOCK NUMBER') {
+        return (
+          <select
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+            onBlur={() => saveCellEdit(cycle.id, column)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          >
+            <option value="">Select Flock</option>
+            {flocks.map((flock) => (
+              <option key={flock.id} value={flock.flock_number}>
+                {flock.flock_number}
+              </option>
+            ))}
+          </select>
+        );
+      }
+      
+      // Date fields
+      if (column.includes('DATE')) {
+        return (
+          <input
+            type="date"
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+            onBlur={() => saveCellEdit(cycle.id, column)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        );
+      }
+      
+      // Number fields
+      if (column.includes('WGT') || column.includes('ADJ') || column.includes('QTY') || column.includes('SET') || column.includes('CRACKED') || column.includes('RECVD') || column.includes('HATCHED') || column.includes('CULLED') || column.includes('SOLD')) {
+        return (
+          <input
+            type="number"
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+            onBlur={() => saveCellEdit(cycle.id, column)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        );
+      }
+      
+      // Text fields
       return (
         <input
-          type={column.includes('DATE') ? 'date' : column.includes('WGT') || column.includes('ADJ') || column.includes('QTY') || column.includes('SET') || column.includes('CRACKED') || column.includes('RECVD') || column.includes('HATCHED') || column.includes('CULLED') || column.includes('SOLD') ? 'number' : 'text'}
+          type="text"
           value={editingValue}
           onChange={(e) => setEditingValue(e.target.value)}
           onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
