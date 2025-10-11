@@ -338,10 +338,18 @@ const HatchCycleList: React.FC = () => {
         convertedValue = editingValue ? editingValue.split(',').map((f: string) => f.trim()).join(',') : null;
       }
 
+      // Special handling for CASES RECVD - also update EGGS RECVD
+      let updateData: any = { [fieldName]: convertedValue };
+      
+      if (column === 'CASES RECVD' && convertedValue) {
+        const eggsRecd = convertedValue * 360;
+        updateData.eggs_recd = eggsRecd;
+      }
+
       // Update in Supabase
       const { error } = await supabase
         .from('hatch_cycles')
-        .update({ [fieldName]: convertedValue })
+        .update(updateData)
         .eq('id', cycleId);
 
       if (error) {
@@ -383,19 +391,29 @@ const HatchCycleList: React.FC = () => {
       // Update local state with proper field mapping
       setCycles(prev => prev.map(c => {
         if (c.id === cycleId) {
+          let updatedCycle = { ...c };
+          
           // Handle nested fields like outcome.hatched
           if (interfaceFieldName.includes('.')) {
             const [parentField, childField] = interfaceFieldName.split('.');
-            return {
-              ...c,
+            updatedCycle = {
+              ...updatedCycle,
               [parentField]: {
-                ...c[parentField as keyof HatchCycle],
+                ...updatedCycle[parentField as keyof HatchCycle],
                 [childField]: convertedValue
               }
             };
           } else {
-            return { ...c, [interfaceFieldName]: convertedValue };
+            updatedCycle = { ...updatedCycle, [interfaceFieldName]: convertedValue };
           }
+          
+          // Special handling for CASES RECVD - also update EGGS RECVD in local state
+          if (column === 'CASES RECVD' && convertedValue) {
+            const eggsRecd = convertedValue * 360;
+            updatedCycle.eggsRecd = eggsRecd;
+          }
+          
+          return updatedCycle;
         }
         return c;
       }));
