@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
 import AddFlockForm from '../components/AddFlockForm';
 import { HatchCycle, HatchColourCode, Flock } from '../types';
