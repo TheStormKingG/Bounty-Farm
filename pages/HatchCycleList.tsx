@@ -295,8 +295,12 @@ const HatchCycleList: React.FC = () => {
 
   const saveCellEdit = async (cycleId: string, column: string) => {
     try {
+      console.log('Saving cell edit:', { cycleId, column, editingValue });
       const cycle = cycles.find(c => c.id === cycleId);
-      if (!cycle) return;
+      if (!cycle) {
+        console.log('Cycle not found:', cycleId);
+        return;
+      }
 
       // Map column names to database field names
       const columnToFieldMap: { [key: string]: string } = {
@@ -326,7 +330,10 @@ const HatchCycleList: React.FC = () => {
       };
 
       const fieldName = columnToFieldMap[column];
-      if (!fieldName) return;
+      if (!fieldName) {
+        console.log('Field name not found for column:', column);
+        return;
+      }
 
       // Convert value based on column type
       let convertedValue: any = editingValue;
@@ -337,6 +344,8 @@ const HatchCycleList: React.FC = () => {
       } else if (column === 'FLOCKS RECVD') {
         convertedValue = editingValue ? editingValue.split(',').map((f: string) => f.trim()).join(',') : null;
       }
+      
+      console.log('Field mapping:', { column, fieldName, convertedValue });
 
       // Special handling for CASES RECVD - also update EGGS RECVD
       let updateData: any = { [fieldName]: convertedValue };
@@ -347,6 +356,7 @@ const HatchCycleList: React.FC = () => {
       }
 
       // Update in Supabase
+      console.log('Updating Supabase with:', updateData);
       const { error } = await supabase
         .from('hatch_cycles')
         .update(updateData)
@@ -357,6 +367,8 @@ const HatchCycleList: React.FC = () => {
         setError('Failed to update cell. Please try again.');
         return;
       }
+      
+      console.log('Supabase update successful');
 
       // Map database field names to TypeScript interface field names
       const dbToInterfaceMap: { [key: string]: string } = {
@@ -389,6 +401,7 @@ const HatchCycleList: React.FC = () => {
       if (!interfaceFieldName) return;
 
       // Update local state with proper field mapping
+      console.log('Updating local state with interface field:', interfaceFieldName);
       setCycles(prev => prev.map(c => {
         if (c.id === cycleId) {
           let updatedCycle = { ...c };
@@ -411,8 +424,10 @@ const HatchCycleList: React.FC = () => {
           if (column === 'CASES RECVD' && convertedValue) {
             const eggsRecd = convertedValue * 360;
             updatedCycle.eggsRecd = eggsRecd;
+            console.log('Updated EGGS RECVD in local state:', eggsRecd);
           }
           
+          console.log('Updated cycle in local state:', updatedCycle);
           return updatedCycle;
         }
         return c;
