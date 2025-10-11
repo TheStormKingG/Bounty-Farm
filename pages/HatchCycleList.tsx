@@ -238,8 +238,8 @@ const HatchCycleList: React.FC = () => {
 
   // Cell editing functions
   const handleCellClick = (cycleId: string, column: string, currentValue: any) => {
-    // Save any existing edit before starting a new one
-    if (editableCell && editableCell.cycleId !== cycleId || editableCell?.column !== column) {
+    // Save any existing edit before starting a new one (only if it's a different cell)
+    if (editableCell && (editableCell.cycleId !== cycleId || editableCell.column !== column)) {
       saveCellEdit(editableCell.cycleId, editableCell.column);
     }
     setEditableCell({ cycleId, column });
