@@ -248,12 +248,61 @@ const HatchCycleList: React.FC = () => {
 
   const handleCellKeyDown = (e: React.KeyboardEvent, cycleId: string, column: string) => {
     if (e.key === 'Enter') {
-      saveCellEdit(cycleId, column);
+      e.preventDefault();
+      saveCellEditAndNavigate(cycleId, column);
     } else if (e.key === 'Escape') {
       cancelCellEdit();
     } else if (e.key === 'Tab') {
       e.preventDefault();
-      navigateToNextCell(cycleId, column);
+      saveCellEditAndNavigate(cycleId, column);
+    }
+  };
+
+  const saveCellEditAndNavigate = async (currentCycleId: string, currentColumn: string) => {
+    try {
+      console.log('Saving and navigating from:', { currentCycleId, currentColumn, editingValue });
+      
+      // Save current edit first
+      await saveCellEdit(currentCycleId, currentColumn);
+      
+      const columns = [
+        'HATCH NO', 'HATCH COLOUR', 'FLOCKS RECVD', 'SUPPLIER FLOCK NUMBER', 
+        'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
+        'EGGS CRACKED', 'EGGS SET', 'DATE PACKED', 'DATE SET', 'DATE CANDLED', 
+        'EXP HATCH QTY', 'PCT ADJ', 'EXP HATCH QTY ADJ', 'HATCH DATE', 
+        'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINATION PROFILE', 
+        'CHICKS SOLD', 'STATUS', 'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
+      ];
+      
+      // Non-editable fields that should be skipped
+      const nonEditableFields = [
+        'HATCH NO', 'EGGS RECVD', 'EGGS CRACKED', 'EXP HATCH QTY', 'CHICKS CULLED',
+        'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
+      ];
+      
+      const currentIndex = columns.indexOf(currentColumn);
+      let nextIndex = currentIndex + 1;
+      
+      // Find next editable column
+      while (nextIndex < columns.length && nonEditableFields.includes(columns[nextIndex])) {
+        nextIndex++;
+      }
+      
+      if (nextIndex < columns.length) {
+        const nextColumn = columns[nextIndex];
+        console.log('Navigating to next column:', nextColumn);
+        
+        // Use setTimeout to ensure state has been updated
+        setTimeout(() => {
+          const currentCycle = cycles.find(c => c.id === currentCycleId);
+          const nextValue = getCellValue(currentCycle!, nextColumn);
+          console.log('Setting next cell value:', nextValue);
+          setEditableCell({ cycleId: currentCycleId, column: nextColumn });
+          setEditingValue(nextValue?.toString() || '');
+        }, 50);
+      }
+    } catch (error) {
+      console.error('Error in saveCellEditAndNavigate:', error);
     }
   };
 
@@ -435,6 +484,7 @@ const HatchCycleList: React.FC = () => {
 
       setEditableCell(null);
       setEditingValue('');
+      console.log('Cell edit completed successfully');
     } catch (err) {
       console.error('Unexpected error updating cell:', err);
       setError('An unexpected error occurred while updating the cell.');
