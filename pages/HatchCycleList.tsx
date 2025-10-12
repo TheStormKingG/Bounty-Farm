@@ -1275,7 +1275,7 @@ const HatchCycleList: React.FC = () => {
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
-                background: 'linear-gradient(to bottom, #ff8c42 0%, #ff8c42 75%, #e55a00 100%)',
+                backgroundColor: '#ff8c42',
                 borderRadius: '8px 8px 0 0',
                 borderBottom: 'none',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
