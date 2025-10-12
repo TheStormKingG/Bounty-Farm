@@ -408,6 +408,17 @@ const HatchCycleList: React.FC = () => {
         updateData.eggs_recvd = eggsRecd;
       }
 
+      // Special handling for EGGS SET - also update EGGS CRACKED
+      if (column === 'EGGS SET' && convertedValue !== null) {
+        // Get the current eggs received value for this cycle
+        const currentCycle = cycles.find(c => c.id === cycleId);
+        if (currentCycle?.eggsRecd) {
+          const eggsCracked = currentCycle.eggsRecd - convertedValue;
+          updateData.eggs_cracked = eggsCracked;
+          console.log('Auto-calculated eggs cracked:', eggsCracked);
+        }
+      }
+
       // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME
       let supplierName: string | null = null;
       if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
@@ -504,6 +515,15 @@ const HatchCycleList: React.FC = () => {
             console.log('Updated EGGS RECVD in local state:', eggsRecd);
           }
           
+          // Special handling for EGGS SET - also update EGGS CRACKED in local state
+          if (column === 'EGGS SET' && convertedValue !== null) {
+            if (updatedCycle.eggsRecd) {
+              const eggsCracked = updatedCycle.eggsRecd - convertedValue;
+              updatedCycle.eggsCracked = eggsCracked;
+              console.log('Updated EGGS CRACKED in local state:', eggsCracked);
+            }
+          }
+          
           // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME in local state
           if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
             updatedCycle.supplierName = supplierName || undefined;
@@ -552,6 +572,7 @@ const HatchCycleList: React.FC = () => {
     // Non-editable fields (auto-calculated or system fields)
     const nonEditableFields = [
       'HATCH NO',           // System field
+      'SUPPLIER NAME',      // Auto-calculated: Derived from SUPPLIER FLOCK NUMBER
       'EGGS RECVD',         // Auto-calculated: Cases Recvd × 360
       'EGGS CRACKED',       // Auto-calculated: Eggs Rec'd - Eggs Set
       'EXP HATCH QTY',      // Auto-calculated: Eggs Set × 0.8
