@@ -1484,35 +1484,6 @@ const HatchCycleList: React.FC = () => {
                         {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
-                        {cycle.status === 'OPEN' ? (
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Open
-                            </span>
-                            <button
-                              onClick={() => handleCloseCycle(cycle.id)}
-                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title="Close Cycle"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                              Closed
-                            </span>
-                            <button
-                              onClick={() => handleReopenCycle(cycle.id)}
-                              className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title="Reopen Cycle"
-                            >
-                              &lt;
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
