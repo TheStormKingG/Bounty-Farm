@@ -1321,7 +1321,8 @@ const HatchCycleList: React.FC = () => {
                         minWidth: '120px',
                         color: 'white',
                         fontWeight: '600',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                        backgroundColor: '#ff8c42'
                       }}
                     >
                       <div className="flex items-center justify-between">
