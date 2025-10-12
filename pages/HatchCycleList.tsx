@@ -363,7 +363,7 @@ const HatchCycleList: React.FC = () => {
         'SUPPLIER FLOCK NUMBER': 'supplier_flock_number',
         'SUPPLIER NAME': 'supplier_name',
         'CASES RECVD': 'cases_recvd',
-        'EGGS RECVD': 'eggs_recd',
+        'EGGS RECVD': 'eggs_recvd',
         'AVG EGG WGT': 'avg_egg_wgt',
         'EGGS CRACKED': 'eggs_cracked',
         'EGGS SET': 'eggs_set',
