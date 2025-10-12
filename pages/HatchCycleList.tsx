@@ -83,6 +83,44 @@ const HighlightedCell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     </div>
 );
 
+// Custom CSS for sticky columns
+const stickyColumnStyles = `
+  .sticky-column-1 {
+    position: sticky !important;
+    left: 0px !important;
+    background-color: white !important;
+    z-index: 10 !important;
+  }
+  
+  .sticky-column-2 {
+    position: sticky !important;
+    left: 120px !important;
+    background-color: white !important;
+    z-index: 10 !important;
+  }
+  
+  .sticky-header-1 {
+    position: sticky !important;
+    left: 0px !important;
+    background-color: white !important;
+    z-index: 20 !important;
+  }
+  
+  .sticky-header-2 {
+    position: sticky !important;
+    left: 120px !important;
+    background-color: white !important;
+    z-index: 20 !important;
+  }
+`;
+
+// Inject the styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = stickyColumnStyles;
+  document.head.appendChild(styleSheet);
+}
+
 // --- helpers to keep UI <> DB clean -----------------------------------------
 const colourLabel = (v?: string) => (v ? String(v).split('-').pop() ?? v : '-');
 
@@ -1246,7 +1284,7 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
             <div 
               ref={headerScrollRef}
@@ -1288,23 +1326,11 @@ const HatchCycleList: React.FC = () => {
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider"
-                      style={{ 
-                        width: '120px', 
-                        minWidth: '120px',
-                        ...(header === 'STATUS' ? { 
-                          position: 'sticky',
-                          left: '0px',
-                          backgroundColor: 'white',
-                          zIndex: 20
-                        } : {}),
-                        ...(header === 'HATCH NO' ? { 
-                          position: 'sticky',
-                          left: '120px',
-                          backgroundColor: 'white',
-                          zIndex: 20
-                        } : {})
-                      }}
+                      className={`px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider ${
+                        header === 'STATUS' ? 'sticky-header-1' : 
+                        header === 'HATCH NO' ? 'sticky-header-2' : ''
+                      }`}
+                      style={{ width: '120px', minWidth: '120px' }}
                     >
                       <div className="flex items-center justify-between">
                         <span className="flex-1">{header}</span>
@@ -1367,14 +1393,7 @@ const HatchCycleList: React.FC = () => {
                 <tbody>
                   {processedCycles.map((cycle) => (
                     <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ 
-                        width: '120px', 
-                        minWidth: '120px',
-                        position: 'sticky',
-                        left: '0px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell sticky-column-1" style={{ width: '120px', minWidth: '120px' }}>
                         {cycle.status === 'OPEN' ? (
                           <div className="flex items-center gap-2">
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -1403,14 +1422,7 @@ const HatchCycleList: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] white-cell" style={{ 
-                        width: '120px', 
-                        minWidth: '120px',
-                        position: 'sticky',
-                        left: '120px',
-                        backgroundColor: 'white',
-                        zIndex: 10
-                      }}>
+                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] white-cell sticky-column-2" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
