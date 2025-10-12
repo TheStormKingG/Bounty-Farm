@@ -1209,62 +1209,68 @@ const HatchCycleList: React.FC = () => {
             <div className="modern-card p-6">
                 <div className="p-4 bg-white rounded-lg">
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 items-end mb-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                  <label htmlFor="hatch-start" className="block text-sm font-medium text-gray-700">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="flex-1">
+                  <label htmlFor="hatch-start" className="block text-sm font-medium text-gray-700 mb-1">
                     Hatch Start
                   </label>
                   <input
                     id="hatch-start"
                     type="date"
-                    className="mt-1 block w-full"
-                    style={{ backgroundColor: '#fff4c6' }}
+                    className="w-full px-3 py-2 rounded border border-black"
+                    style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-09-08"
                   />
-                            </div>
-                            <div>
-                  <label htmlFor="hatch-end" className="block text-sm font-medium text-gray-700">
+                        </div>
+                        <div className="flex-1">
+                  <label htmlFor="hatch-end" className="block text-sm font-medium text-gray-700 mb-1">
                     End
                   </label>
                   <input
                     id="hatch-end"
                     type="date"
-                    className="mt-1 block w-full"
-                    style={{ backgroundColor: '#fff4c6' }}
+                    className="w-full px-3 py-2 rounded border border-black"
+                    style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-11-07"
                   />
-                            </div>
                         </div>
-                    </div>
-                    {/* Search */}
-                    <div className="flex items-center space-x-2">
-                         <div className="flex-grow flex items-center" style={{ backgroundColor: '#fff4c6', borderRadius: '6px', padding: '8px' }}>
-                            <button className="p-1 text-gray-600 hover:text-gray-800 mr-2">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </button>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full bg-transparent border-none focus:ring-0 text-gray-900"
-                />
-                         </div>
-                        <select className="px-4 py-2 rounded-md border" style={{ backgroundColor: '#fff4c6' }}>
+                        <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="w-full px-3 py-2 pr-10 rounded border border-black"
+                      style={{ backgroundColor: '#fffae5' }}
+                    />
+                    <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-600 hover:text-gray-800">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                        </div>
+                        <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rows
+                  </label>
+                  <select className="w-full px-3 py-2 rounded border border-black" style={{ backgroundColor: '#fffae5' }}>
                             <option>1000</option>
                             <option>500</option>
                             <option>100</option>
                         </select>
+                        </div>
                     </div>
                 </div>
 
