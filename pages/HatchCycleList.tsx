@@ -1236,12 +1236,14 @@ const HatchCycleList: React.FC = () => {
                         </div>
                         <div className="w-1/6">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rows
+                    Show
                   </label>
                   <select className="w-full px-3 py-2 rounded-2xl shadow-md" style={{ backgroundColor: '#fffae5' }}>
-                            <option>1000</option>
-                            <option>500</option>
+                            <option>50</option>
                             <option>100</option>
+                            <option>500</option>
+                            <option>1000</option>
+                            <option>ALL</option>
                         </select>
                         </div>
                         <div className="flex-1">
