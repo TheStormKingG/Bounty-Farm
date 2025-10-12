@@ -405,7 +405,7 @@ const HatchCycleList: React.FC = () => {
       
       if (column === 'CASES RECVD' && convertedValue) {
         const eggsRecd = convertedValue * 360;
-        updateData.eggs_recd = eggsRecd;
+        updateData.eggs_recvd = eggsRecd;
       }
 
       // Update in Supabase
@@ -431,7 +431,7 @@ const HatchCycleList: React.FC = () => {
         'supplier_flock_number': 'supplierFlockNumber',
         'supplier_name': 'supplierName',
         'cases_recvd': 'casesRecd',
-        'eggs_recd': 'eggsRecd',
+        'eggs_recvd': 'eggsRecd',
         'avg_egg_wgt': 'avgEggWgt',
         'eggs_cracked': 'eggsCracked',
         'eggs_set': 'eggsSet',
