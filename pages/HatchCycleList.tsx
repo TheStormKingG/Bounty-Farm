@@ -102,14 +102,14 @@ const stickyColumnStyles = `
   .sticky-header-1 {
     position: sticky !important;
     left: 0px !important;
-    background-color: white !important;
+    background-color: #ff8c42 !important;
     z-index: 20 !important;
   }
   
   .sticky-header-2 {
     position: sticky !important;
     left: 120px !important;
-    background-color: white !important;
+    background-color: #ff8c42 !important;
     z-index: 20 !important;
   }
 `;
