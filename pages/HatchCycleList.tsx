@@ -1211,34 +1211,27 @@ const HatchCycleList: React.FC = () => {
                     {/* Filters */}
                     <div className="flex items-end gap-2 mb-4">
                         <div className="w-1/6">
-                  <label htmlFor="hatch-start" className="block text-sm font-medium text-gray-700 mb-1">
-                    Hatch Start
-                  </label>
                   <input
                     id="hatch-start"
                     type="date"
                     className="w-full px-3 py-2 rounded-2xl shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-09-08"
+                    title="Start"
                   />
                         </div>
                         <div className="w-1/6">
-                  <label htmlFor="hatch-end" className="block text-sm font-medium text-gray-700 mb-1">
-                    End
-                  </label>
                   <input
                     id="hatch-end"
                     type="date"
                     className="w-full px-3 py-2 rounded-2xl shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-11-07"
+                    title="End"
                   />
                         </div>
                         <div className="w-1/6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Show
-                  </label>
-                  <select className="w-full px-3 py-2 rounded-2xl shadow-md" style={{ backgroundColor: '#fffae5' }}>
+                  <select className="w-full px-3 py-2 rounded-2xl shadow-md" style={{ backgroundColor: '#fffae5' }} title="Show">
                             <option>50</option>
                             <option>100</option>
                             <option>500</option>
@@ -1247,9 +1240,6 @@ const HatchCycleList: React.FC = () => {
                         </select>
                         </div>
                         <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Search
-                  </label>
                   <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
                     <input
                       type="text"
