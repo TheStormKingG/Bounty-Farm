@@ -1288,15 +1288,22 @@ const HatchCycleList: React.FC = () => {
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider"
-                      style={{ width: '120px', minWidth: '120px' }}
+                      className={`px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider ${
+                        header === 'STATUS' || header === 'HATCH NO' ? 'sticky bg-white z-20' : ''
+                      }`}
+                      style={{ 
+                        width: '120px', 
+                        minWidth: '120px',
+                        ...(header === 'STATUS' ? { left: '0px' } : {}),
+                        ...(header === 'HATCH NO' ? { left: '120px' } : {})
+                      }}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{header}</span>
-                        <div className="flex items-center space-x-1 ml-2">
+                        <span className="flex-1">{header}</span>
+                        <div className="flex items-center space-x-1">
                           <button
                             onClick={() => handleSort(header)}
-                            className="p-1 hover:bg-gray-200 rounded"
+                            className="p-1 hover:bg-gray-200 rounded text-xs"
                             title={`Sort by ${header}`}
                           >
                             {sortColumn === header ? (
@@ -1307,7 +1314,7 @@ const HatchCycleList: React.FC = () => {
                           </button>
                           <button
                             onClick={() => toggleFilter(header)}
-                            className="p-1 hover:bg-gray-200 rounded"
+                            className="p-1 hover:bg-gray-200 rounded text-xs"
                             title={`Filter ${header}`}
                           >
                             🔍
@@ -1352,7 +1359,7 @@ const HatchCycleList: React.FC = () => {
                 <tbody>
                   {processedCycles.map((cycle) => (
                     <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell sticky left-0 bg-white z-10" style={{ width: '120px', minWidth: '120px' }}>
                         {cycle.status === 'OPEN' ? (
                           <div className="flex items-center gap-2">
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -1381,8 +1388,8 @@ const HatchCycleList: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
-                        {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
+                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] white-cell sticky left-[120px] bg-white z-10" style={{ width: '120px', minWidth: '120px' }}>
+                        {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
