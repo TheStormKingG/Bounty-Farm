@@ -1209,8 +1209,8 @@ const HatchCycleList: React.FC = () => {
             <div className="modern-card p-6">
                 <div className="p-4 bg-white rounded-lg">
                     {/* Filters */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end mb-4">
-                        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 items-end mb-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                   <label htmlFor="hatch-start" className="block text-sm font-medium text-gray-700">
                     Hatch Start
@@ -1218,7 +1218,8 @@ const HatchCycleList: React.FC = () => {
                   <input
                     id="hatch-start"
                     type="date"
-                    className="mt-1 block w-full dark-input"
+                    className="mt-1 block w-full"
+                    style={{ backgroundColor: '#fff4c6' }}
                     defaultValue="2025-09-08"
                   />
                             </div>
@@ -1229,57 +1230,40 @@ const HatchCycleList: React.FC = () => {
                   <input
                     id="hatch-end"
                     type="date"
-                    className="mt-1 block w-full dark-input"
+                    className="mt-1 block w-full"
+                    style={{ backgroundColor: '#fff4c6' }}
                     defaultValue="2025-11-07"
                   />
                             </div>
                         </div>
-                         <div>
-                <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                            <select id="status-filter" className="mt-1 block w-full dark-select">
-                                <option>OPEN</option>
-                                <option>CLOSED</option>
-                                <option>ALL</option>
-                            </select>
-                        </div>
                     </div>
-                    {/* Search and Actions */}
+                    {/* Search */}
                     <div className="flex items-center space-x-2">
-                         <div className="flex-grow flex items-center dark-input">
-                            <span className="pl-1 text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                            </span>
+                         <div className="flex-grow flex items-center" style={{ backgroundColor: '#fff4c6', borderRadius: '6px', padding: '8px' }}>
+                            <button className="p-1 text-gray-600 hover:text-gray-800 mr-2">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </button>
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full p-0 pl-2 bg-transparent border-none focus:ring-0 text-white"
+                  className="w-full bg-transparent border-none focus:ring-0 text-gray-900"
                 />
                          </div>
-              <button className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">
-                Go
-              </button>
-                        <select className="dark-select">
+                        <select className="px-4 py-2 rounded-md border" style={{ backgroundColor: '#fff4c6' }}>
                             <option>1000</option>
                             <option>500</option>
                             <option>100</option>
-                        </select>
-                        <select className="dark-select">
-                            <option>Actions</option>
-                            <option>Export CSV</option>
-                            <option>Print</option>
                         </select>
                     </div>
                 </div>
