@@ -1209,30 +1209,40 @@ const HatchCycleList: React.FC = () => {
             <div className="modern-card p-6">
                 <div className="p-4 bg-white rounded-lg">
                     {/* Filters */}
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="flex-1">
+                    <div className="flex items-end gap-2 mb-4">
+                        <div className="w-1/6">
                   <label htmlFor="hatch-start" className="block text-sm font-medium text-gray-700 mb-1">
                     Hatch Start
                   </label>
                   <input
                     id="hatch-start"
                     type="date"
-                    className="w-full px-3 py-2 rounded border border-black"
+                    className="w-full px-3 py-2 rounded-lg shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-09-08"
                   />
                         </div>
-                        <div className="flex-1">
+                        <div className="w-1/6">
                   <label htmlFor="hatch-end" className="block text-sm font-medium text-gray-700 mb-1">
                     End
                   </label>
                   <input
                     id="hatch-end"
                     type="date"
-                    className="w-full px-3 py-2 rounded border border-black"
+                    className="w-full px-3 py-2 rounded-lg shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
                     defaultValue="2025-11-07"
                   />
+                        </div>
+                        <div className="w-1/6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rows
+                  </label>
+                  <select className="w-full px-3 py-2 rounded-lg shadow-md" style={{ backgroundColor: '#fffae5' }}>
+                            <option>1000</option>
+                            <option>500</option>
+                            <option>100</option>
+                        </select>
                         </div>
                         <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1242,10 +1252,10 @@ const HatchCycleList: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Search..."
-                      className="w-full px-3 py-2 pr-10 rounded border border-black"
+                      className="w-full px-3 py-2 pr-10 rounded-lg shadow-md"
                       style={{ backgroundColor: '#fffae5' }}
                     />
-                    <button className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-600 hover:text-gray-800">
+                    <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-600 hover:text-gray-800">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
@@ -1260,16 +1270,6 @@ const HatchCycleList: React.FC = () => {
                       </svg>
                     </button>
                   </div>
-                        </div>
-                        <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rows
-                  </label>
-                  <select className="w-full px-3 py-2 rounded border border-black" style={{ backgroundColor: '#fffae5' }}>
-                            <option>1000</option>
-                            <option>500</option>
-                            <option>100</option>
-                        </select>
                         </div>
                     </div>
                 </div>
