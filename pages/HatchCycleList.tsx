@@ -146,8 +146,8 @@ const mapTableRowToCycle = (r: any): HatchCycle => ({
     earlyDead: undefined, // r.candling_early_dead ?? undefined,
   },
   expHatchQty: r.exp_hatch_qty ?? undefined,
-  pctAdj: undefined, // r.pct_adj ?? undefined,
-  expHatchQtyAdj: undefined, // r.exp_hatch_qty_adj ?? undefined,
+  pctAdj: r.pct_adj ?? undefined,
+  expHatchQtyAdj: r.exp_hatch_qty_adj ?? undefined,
   hatchDate: r.hatch_date ?? undefined,
   avgChicksWgt: r.avg_chicks_wgt ?? undefined,
   outcome: {
