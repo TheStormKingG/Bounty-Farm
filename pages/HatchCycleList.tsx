@@ -408,6 +408,28 @@ const HatchCycleList: React.FC = () => {
         updateData.eggs_recvd = eggsRecd;
       }
 
+      // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME
+      if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
+        try {
+          const { data: flockData, error: flockError } = await supabase
+            .from('flocks')
+            .select('supplier')
+            .eq('flock_number', convertedValue)
+            .single();
+
+          if (!flockError && flockData) {
+            updateData.supplier_name = flockData.supplier;
+            console.log('Auto-updated supplier name:', flockData.supplier);
+          } else {
+            console.log('No flock found for number:', convertedValue);
+            updateData.supplier_name = null;
+          }
+        } catch (err) {
+          console.error('Error fetching supplier for flock number:', err);
+          updateData.supplier_name = null;
+        }
+      }
+
       // Update in Supabase
       console.log('Updating Supabase with:', updateData);
       const { error } = await supabase
@@ -478,6 +500,28 @@ const HatchCycleList: React.FC = () => {
             const eggsRecd = convertedValue * 360;
             updatedCycle.eggsRecd = eggsRecd;
             console.log('Updated EGGS RECVD in local state:', eggsRecd);
+          }
+          
+          // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME in local state
+          if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
+            try {
+              const { data: flockData, error: flockError } = await supabase
+                .from('flocks')
+                .select('supplier')
+                .eq('flock_number', convertedValue)
+                .single();
+
+              if (!flockError && flockData) {
+                updatedCycle.supplierName = flockData.supplier;
+                console.log('Updated SUPPLIER NAME in local state:', flockData.supplier);
+              } else {
+                updatedCycle.supplierName = undefined;
+                console.log('No flock found for number in local state update:', convertedValue);
+              }
+            } catch (err) {
+              console.error('Error fetching supplier for flock number in local state:', err);
+              updatedCycle.supplierName = undefined;
+            }
           }
           
           console.log('Updated cycle in local state:', updatedCycle);
