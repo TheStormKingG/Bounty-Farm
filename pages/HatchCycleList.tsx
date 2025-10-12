@@ -1327,7 +1327,7 @@ const HatchCycleList: React.FC = () => {
                     >
                       <div className="flex items-center justify-between">
                         <span className="flex-1">{header}</span>
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 ml-2">
                           <button
                             onClick={() => handleSort(header)}
                             className="p-1 hover:bg-white hover:bg-opacity-20 rounded text-xs"
