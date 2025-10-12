@@ -1176,7 +1176,7 @@ const HatchCycleList: React.FC = () => {
               style={{ flexShrink: 0 }}
               onScroll={handleHeaderScroll}
             >
-              <table className="modern-table min-w-full">
+              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 bg-white z-10">
                   <tr>
                   {[
@@ -1211,6 +1211,7 @@ const HatchCycleList: React.FC = () => {
                     <th
                       key={header}
                       className="px-2 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ width: '120px', minWidth: '120px' }}
                     >
                       <div className="flex items-center justify-between">
                         <span>{header}</span>
@@ -1269,73 +1270,73 @@ const HatchCycleList: React.FC = () => {
               style={{ maxHeight: 'calc(70vh - 60px)' }}
               onScroll={handleBodyScroll}
             >
-              <table className="modern-table min-w-full">
+              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {processedCycles.map((cycle) => (
                     <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'FLOCKS RECVD', cycle.flocksRecd?.join(', '), 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'SUPPLIER FLOCK NUMBER', cycle.supplierFlockNumber, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'SUPPLIER NAME', cycle.supplierName, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'CASES RECVD', cycle.casesRecd?.toLocaleString(), 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'EGGS RECVD', cycle.eggsRecd?.toLocaleString(), 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'AVG EGG WGT', cycle.avgEggWgt, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'EGGS CRACKED', cycle.eggsCracked?.toLocaleString(), 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         <HighlightedCell>{renderEditableCell(cycle, 'EGGS SET', (cycle.eggsSet ?? 0).toLocaleString(), 'yellow-cell')}</HighlightedCell>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>{renderEditableCell(cycle, 'DATE PACKED', cycle.datePacked, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>{renderEditableCell(cycle, 'DATE SET', cycle.setDate, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>{renderEditableCell(cycle, 'DATE CANDLED', cycle.dateCandled, 'yellow-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'EXP HATCH QTY', cycle.expHatchQty?.toLocaleString(), 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'PCT ADJ', typeof cycle.pctAdj === 'number' ? `${cycle.pctAdj}%` : cycle.pctAdj, 'yellow-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap yellow-cell">
+                      <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         <HighlightedCell>
                           {renderEditableCell(cycle, 'EXP HATCH QTY ADJ', cycle.expHatchQtyAdj?.toLocaleString(), 'yellow-cell')}
                         </HighlightedCell>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>{renderEditableCell(cycle, 'HATCH DATE', cycle.hatchDate, 'white-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>{renderEditableCell(cycle, 'AVG CHICKS WGT', cycle.avgChicksWgt, 'white-cell')}</td>
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         <HighlightedCell>
                           {renderEditableCell(cycle, 'CHICKS HATCHED', cycle.outcome.hatched?.toLocaleString(), 'white-cell')}
                         </HighlightedCell>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         <HighlightedCell>
                           {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
                         </HighlightedCell>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {cycle.status === 'OPEN' ? (
                           <div className="flex items-center gap-2">
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -1364,16 +1365,16 @@ const HatchCycleList: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'CREATED BY', cycle.createdBy, 'white-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'CREATED AT', cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : null, 'white-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'UPDATED BY', cycle.updatedBy, 'white-cell')}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap white-cell">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
                       </td>
                     </tr>
