@@ -88,14 +88,14 @@ const stickyColumnStyles = `
   .sticky-column-1 {
     position: sticky !important;
     left: 0px !important;
-    background-color: white !important;
+    background-color: #ff8c42 !important;
     z-index: 10 !important;
   }
   
   .sticky-column-2 {
     position: sticky !important;
     left: 120px !important;
-    background-color: white !important;
+    background-color: #ff8c42 !important;
     z-index: 10 !important;
   }
   
@@ -1388,7 +1388,12 @@ const HatchCycleList: React.FC = () => {
                 <tbody>
                   {processedCycles.map((cycle) => (
                     <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap white-cell sticky-column-1" style={{ width: '120px', minWidth: '120px' }}>
+                      <td className="px-4 py-3 whitespace-nowrap sticky-column-1" style={{ 
+                        width: '120px', 
+                        minWidth: '120px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white'
+                      }}>
                         {cycle.status === 'OPEN' ? (
                           <div className="flex items-center gap-2">
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -1417,7 +1422,12 @@ const HatchCycleList: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] white-cell sticky-column-2" style={{ width: '120px', minWidth: '120px' }}>
+                      <td className="px-4 py-3 whitespace-nowrap sticky-column-2" style={{ 
+                        width: '120px', 
+                        minWidth: '120px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white'
+                      }}>
                         {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
