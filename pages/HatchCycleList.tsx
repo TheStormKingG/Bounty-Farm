@@ -1256,7 +1256,7 @@ const HatchCycleList: React.FC = () => {
                       placeholder="Search..."
                       className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
                     />
-                    <button className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white transition-colors">
+                    <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
