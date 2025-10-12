@@ -409,6 +409,7 @@ const HatchCycleList: React.FC = () => {
       }
 
       // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME
+      let supplierName: string | null = null;
       if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
         try {
           const { data: flockData, error: flockError } = await supabase
@@ -418,8 +419,9 @@ const HatchCycleList: React.FC = () => {
             .single();
 
           if (!flockError && flockData) {
-            updateData.supplier_name = flockData.supplier;
-            console.log('Auto-updated supplier name:', flockData.supplier);
+            supplierName = flockData.supplier;
+            updateData.supplier_name = supplierName;
+            console.log('Auto-updated supplier name:', supplierName);
           } else {
             console.log('No flock found for number:', convertedValue);
             updateData.supplier_name = null;
@@ -504,24 +506,8 @@ const HatchCycleList: React.FC = () => {
           
           // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME in local state
           if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
-            try {
-              const { data: flockData, error: flockError } = await supabase
-                .from('flocks')
-                .select('supplier')
-                .eq('flock_number', convertedValue)
-                .single();
-
-              if (!flockError && flockData) {
-                updatedCycle.supplierName = flockData.supplier;
-                console.log('Updated SUPPLIER NAME in local state:', flockData.supplier);
-              } else {
-                updatedCycle.supplierName = undefined;
-                console.log('No flock found for number in local state update:', convertedValue);
-              }
-            } catch (err) {
-              console.error('Error fetching supplier for flock number in local state:', err);
-              updatedCycle.supplierName = undefined;
-            }
+            updatedCycle.supplierName = supplierName || undefined;
+            console.log('Updated SUPPLIER NAME in local state:', supplierName);
           }
           
           console.log('Updated cycle in local state:', updatedCycle);
