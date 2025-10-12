@@ -1274,7 +1274,11 @@ const HatchCycleList: React.FC = () => {
               onScroll={handleHeaderScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
-                <thead className="sticky top-0 bg-white z-10">
+                <thead className="sticky top-0 z-10" style={{
+                background: 'linear-gradient(to bottom, #ff8c42, #ff6b1a, #ff8c42)',
+                borderBottom: '2px solid #e55a00',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
                   <tr>
                   {[
                     'STATUS',
@@ -1311,14 +1315,20 @@ const HatchCycleList: React.FC = () => {
                         header === 'STATUS' ? 'sticky-header-1' : 
                         header === 'HATCH NO' ? 'sticky-header-2' : ''
                       }`}
-                      style={{ width: '120px', minWidth: '120px' }}
+                      style={{ 
+                        width: '120px', 
+                        minWidth: '120px',
+                        color: 'white',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <span className="flex-1">{header}</span>
                         <div className="flex items-center space-x-1">
                           <button
                             onClick={() => handleSort(header)}
-                            className="p-1 hover:bg-gray-200 rounded text-xs"
+                            className="p-1 hover:bg-white hover:bg-opacity-20 rounded text-xs"
+                            style={{ color: 'white' }}
                             title={`Sort by ${header}`}
                           >
                             {sortColumn === header ? (
@@ -1329,7 +1339,8 @@ const HatchCycleList: React.FC = () => {
                           </button>
                           <button
                             onClick={() => toggleFilter(header)}
-                            className="p-1 hover:bg-gray-200 rounded text-xs"
+                            className="p-1 hover:bg-white hover:bg-opacity-20 rounded text-xs"
+                            style={{ color: 'white' }}
                             title={`Filter ${header}`}
                           >
                             🔍
