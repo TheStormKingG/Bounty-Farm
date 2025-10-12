@@ -1246,7 +1246,7 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Fixed Header */}
             <div 
               ref={headerScrollRef}
@@ -1352,7 +1352,7 @@ const HatchCycleList: React.FC = () => {
             <div 
               ref={bodyScrollRef}
               className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)' }}
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
               onScroll={handleBodyScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
