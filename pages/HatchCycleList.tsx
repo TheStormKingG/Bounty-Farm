@@ -419,6 +419,23 @@ const HatchCycleList: React.FC = () => {
         }
       }
 
+      // Special handling for PCT ADJ - validate range (0-100) and calculate EXP HATCH QTY ADJ
+      if (column === 'PCT ADJ' && convertedValue !== null) {
+        // Validate PCT ADJ is between 0 and 100
+        if (convertedValue < 0 || convertedValue > 100) {
+          setError('PCT ADJ must be between 0 and 100');
+          return;
+        }
+        
+        // Get the current eggs set value for this cycle
+        const currentCycle = cycles.find(c => c.id === cycleId);
+        if (currentCycle?.eggsSet) {
+          const expHatchQtyAdj = (convertedValue / 100) * currentCycle.eggsSet;
+          updateData.exp_hatch_qty_adj = Math.round(expHatchQtyAdj);
+          console.log('Auto-calculated EXP HATCH QTY ADJ:', Math.round(expHatchQtyAdj));
+        }
+      }
+
       // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME
       let supplierName: string | null = null;
       if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
@@ -524,6 +541,15 @@ const HatchCycleList: React.FC = () => {
             }
           }
           
+          // Special handling for PCT ADJ - also update EXP HATCH QTY ADJ in local state
+          if (column === 'PCT ADJ' && convertedValue !== null) {
+            if (updatedCycle.eggsSet) {
+              const expHatchQtyAdj = (convertedValue / 100) * updatedCycle.eggsSet;
+              updatedCycle.expHatchQtyAdj = Math.round(expHatchQtyAdj);
+              console.log('Updated EXP HATCH QTY ADJ in local state:', Math.round(expHatchQtyAdj));
+            }
+          }
+          
           // Special handling for SUPPLIER FLOCK NUMBER - also update SUPPLIER NAME in local state
           if (column === 'SUPPLIER FLOCK NUMBER' && convertedValue) {
             updatedCycle.supplierName = supplierName || undefined;
@@ -576,6 +602,7 @@ const HatchCycleList: React.FC = () => {
       'EGGS RECVD',         // Auto-calculated: Cases Recvd × 360
       'EGGS CRACKED',       // Auto-calculated: Eggs Rec'd - Eggs Set
       'EXP HATCH QTY',      // Auto-calculated: Eggs Set × 0.8
+      'EXP HATCH QTY ADJ',  // Auto-calculated: (PCT ADJ/100) × Eggs Set
       'CHICKS CULLED',      // Auto-calculated: Chicks Hatched - Chicks Sold
       'CREATED BY',         // System field
       'CREATED AT',         // System field
@@ -1231,6 +1258,7 @@ const HatchCycleList: React.FC = () => {
                 <thead className="sticky top-0 bg-white z-10">
                   <tr>
                   {[
+                    'STATUS',
                     'HATCH NO',
                     'HATCH COLOUR',
                     'FLOCKS RECVD',
@@ -1253,7 +1281,6 @@ const HatchCycleList: React.FC = () => {
                     'CHICKS CULLED',
                     'VACCINATION PROFILE',
                     'CHICKS SOLD',
-                    'STATUS',
                     'CREATED BY',
                     'CREATED AT',
                     'UPDATED BY',
@@ -1325,6 +1352,35 @@ const HatchCycleList: React.FC = () => {
                 <tbody>
                   {processedCycles.map((cycle) => (
                     <tr key={cycle.id} className="text-sm text-[#333333] transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '120px', minWidth: '120px' }}>
+                        {cycle.status === 'OPEN' ? (
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Open
+                            </span>
+                            <button
+                              onClick={() => handleCloseCycle(cycle.id)}
+                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                              title="Close Cycle"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                              Closed
+                            </span>
+                            <button
+                              onClick={() => handleReopenCycle(cycle.id)}
+                              className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
+                              title="Reopen Cycle"
+                            >
+                              ↻
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap font-medium text-[#5C3A6B] yellow-cell" style={{ width: '120px', minWidth: '120px' }}>
                         {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'yellow-cell')}
                       </td>
