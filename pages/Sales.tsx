@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
@@ -83,6 +83,10 @@ const Sales: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  
+  // Scroll synchronization refs
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -197,6 +201,19 @@ const Sales: React.FC = () => {
     } else {
       setSortColumn(column);
       setSortDirection('asc');
+    }
+  };
+
+  // Scroll synchronization functions
+  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (bodyScrollRef.current) {
+      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (headerScrollRef.current) {
+      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
 
@@ -455,8 +472,10 @@ const Sales: React.FC = () => {
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
             <div 
+              ref={headerScrollRef}
               className="overflow-x-auto" 
               style={{ flexShrink: 0 }}
+              onScroll={handleHeaderScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
@@ -531,8 +550,10 @@ const Sales: React.FC = () => {
             
             {/* Scrollable Body */}
             <div 
+              ref={bodyScrollRef}
               className="overflow-auto flex-1" 
               style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+              onScroll={handleBodyScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
