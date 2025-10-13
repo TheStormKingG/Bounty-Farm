@@ -625,6 +625,178 @@ const Sales: React.FC = () => {
             )}
       </div>
 
+      {/* Invoices Table */}
+      <div className="bg-white rounded-2xl p-6 shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Invoices</h2>
+          <button className="btn-primary px-6 py-3 text-sm">
+            <span>+</span> Create Invoice
+          </button>
+        </div>
+        
+        <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div 
+            className="overflow-auto flex-1" 
+            style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
+          >
+            <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <thead className="sticky top-0 z-10" style={{
+                backgroundColor: '#ff8c42',
+                borderRadius: '8px 8px 0 0',
+                borderBottom: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <tr>
+                  {[
+                    'Invoice Number', 'Date Sent', 'Payment Status', 'Actions'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '200px', 
+                        minWidth: '200px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                        {header !== 'Actions' && (
+                          <div className="ml-4 flex space-x-1">
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                              </svg>
+                            </button>
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                  <td className="px-4 py-3 text-sm">INV-001</td>
+                  <td className="px-4 py-3 text-sm">10/15/2025</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Paid</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm space-x-2">
+                    <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
+                    <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
+                  </td>
+                </tr>
+                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                  <td className="px-4 py-3 text-sm">INV-002</td>
+                  <td className="px-4 py-3 text-sm">10/16/2025</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm space-x-2">
+                    <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
+                    <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Dispatch Table */}
+      <div className="bg-white rounded-2xl p-6 shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Dispatch</h2>
+          <button className="btn-primary px-6 py-3 text-sm">
+            <span>+</span> Create Dispatch
+          </button>
+        </div>
+        
+        <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div 
+            className="overflow-auto flex-1" 
+            style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
+          >
+            <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <thead className="sticky top-0 z-10" style={{
+                backgroundColor: '#ff8c42',
+                borderRadius: '8px 8px 0 0',
+                borderBottom: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <tr>
+                  {[
+                    'Dispatch Number', 'Date', 'Type', 'Trucks', 'Trips'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                        {header !== 'Type' && header !== 'Trucks' && header !== 'Trips' && (
+                          <div className="ml-4 flex space-x-1">
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                              </svg>
+                            </button>
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                  <td className="px-4 py-3 text-sm">DISP-001</td>
+                  <td className="px-4 py-3 text-sm">10/15/2025</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Pickup</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">2</td>
+                  <td className="px-4 py-3 text-sm">3</td>
+                </tr>
+                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                  <td className="px-4 py-3 text-sm">DISP-002</td>
+                  <td className="px-4 py-3 text-sm">10/16/2025</td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Delivery</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">1</td>
+                  <td className="px-4 py-3 text-sm">2</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* Add Record Modal */}
       {isAddModalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
