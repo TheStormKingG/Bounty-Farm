@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Settings from './pages/Settings';
 import FlockManagement from './pages/FlockManagement';
 import BreedManagement from './pages/BreedManagement';
+import VaccineProfile from './pages/VaccineProfile';
 
 const App: React.FC = () => {
   const { user, loading } = useAuth();
@@ -58,6 +59,7 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/flock-management" element={<FlockManagement />} />
           <Route path="/breed-management" element={<BreedManagement />} />
+          <Route path="/vaccine-profile" element={<VaccineProfile />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 
