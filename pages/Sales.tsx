@@ -332,8 +332,9 @@ const Sales: React.FC = () => {
         </div>
       )}
 
-      {/* Filtering Section */}
+      {/* Combined Filtering and Table Section */}
       <div className="bg-white rounded-2xl p-4 shadow-md">
+        {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-4">
           <div className="w-1/6">
             <input
@@ -384,16 +385,15 @@ const Sales: React.FC = () => {
               </svg>
                                         </button>
           </div>
-        </div>
                 </div>
 
-      {/* Loading State */}
-      {loading ? (
-        <div className="flex justify-center items-center py-8">
-          <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center items-center py-8">
+            <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
+          </div>
+        ) : (
+          <div className="overflow-hidden">
           {/* Table Header */}
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -474,8 +474,9 @@ const Sales: React.FC = () => {
                                 </tbody>
                             </table>
                     </div>
-                </div>
-            )}
+          </div>
+        )}
+      </div>
 
       {/* Add Record Modal */}
       {isAddModalVisible && (
