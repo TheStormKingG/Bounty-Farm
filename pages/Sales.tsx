@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
@@ -23,6 +23,14 @@ const Sales: React.FC = () => {
   const [salesDispatch, setSalesDispatch] = useState<SalesDispatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Filtering and search state
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [rowCount, setRowCount] = useState('50');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -74,6 +82,71 @@ const Sales: React.FC = () => {
 
     fetchSalesDispatch();
   }, []);
+
+  // Process and filter sales dispatch records
+  const processedRecords = useMemo(() => {
+    let filtered = [...salesDispatch];
+
+    // Date range filtering
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      filtered = filtered.filter(record => {
+        const recordDate = new Date(record.dateOrdered);
+        return recordDate >= start && recordDate <= end;
+      });
+    }
+
+    // Search filtering
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(record =>
+        record.poNumber.toLowerCase().includes(searchLower) ||
+        record.customer.toLowerCase().includes(searchLower) ||
+        record.createdBy.toLowerCase().includes(searchLower) ||
+        record.updatedBy.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Sorting
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue: any = a[sortColumn as keyof SalesDispatch];
+        let bValue: any = b[sortColumn as keyof SalesDispatch];
+
+        // Handle date sorting
+        if (sortColumn === 'dateOrdered' || sortColumn === 'hatchDate' || sortColumn === 'createdAt' || sortColumn === 'updatedAt') {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        }
+
+        // Handle number sorting
+        if (sortColumn === 'qty' || sortColumn === 'batchesRequired' || sortColumn === 'trucksRequired') {
+          aValue = Number(aValue);
+          bValue = Number(bValue);
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // Row count limiting
+    const limit = rowCount === 'ALL' ? filtered.length : parseInt(rowCount);
+    filtered = filtered.slice(0, limit);
+
+    return filtered;
+  }, [salesDispatch, startDate, endDate, searchTerm, rowCount, sortColumn, sortDirection]);
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,13 +305,13 @@ const Sales: React.FC = () => {
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const isNumber = type === 'number';
+        const { name, value, type } = e.target;
+        const isNumber = type === 'number';
     setNewRecordData(prev => ({
-      ...prev,
-      [name]: isNumber ? (value === '' ? undefined : Number(value)) : value,
-    }));
-  };
+            ...prev,
+            [name]: isNumber ? (value === '' ? undefined : Number(value)) : value,
+        }));
+    };
 
   return (
     <div className="space-y-8 animate-fade-in-up">
@@ -259,33 +332,117 @@ const Sales: React.FC = () => {
         </div>
       )}
 
+      {/* Filtering Section */}
+      <div className="bg-[#fffae5] rounded-2xl p-4 shadow-md">
+        <div className="flex items-end gap-2 mb-4">
+          <div className="w-1/6">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="Start"
+            />
+          </div>
+          <div className="w-1/6">
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="End"
+            />
+          </div>
+          <div className="w-1/6">
+            <select
+              value={rowCount}
+              onChange={(e) => setRowCount(e.target.value)}
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+            >
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+              <option value="ALL">ALL</option>
+            </select>
+          </div>
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 pr-12 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="Search..."
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white bg-[#5c3a6b] rounded-lg p-1 hover:opacity-90"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Loading State */}
       {loading ? (
         <div className="flex justify-center items-center py-8">
           <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
         </div>
       ) : (
-        <Card title="Sales Dispatch Records">
+        <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+          {/* Table Header */}
           <div className="overflow-x-auto">
-            <table className="modern-table min-w-full">
+            <table className="min-w-full">
               <thead>
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">PO Number</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Date Ordered</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Customer</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Qty</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Hatch Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Batches Required</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Trucks Required</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Created By</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Created At</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Updated By</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Updated At</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Actions</th>
+                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '8px 8px 0 0' }}>
+                  {[
+                    'PO Number', 'Date Ordered', 'Customer', 'Qty', 'Hatch Date',
+                    'Batches Required', 'Trucks Required', 'Created By', 'Created At',
+                    'Updated By', 'Updated At', 'Actions'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                        {header !== 'Actions' && (
+                          <div className="ml-4 flex space-x-1">
+                            <button
+                              onClick={() => handleSort(header.toLowerCase().replace(/\s+/g, '').replace('number', 'Number').replace('ordered', 'Ordered').replace('required', 'Required').replace('created', 'Created').replace('updated', 'Updated').replace('at', 'At'))}
+                              className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18M3 12h18M3 18h18"/>
+                              </svg>
+                            </button>
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {salesDispatch.map(record => (
+                {processedRecords.map(record => (
                   <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                     <td className="px-4 py-3 text-sm font-medium">{record.poNumber}</td>
                     <td className="px-4 py-3 text-sm">{new Date(record.dateOrdered).toLocaleDateString()}</td>
@@ -317,14 +474,14 @@ const Sales: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       )}
 
       {/* Add Record Modal */}
       {isAddModalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h3 className="text-xl font-semibold text-gray-800">Add Sales Dispatch Record</h3>
               <button 
                 onClick={() => setIsAddModalVisible(false)} 
@@ -332,9 +489,9 @@ const Sales: React.FC = () => {
               >
                 &times;
               </button>
-            </div>
+                        </div>
             <form onSubmit={handleAddRecord} className="space-y-4">
-              <div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">PO Number</label>
                 <input
                   type="text"
@@ -345,8 +502,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter PO number"
                   required
                 />
-              </div>
-              <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
                 <input
                   type="date"
@@ -356,8 +513,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-              </div>
-              <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
                 <input
                   type="text"
@@ -368,8 +525,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter customer name"
                   required
                 />
-              </div>
-              <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
                   type="number"
@@ -380,8 +537,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter quantity"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
                 <input
                   type="date"
@@ -391,8 +548,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Batches Required</label>
                 <input
                   type="number"
@@ -402,8 +559,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   placeholder="Enter batches required"
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Trucks Required</label>
                 <input
                   type="number"
@@ -413,7 +570,7 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   placeholder="Enter trucks required"
                 />
-              </div>
+                                </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
                   type="button"
@@ -428,17 +585,17 @@ const Sales: React.FC = () => {
                 >
                   Add Record
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
       {/* Edit Record Modal */}
       {isEditModalVisible && currentRecord && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h3 className="text-xl font-semibold text-gray-800">Edit Sales Dispatch Record</h3>
               <button 
                 onClick={() => setIsEditModalVisible(false)} 
@@ -446,9 +603,9 @@ const Sales: React.FC = () => {
               >
                 &times;
               </button>
-            </div>
+                        </div>
             <form onSubmit={handleUpdateRecord} className="space-y-4">
-              <div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">PO Number</label>
                 <input
                   type="text"
@@ -459,8 +616,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter PO number"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
                 <input
                   type="date"
@@ -470,8 +627,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
                 <input
                   type="text"
@@ -482,8 +639,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter customer name"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
                   type="number"
@@ -494,8 +651,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter quantity"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
                 <input
                   type="date"
@@ -505,8 +662,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Batches Required</label>
                 <input
                   type="number"
@@ -516,8 +673,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   placeholder="Enter batches required"
                 />
-              </div>
-              <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Trucks Required</label>
                 <input
                   type="number"
@@ -527,7 +684,7 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   placeholder="Enter trucks required"
                 />
-              </div>
+                                </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
                   type="button"
@@ -542,13 +699,13 @@ const Sales: React.FC = () => {
                 >
                   Update Record
                 </button>
-              </div>
-            </form>
-          </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Sales;
