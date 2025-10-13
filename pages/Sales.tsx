@@ -367,23 +367,30 @@ const Sales: React.FC = () => {
               <option value="ALL">ALL</option>
             </select>
           </div>
-          <div className="flex-1 relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 pr-12 bg-[#fffae5] rounded-2xl shadow-md text-sm"
-              placeholder="Search..."
-            />
-                                        <button 
-              type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white bg-[#5c3a6b] rounded-lg p-1 hover:opacity-90"
-                                        >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
-              </svg>
+          <div className="flex-1">
+            <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                    clipRule="evenodd"
+                  />
+                </svg>
                                         </button>
+            </div>
           </div>
                 </div>
 
@@ -398,7 +405,7 @@ const Sales: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '12px 12px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '8px 8px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                   {[
                     'PO Number', 'Date Ordered', 'Customer', 'Qty', 'Hatch Date',
                     'Batches Required', 'Trucks Required', 'Created By', 'Created At',
@@ -456,8 +463,8 @@ const Sales: React.FC = () => {
                       </th>
                     );
                   })}
-                </tr>
-              </thead>
+                                    </tr>
+                                </thead>
               <tbody>
                 {processedRecords.map(record => (
                   <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
