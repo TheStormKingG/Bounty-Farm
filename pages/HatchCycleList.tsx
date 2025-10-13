@@ -1302,10 +1302,9 @@ const HatchCycleList: React.FC = () => {
           <div className="text-lg text-[#AAAAAA]">Loading hatch cycles...</div>
         </div>
       ) : (
-            <div className="modern-card p-6">
-                <div className="p-4 bg-white rounded-lg">
-                    {/* Filters */}
-                    <div className="flex items-end gap-2 mb-6 mt-2">
+            <div className="bg-white rounded-2xl p-6 shadow-md">
+                {/* Filters */}
+                <div className="flex items-end gap-2 mb-6 mt-2">
                         <div className="w-1/6">
                   <input
                     id="hatch-start"
@@ -1369,7 +1368,6 @@ const HatchCycleList: React.FC = () => {
                   </div>
                         </div>
                     </div>
-                </div>
 
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
