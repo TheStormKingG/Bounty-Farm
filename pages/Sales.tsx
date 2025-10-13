@@ -405,7 +405,6 @@ const Sales: React.FC = () => {
     return (
     <div className="space-y-8 animate-fade-in-up">
              <div className="flex justify-between items-center">
-        <h1 className="heading-primary">Purchase Orders</h1>
                 <button
           onClick={async () => {
             const nextPO = await generateNextPONumber();
@@ -427,6 +426,9 @@ const Sales: React.FC = () => {
 
       {/* Combined Filtering and Table Section */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
+        </div>
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
           <div className="w-1/6">
@@ -632,8 +634,8 @@ const Sales: React.FC = () => {
           <button className="btn-primary px-6 py-3 text-sm">
             <span>+</span> Create Invoice
           </button>
-        </div>
-        
+                        </div>
+                        
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           <div 
             className="overflow-auto flex-1" 
@@ -677,9 +679,9 @@ const Sales: React.FC = () => {
                                 <path d="M21 21l-4.35-4.35"/>
                               </svg>
                             </button>
-                          </div>
+                            </div>
                         )}
-                      </div>
+                            </div>
                     </th>
                   ))}
                 </tr>
@@ -709,9 +711,9 @@ const Sales: React.FC = () => {
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-      </div>
+                            </div>
+                            </div>
+                        </div>
 
       {/* Dispatch Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
@@ -770,8 +772,8 @@ const Sales: React.FC = () => {
                       </div>
                     </th>
                   ))}
-                </tr>
-              </thead>
+                                            </tr>
+                                        </thead>
               <tbody>
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">DISP-001</td>
@@ -790,12 +792,12 @@ const Sales: React.FC = () => {
                   </td>
                   <td className="px-4 py-3 text-sm">1</td>
                   <td className="px-4 py-3 text-sm">2</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                        </div>
+                    </div>
+                </div>
 
       {/* Add Record Modal */}
       {isAddModalVisible && (
@@ -811,7 +813,7 @@ const Sales: React.FC = () => {
               </button>
                         </div>
             <form onSubmit={handleAddRecord} className="space-y-4">
-                            <div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">PO Number</label>
                 <input
                   type="text"
@@ -823,8 +825,8 @@ const Sales: React.FC = () => {
                   readOnly
                   required
                 />
-                            </div>
-                            <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
                 <input
                   type="date"
@@ -834,8 +836,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-                            </div>
-                            <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
                 <input
                   type="text"
@@ -846,8 +848,8 @@ const Sales: React.FC = () => {
                   placeholder="Enter customer name"
                   required
                 />
-                            </div>
-                            <div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
                   type="number"
