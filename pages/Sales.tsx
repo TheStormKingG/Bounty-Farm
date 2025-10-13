@@ -1,437 +1,554 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { Order, Trip } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../src/supabase';
 
-const initialOrders: Order[] = [
-    { id: 'ORD001', customer: 'John Farms', type: 'Standing', quantityOrdered: 500, hatchDate: '2025-09-07', location: 'Hatchery', status: 'Completed', paymentStatus: 'Paid', allocatedQty: 500, trips: [{ tripId: 'TRIP-001A', quantity: 300, dispatchedAt: '2025-09-07' }, { tripId: 'TRIP-001B', quantity: 200, dispatchedAt: '2025-09-07' }], flockIds: ['Flock 2025-35'], createdAt: '2025-08-20', createdBy: 'sales-01' },
-    { id: 'ORD002', customer: 'Alex Trader', type: 'AdHoc', quantityOrdered: 300, hatchDate: '2025-09-07', location: 'Hatchery', status: 'Allocated', paymentStatus: 'Partial', allocatedQty: 270, trips: [{ tripId: 'TRIP-002A', quantity: 270, dispatchedAt: '2025-09-07' }], flockIds: ['Flock 2025-35'], createdAt: '2025-08-22', createdBy: 'sales-01' },
-    { id: 'ORD003', customer: 'Livestock Co', type: 'Standing', quantityOrdered: 1000, hatchDate: '2025-09-07', location: 'Outlet', status: 'Pending', paymentStatus: 'Pending', trips: [], flockIds: ['Flock 2025-36', 'Flock 2025-37'], createdAt: '2025-08-21', createdBy: 'sales-01' },
-    { id: 'ORD004', customer: 'Mary Poultry', type: 'AdHoc', quantityOrdered: 150, hatchDate: '2025-09-14', location: 'Hatchery', status: 'Confirmed', paymentStatus: 'Pending', trips: [], flockIds: ['Flock 2025-38'], createdAt: '2025-09-01', createdBy: 'sales-01' },
-];
-
-const statusOptions: Order['status'][] = ['Pending', 'Confirmed', 'Allocated', 'Completed', 'NoShow', 'Cancelled'];
-const locationOptions: Order['location'][] = ['Hatchery', 'Outlet', 'Delivery'];
-const typeOptions: Order['type'][] = ['AdHoc', 'Standing'];
-const paymentStatusOptions: NonNullable<Order['paymentStatus']>[] = ['Pending', 'Paid', 'Partial'];
-
-
-const statusColors: Record<Order['status'], string> = {
-    Pending: 'bg-yellow-100 text-yellow-800',
-    Confirmed: 'bg-blue-100 text-blue-800',
-    Allocated: 'bg-indigo-100 text-indigo-800',
-    Completed: 'bg-green-100 text-green-800',
-    NoShow: 'bg-red-100 text-red-800',
-    Cancelled: 'bg-gray-100 text-gray-800',
-};
-
-const TRUCK_CAPACITY = 56000;
+interface SalesDispatch {
+  id: string;
+  poNumber: string;
+  dateOrdered: string;
+  customer: string;
+  qty: number;
+  hatchDate: string;
+  batchesRequired: number;
+  trucksRequired: number;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+}
 
 const Sales: React.FC = () => {
-    const [orders, setOrders] = useState(initialOrders);
-    const [isNewOrderModalVisible, setIsNewOrderModalVisible] = useState(false);
-    const [newOrderData, setNewOrderData] = useState<Partial<Order>>({
-        status: 'Pending',
-        type: 'AdHoc',
-        location: 'Hatchery',
-        paymentStatus: 'Pending',
+  const { user } = useAuth();
+  const [salesDispatch, setSalesDispatch] = useState<SalesDispatch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [currentRecord, setCurrentRecord] = useState<SalesDispatch | null>(null);
+  const [newRecordData, setNewRecordData] = useState<Partial<SalesDispatch>>({});
+
+  // Fetch sales dispatch records from database
+  useEffect(() => {
+    const fetchSalesDispatch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const { data, error } = await supabase
+          .from('sales_dispatch')
+          .select('*')
+          .order('date_ordered', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching sales dispatch records:', error);
+          setError('Failed to fetch sales dispatch records from database');
+          setSalesDispatch([]);
+        } else {
+          const mappedRecords: SalesDispatch[] = (data || []).map((record: any) => ({
+            id: record.id,
+            poNumber: record.po_number,
+            dateOrdered: record.date_ordered,
+            customer: record.customer,
+            qty: record.qty,
+            hatchDate: record.hatch_date,
+            batchesRequired: record.batches_required,
+            trucksRequired: record.trucks_required,
+            createdBy: record.created_by || 'admin',
+            createdAt: record.created_at || new Date().toISOString(),
+            updatedBy: record.updated_by || 'admin',
+            updatedAt: record.updated_at || new Date().toISOString(),
+          }));
+          setSalesDispatch(mappedRecords);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('Database connection failed');
+        setSalesDispatch([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSalesDispatch();
+  }, []);
+
+  const handleAddRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRecordData.poNumber || !newRecordData.customer || !newRecordData.qty) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      setError(null);
+      
+      const { data, error } = await supabase
+        .from('sales_dispatch')
+        .insert([{
+          po_number: newRecordData.poNumber,
+          date_ordered: newRecordData.dateOrdered,
+          customer: newRecordData.customer,
+          qty: newRecordData.qty,
+          hatch_date: newRecordData.hatchDate,
+          batches_required: newRecordData.batchesRequired || 1,
+          trucks_required: newRecordData.trucksRequired || 1,
+          created_by: user?.name || 'admin',
+          updated_by: user?.name || 'admin',
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating sales dispatch record:', error);
+        setError('Failed to create sales dispatch record: ' + error.message);
+        return;
+      }
+
+      const newRecord: SalesDispatch = {
+        id: data.id,
+        poNumber: data.po_number,
+        dateOrdered: data.date_ordered,
+        customer: data.customer,
+        qty: data.qty,
+        hatchDate: data.hatch_date,
+        batchesRequired: data.batches_required,
+        trucksRequired: data.trucks_required,
+        createdBy: data.created_by,
+        createdAt: data.created_at,
+        updatedBy: data.updated_by,
+        updatedAt: data.updated_at,
+      };
+
+      setSalesDispatch(prev => [newRecord, ...prev]);
+      setIsAddModalVisible(false);
+      setNewRecordData({});
+      alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred while adding sales dispatch record');
+    }
+  };
+
+  const handleEditRecord = (record: SalesDispatch) => {
+    setCurrentRecord(record);
+    setNewRecordData({
+      poNumber: record.poNumber,
+      dateOrdered: record.dateOrdered,
+      customer: record.customer,
+      qty: record.qty,
+      hatchDate: record.hatchDate,
+      batchesRequired: record.batchesRequired,
+      trucksRequired: record.trucksRequired,
     });
-    const [tripModalOrder, setTripModalOrder] = useState<Order | null>(null);
-    const [viewModalOrder, setViewModalOrder] = useState<Order | null>(null);
-    const [editModalOrder, setEditModalOrder] = useState<Order | null>(null);
-    const [editFormData, setEditFormData] = useState<Partial<Order>>({});
+    setIsEditModalVisible(true);
+  };
 
-    const generateTrips = (orderId: string, quantity: number | undefined, hatchDate: string | undefined): Trip[] => {
-        if (!quantity || quantity <= 0) {
-            return [];
-        }
+  const handleUpdateRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentRecord) return;
     
-        const numberOfTrucks = Math.ceil(quantity / TRUCK_CAPACITY);
-        if (numberOfTrucks === 0) {
-            return [];
-        }
-    
-        const baseQuantityPerTruck = Math.floor(quantity / numberOfTrucks);
-        let remainder = quantity % numberOfTrucks;
-    
-        const trips: Trip[] = [];
-        const dispatchDate = hatchDate || new Date().toISOString().split('T')[0];
+    if (!newRecordData.poNumber || !newRecordData.customer || !newRecordData.qty) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
-        for (let i = 1; i <= numberOfTrucks; i++) {
-            let tripQuantity = baseQuantityPerTruck;
-            if (remainder > 0) {
-                tripQuantity += 1;
-                remainder--;
+    try {
+      setError(null);
+      
+      const { error } = await supabase
+        .from('sales_dispatch')
+        .update({
+          po_number: newRecordData.poNumber,
+          date_ordered: newRecordData.dateOrdered,
+          customer: newRecordData.customer,
+          qty: newRecordData.qty,
+          hatch_date: newRecordData.hatchDate,
+          batches_required: newRecordData.batchesRequired,
+          trucks_required: newRecordData.trucksRequired,
+          updated_by: user?.name || 'admin',
+        })
+        .eq('id', currentRecord.id);
+
+      if (error) {
+        console.error('Error updating sales dispatch record:', error);
+        setError('Failed to update sales dispatch record');
+        return;
+      }
+
+      setSalesDispatch(prev => prev.map(r => 
+        r.id === currentRecord.id 
+          ? { 
+              ...r, 
+              poNumber: newRecordData.poNumber!,
+              dateOrdered: newRecordData.dateOrdered!,
+              customer: newRecordData.customer!,
+              qty: newRecordData.qty!,
+              hatchDate: newRecordData.hatchDate!,
+              batchesRequired: newRecordData.batchesRequired!,
+              trucksRequired: newRecordData.trucksRequired!,
+              updatedBy: user?.name || 'admin', 
+              updatedAt: new Date().toISOString() 
             }
-            trips.push({
-                tripId: `TRIP-${orderId.replace('ORD', '')}-${i}`,
-                quantity: tripQuantity,
-                dispatchedAt: dispatchDate,
-            });
-        }
-    
-        return trips;
-    };
+          : r
+      ));
+      setIsEditModalVisible(false);
+      setCurrentRecord(null);
+      setNewRecordData({});
+      alert(`Sales dispatch record "${newRecordData.poNumber}" updated successfully!`);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred while updating sales dispatch record');
+    }
+  };
 
-    const handleEditClick = (order: Order) => {
-        setEditModalOrder(order);
-        setEditFormData(order);
-    };
-    
-    const handleNewOrderClick = () => {
-        setNewOrderData({
-            status: 'Pending',
-            type: 'AdHoc',
-            location: 'Hatchery',
-            paymentStatus: 'Pending',
-            hatchDate: new Date().toISOString().split('T')[0], // Default to today
-        });
-        setIsNewOrderModalVisible(true);
-    };
+  const handleDeleteRecord = async (recordId: string, poNumber: string) => {
+    if (!window.confirm(`Are you sure you want to delete the sales dispatch record "${poNumber}"?`)) {
+      return;
+    }
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, setData: React.Dispatch<React.SetStateAction<Partial<Order>>>) => {
-        const { name, value, type } = e.target;
-        const isNumber = type === 'number';
-        setData(prev => ({
-            ...prev,
-            [name]: isNumber ? (value === '' ? undefined : Number(value)) : value,
-        }));
-    };
+    try {
+      setError(null);
+      
+      const { error } = await supabase
+        .from('sales_dispatch')
+        .delete()
+        .eq('id', recordId);
 
-    const handleSaveChanges = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!editModalOrder) return;
+      if (error) {
+        console.error('Error deleting sales dispatch record:', error);
+        setError('Failed to delete sales dispatch record');
+        return;
+      }
 
-        const allocatedQty = editFormData.allocatedQty;
-        const updatedTrips = generateTrips(editModalOrder.id, allocatedQty, editFormData.hatchDate);
+      setSalesDispatch(prev => prev.filter(r => r.id !== recordId));
+      alert('Sales dispatch record deleted successfully');
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred while deleting sales dispatch record');
+    }
+  };
 
-        setOrders(orders.map(o => o.id === editModalOrder.id ? { ...o, ...editFormData, trips: updatedTrips } as Order : o));
-        setEditModalOrder(null);
-    };
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const isNumber = type === 'number';
+    setNewRecordData(prev => ({
+      ...prev,
+      [name]: isNumber ? (value === '' ? undefined : Number(value)) : value,
+    }));
+  };
 
-    const handleAddNewOrder = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newId = `ORD${String(orders.length + 1).padStart(3, '0')}`;
-        const allocatedQty = newOrderData.allocatedQty;
-        const trips = generateTrips(newId, allocatedQty, newOrderData.hatchDate);
+  return (
+    <div className="space-y-8 animate-fade-in-up">
+      <div className="flex justify-between items-center">
+        <h1 className="heading-primary">Sales & Dispatch</h1>
+        <button 
+          onClick={() => setIsAddModalVisible(true)} 
+          className="btn-primary px-6 py-3 text-sm"
+        >
+          <span>+</span> Add Sales Dispatch
+        </button>
+      </div>
+      
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
+          {error}
+        </div>
+      )}
 
-        const newOrder: Order = {
-            id: newId,
-            customer: newOrderData.customer || 'N/A',
-            type: newOrderData.type || 'AdHoc',
-            quantityOrdered: newOrderData.quantityOrdered || 0,
-            hatchDate: newOrderData.hatchDate || new Date().toISOString().split('T')[0],
-            location: newOrderData.location || 'Hatchery',
-            status: newOrderData.status || 'Pending',
-            paymentStatus: newOrderData.paymentStatus || 'Pending',
-            allocatedQty: allocatedQty,
-            flockIds: newOrderData.flockIds,
-            createdAt: new Date().toISOString(),
-            createdBy: 'sales-01', // Mock user
-            trips: trips,
-        };
-        setOrders([newOrder, ...orders]);
-        setIsNewOrderModalVisible(false);
-    };
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
+        </div>
+      ) : (
+        <Card title="Sales Dispatch Records">
+          <div className="overflow-x-auto">
+            <table className="modern-table min-w-full">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">PO Number</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Date Ordered</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Customer</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Qty</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Hatch Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Batches Required</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Trucks Required</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Created By</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Created At</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Updated By</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Updated At</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#333333] uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesDispatch.map(record => (
+                  <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm font-medium">{record.poNumber}</td>
+                    <td className="px-4 py-3 text-sm">{new Date(record.dateOrdered).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm">{record.customer}</td>
+                    <td className="px-4 py-3 text-sm">{record.qty.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm">{new Date(record.hatchDate).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm">{record.batchesRequired}</td>
+                    <td className="px-4 py-3 text-sm">{record.trucksRequired}</td>
+                    <td className="px-4 py-3 text-sm">{record.createdBy}</td>
+                    <td className="px-4 py-3 text-sm">{new Date(record.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm">{record.updatedBy}</td>
+                    <td className="px-4 py-3 text-sm">{new Date(record.updatedAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm space-x-2">
+                      <button 
+                        onClick={() => handleEditRecord(record)}
+                        className="text-[#5C3A6B] hover:underline font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteRecord(record.id, record.poNumber)}
+                        className="text-[#F86F6F] hover:underline font-medium"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
-    return (
-        <div className="space-y-6">
-             <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-bold text-gray-800">Sales & Dispatch</h2>
+      {/* Add Record Modal */}
+      {isAddModalVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Add Sales Dispatch Record</h3>
+              <button 
+                onClick={() => setIsAddModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddRecord} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PO Number</label>
+                <input
+                  type="text"
+                  name="poNumber"
+                  value={newRecordData.poNumber || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter PO number"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
+                <input
+                  type="date"
+                  name="dateOrdered"
+                  value={newRecordData.dateOrdered || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                <input
+                  type="text"
+                  name="customer"
+                  value={newRecordData.customer || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter customer name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                <input
+                  type="number"
+                  name="qty"
+                  value={newRecordData.qty || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter quantity"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
+                <input
+                  type="date"
+                  name="hatchDate"
+                  value={newRecordData.hatchDate || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Batches Required</label>
+                <input
+                  type="number"
+                  name="batchesRequired"
+                  value={newRecordData.batchesRequired || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter batches required"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Trucks Required</label>
+                <input
+                  type="number"
+                  name="trucksRequired"
+                  value={newRecordData.trucksRequired || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter trucks required"
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
-                  onClick={handleNewOrderClick}
+                  type="button"
+                  onClick={() => setIsAddModalVisible(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
                   className="btn-blue px-6 py-3"
                 >
-                  <span>+</span> New Order
+                  Add Record
                 </button>
-            </div>
-
-            <Card title="Booking File">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hatch Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flock(s)</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ordered</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dispatch ID</th>
-                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Trips</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {orders.map((order) => (
-                                <tr key={order.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.customer}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.hatchDate}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.flockIds?.join(', ') || '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.quantityOrdered.toLocaleString()}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">{order.allocatedQty?.toLocaleString() || '-'}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.id}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                        <button 
-                                            onClick={() => setTripModalOrder(order)}
-                                            className="text-bounty-blue-600 hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-                                            disabled={!order.trips || order.trips.length === 0}
-                                        >
-                                            {order.trips?.length || 0}
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button onClick={() => setViewModalOrder(order)} className="text-gray-600 hover:text-bounty-blue-900 mr-3">View</button>
-                                        <button onClick={() => handleEditClick(order)} className="text-bounty-blue-600 hover:text-bounty-blue-900">Edit</button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </Card>
-
-            {/* Trip Details Modal */}
-            {tripModalOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mx-4">
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h3 className="text-xl font-semibold text-gray-800">Trip Details: {tripModalOrder.id}</h3>
-                            <button onClick={() => setTripModalOrder(null)} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                        </div>
-                        <p className="mb-4 text-gray-600">Customer: <span className="font-semibold text-gray-900">{tripModalOrder.customer}</span></p>
-
-                        <div className="overflow-y-auto max-h-60">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase bg-gray-50">Trip ID</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase bg-gray-50">Quantity</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase bg-gray-50">Dispatch Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {tripModalOrder.trips?.map(trip => (
-                                        <tr key={trip.tripId}>
-                                            <td className="px-4 py-3 text-sm text-gray-900">{trip.tripId}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-900">{trip.quantity.toLocaleString()}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-500">{trip.dispatchedAt}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div className="mt-6 text-right">
-                             <button onClick={() => setTripModalOrder(null)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-             {/* View Order (Dispatch Card) Modal */}
-            {viewModalOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl mx-4">
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h3 className="text-xl font-semibold text-gray-800">Dispatch Card: {viewModalOrder.id}</h3>
-                            <button onClick={() => setViewModalOrder(null)} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                            <div>
-                                <h4 className="font-semibold text-gray-600 mb-2">Customer Details</h4>
-                                <p><span className="text-gray-500">Customer:</span> <span className="font-medium text-gray-900">{viewModalOrder.customer}</span></p>
-                                <p><span className="text-gray-500">Order Type:</span> <span className="font-medium text-gray-900">{viewModalOrder.type}</span></p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-600 mb-2">Order Summary</h4>
-                                <p><span className="text-gray-500">Status:</span> <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[viewModalOrder.status]}`}>{viewModalOrder.status}</span></p>
-                                <p><span className="text-gray-500">Hatch Date:</span> <span className="font-medium text-gray-900">{viewModalOrder.hatchDate}</span></p>
-                                <p><span className="text-gray-500">Location:</span> <span className="font-medium text-gray-900">{viewModalOrder.location}</span></p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-600 mb-2">Quantities</h4>
-                                <p><span className="text-gray-500">Ordered:</span> <span className="font-medium text-gray-900">{viewModalOrder.quantityOrdered.toLocaleString()}</span></p>
-                                <p><span className="text-gray-500">Allocated:</span> <span className="font-medium text-gray-900">{viewModalOrder.allocatedQty?.toLocaleString() || 'N/A'}</span></p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-600 mb-2">Source & Payment</h4>
-                                <p><span className="text-gray-500">Flock(s):</span> <span className="font-medium text-gray-900">{viewModalOrder.flockIds?.join(', ') || 'N/A'}</span></p>
-                                <p><span className="text-gray-500">Payment:</span> <span className="font-medium text-gray-900">{viewModalOrder.paymentStatus || 'N/A'}</span></p>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 border-t pt-4">
-                            <h4 className="font-semibold text-gray-600 mb-2">Dispatch Trips</h4>
-                            {viewModalOrder.trips && viewModalOrder.trips.length > 0 ? (
-                                <div className="overflow-y-auto max-h-40">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50 sticky top-0">
-                                            <tr>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trip ID</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Dispatch Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {viewModalOrder.trips?.map(trip => (
-                                                <tr key={trip.tripId}>
-                                                    <td className="px-4 py-3 text-sm text-gray-900">{trip.tripId}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-900">{trip.quantity.toLocaleString()}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-500">{trip.dispatchedAt}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <p className="text-gray-500 text-center py-4">No dispatch trips recorded for this order.</p>
-                            )}
-                        </div>
-                        
-                        <div className="mt-6 text-right">
-                            <button onClick={() => setViewModalOrder(null)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Close</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-             {/* New Order Modal */}
-            {isNewOrderModalVisible && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl mx-4">
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h3 className="text-xl font-semibold text-gray-800">Book New Order</h3>
-                            <button onClick={() => setIsNewOrderModalVisible(null)} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                        </div>
-                        
-                        <form onSubmit={handleAddNewOrder}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                                <div>
-                                    <label className="block font-medium text-gray-700">Customer</label>
-                                    <input type="text" name="customer" value={newOrderData.customer || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Order Type</label>
-                                    <select name="type" value={newOrderData.type || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {typeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Status</label>
-                                    <select name="status" value={newOrderData.status || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                       {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Hatch Date</label>
-                                    <input type="date" name="hatchDate" value={newOrderData.hatchDate || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required/>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Location</label>
-                                    <select name="location" value={newOrderData.location || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {locationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Payment Status</label>
-                                    <select name="paymentStatus" value={newOrderData.paymentStatus || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {paymentStatusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Quantity Ordered</label>
-                                    <input type="number" name="quantityOrdered" value={newOrderData.quantityOrdered || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required />
-                                </div>
-                                 <div>
-                                    <label className="block font-medium text-gray-700">Quantity Allocated</label>
-                                    <input type="number" name="allocatedQty" value={newOrderData.allocatedQty || ''} onChange={(e) => handleFormChange(e, setNewOrderData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                 <div className="md:col-span-2">
-                                    <label className="block font-medium text-gray-700">Flock(s) (comma-separated)</label>
-                                    <input type="text" name="flockIds" value={Array.isArray(newOrderData.flockIds) ? newOrderData.flockIds.join(', ') : ''} onChange={(e) => setNewOrderData(prev => ({ ...prev, flockIds: e.target.value.split(',').map(f => f.trim()) }))} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                            </div>
-                            <div className="mt-6 pt-4 border-t flex justify-end space-x-3">
-                                <button type="button" onClick={() => setIsNewOrderModalVisible(false)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
-                                <button type="submit" className="btn-green px-6 py-3">Save Order</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Edit Order Modal */}
-            {editModalOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-2xl mx-4">
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h3 className="text-xl font-semibold text-gray-800">Edit Order: {editModalOrder.id}</h3>
-                            <button onClick={() => setEditModalOrder(null)} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                        </div>
-                        
-                        <form onSubmit={handleSaveChanges}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
-                                <div>
-                                    <label className="block font-medium text-gray-700">Customer</label>
-                                    <input type="text" name="customer" value={editFormData.customer || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Order Type</label>
-                                    <select name="type" value={editFormData.type || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {typeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Status</label>
-                                    <select name="status" value={editFormData.status || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                       {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Hatch Date</label>
-                                    <input type="date" name="hatchDate" value={editFormData.hatchDate || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Location</label>
-                                    <select name="location" value={editFormData.location || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {locationOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Payment Status</label>
-                                    <select name="paymentStatus" value={editFormData.paymentStatus || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                                        {paymentStatusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block font-medium text-gray-700">Quantity Ordered</label>
-                                    <input type="number" name="quantityOrdered" value={editFormData.quantityOrdered || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                 <div>
-                                    <label className="block font-medium text-gray-700">Quantity Allocated</label>
-                                    <input type="number" name="allocatedQty" value={editFormData.allocatedQty || ''} onChange={(e) => handleFormChange(e, setEditFormData)} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                                 <div className="md:col-span-2">
-                                    <label className="block font-medium text-gray-700">Flock(s) (comma-separated)</label>
-                                    <input type="text" name="flockIds" value={Array.isArray(editFormData.flockIds) ? editFormData.flockIds.join(', ') : ''} onChange={(e) => setEditFormData(prev => ({ ...prev, flockIds: e.target.value.split(',').map(f => f.trim()) }))} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
-                                </div>
-                            </div>
-                            <div className="mt-6 pt-4 border-t flex justify-end space-x-3">
-                                <button type="button" onClick={() => setEditModalOrder(null)} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
-                                <button type="submit" className="btn-blue px-6 py-3">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+              </div>
+            </form>
+          </div>
         </div>
-    );
+      )}
+
+      {/* Edit Record Modal */}
+      {isEditModalVisible && currentRecord && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Edit Sales Dispatch Record</h3>
+              <button 
+                onClick={() => setIsEditModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateRecord} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PO Number</label>
+                <input
+                  type="text"
+                  name="poNumber"
+                  value={newRecordData.poNumber || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter PO number"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
+                <input
+                  type="date"
+                  name="dateOrdered"
+                  value={newRecordData.dateOrdered || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                <input
+                  type="text"
+                  name="customer"
+                  value={newRecordData.customer || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter customer name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                <input
+                  type="number"
+                  name="qty"
+                  value={newRecordData.qty || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter quantity"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
+                <input
+                  type="date"
+                  name="hatchDate"
+                  value={newRecordData.hatchDate || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Batches Required</label>
+                <input
+                  type="number"
+                  name="batchesRequired"
+                  value={newRecordData.batchesRequired || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter batches required"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Trucks Required</label>
+                <input
+                  type="number"
+                  name="trucksRequired"
+                  value={newRecordData.trucksRequired || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter trucks required"
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalVisible(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-blue px-6 py-3"
+                >
+                  Update Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Sales;
