@@ -630,7 +630,7 @@ const Sales: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
                         <div className="flex justify-between items-center mb-4 border-b pb-2">
-              <h3 className="text-xl font-semibold text-gray-800">Add Sales Dispatch Record</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Create Purchase Order (PO)</h3>
               <button 
                 onClick={() => setIsAddModalVisible(false)} 
                 className="text-gray-500 hover:text-gray-800 text-2xl"
@@ -724,15 +724,15 @@ const Sales: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalVisible(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  className="px-6 py-3 bg-white text-black border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="btn-blue px-6 py-3"
+                  className="px-6 py-3 bg-[#5C3A6B] text-white rounded-md hover:opacity-90"
                 >
-                  Add Record
+                  Create PO
                 </button>
                             </div>
                         </form>
