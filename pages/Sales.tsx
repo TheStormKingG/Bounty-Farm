@@ -720,24 +720,29 @@ const Sales: React.FC = () => {
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-001</td>
                   <td className="px-4 py-3 text-sm">
-                    <button 
-                      onClick={(e) => {
-                        const button = e.target as HTMLButtonElement;
-                        const input = document.createElement('input');
-                        input.type = 'date';
-                        input.onchange = (event) => {
-                          const target = event.target as HTMLInputElement;
-                          if (target.value) {
-                            button.textContent = target.value;
+                    <div className="relative">
+                      <input
+                        type="date"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const input = e.target as HTMLInputElement;
+                          const button = input.nextElementSibling as HTMLButtonElement;
+                          if (input.value) {
+                            button.textContent = input.value;
                             button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
                           }
-                        };
-                        input.click();
-                      }}
-                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
-                    >
-                      Pending
-                    </button>
+                        }}
+                      />
+                      <button 
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          input.click();
+                        }}
+                        className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                      >
+                        Pending
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <button 
@@ -762,24 +767,29 @@ const Sales: React.FC = () => {
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-002</td>
                   <td className="px-4 py-3 text-sm">
-                    <button 
-                      onClick={(e) => {
-                        const button = e.target as HTMLButtonElement;
-                        const input = document.createElement('input');
-                        input.type = 'date';
-                        input.onchange = (event) => {
-                          const target = event.target as HTMLInputElement;
-                          if (target.value) {
-                            button.textContent = target.value;
+                    <div className="relative">
+                      <input
+                        type="date"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const input = e.target as HTMLInputElement;
+                          const button = input.nextElementSibling as HTMLButtonElement;
+                          if (input.value) {
+                            button.textContent = input.value;
                             button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
                           }
-                        };
-                        input.click();
-                      }}
-                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
-                    >
-                      Pending
-                    </button>
+                        }}
+                      />
+                      <button 
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          input.click();
+                        }}
+                        className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                      >
+                        Pending
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <button 
