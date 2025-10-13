@@ -405,7 +405,7 @@ const Sales: React.FC = () => {
     return (
     <div className="space-y-8 animate-fade-in-up">
              <div className="flex justify-between items-center">
-        <h1 className="heading-primary">Sales & Dispatch</h1>
+        <h1 className="heading-primary">Purchase Orders</h1>
                 <button
           onClick={async () => {
             const nextPO = await generateNextPONumber();
@@ -414,7 +414,7 @@ const Sales: React.FC = () => {
           }} 
           className="btn-primary px-6 py-3 text-sm"
                 >
-          <span>+</span> Add Sales Dispatch
+          <span>+</span> Create PO
                 </button>
             </div>
 
