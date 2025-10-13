@@ -200,26 +200,26 @@ const Sales: React.FC = () => {
 
       if (error) {
         console.error('Error fetching last PO number:', error);
-        return 'BFLOS-001';
+        return 'BFLOS-001-PO';
       }
 
       if (!data || data.length === 0) {
-        return 'BFLOS-001';
+        return 'BFLOS-001-PO';
       }
 
       const lastPONumber = data[0].po_number;
-      const match = lastPONumber.match(/BFLOS-(\d+)/);
+      const match = lastPONumber.match(/BFLOS-(\d+)-PO/);
       
       if (match) {
         const lastNumber = parseInt(match[1]);
         const nextNumber = lastNumber + 1;
-        return `BFLOS-${nextNumber.toString().padStart(3, '0')}`;
+        return `BFLOS-${nextNumber.toString().padStart(3, '0')}-PO`;
       }
 
-      return 'BFLOS-001';
+      return 'BFLOS-001-PO';
     } catch (error) {
       console.error('Error generating PO number:', error);
-      return 'BFLOS-001';
+      return 'BFLOS-001-PO';
     }
   };
 
@@ -281,6 +281,25 @@ const Sales: React.FC = () => {
       };
 
       setSalesDispatch(prev => [newRecord, ...prev]);
+      
+      // Auto-create invoice
+      const invoiceNumber = newRecordData.poNumber.replace('-PO', '-INV');
+      const { error: invoiceError } = await supabase
+        .from('invoices')
+        .insert([{
+          invoice_number: invoiceNumber,
+          date_sent: newRecordData.dateOrdered,
+          payment_status: 'pending',
+          po_number: newRecordData.poNumber,
+          created_by: user?.name || 'admin',
+          updated_by: user?.name || 'admin',
+        }]);
+
+      if (invoiceError) {
+        console.error('Error creating invoice:', invoiceError);
+        // Don't show error to user as PO was created successfully
+      }
+      
       setIsAddModalVisible(false);
       setNewRecordData({});
       alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
@@ -612,9 +631,6 @@ const Sales: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Invoices</h2>
-          <button className="btn-primary px-6 py-3 text-sm">
-            <span>+</span> Create Invoice
-          </button>
         </div>
         
         {/* Filtering Section */}
@@ -703,9 +719,22 @@ const Sales: React.FC = () => {
               <tbody>
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-001</td>
-                  <td className="px-4 py-3 text-sm">10/15/2025</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Paid</span>
+                    <input
+                      type="date"
+                      defaultValue="2025-10-15"
+                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>
+                      <button className="text-gray-600 hover:text-green-600">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm space-x-2">
                     <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
@@ -714,9 +743,22 @@ const Sales: React.FC = () => {
                 </tr>
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-002</td>
-                  <td className="px-4 py-3 text-sm">10/16/2025</td>
                   <td className="px-4 py-3 text-sm">
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>
+                    <input
+                      type="date"
+                      defaultValue="2025-10-16"
+                      className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Paid</span>
+                      <button className="text-green-600">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm space-x-2">
                     <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
@@ -733,9 +775,6 @@ const Sales: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Dispatch</h2>
-          <button className="btn-primary px-6 py-3 text-sm">
-            <span>+</span> Create Dispatch
-          </button>
         </div>
         
         {/* Filtering Section */}

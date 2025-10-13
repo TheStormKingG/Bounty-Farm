@@ -38,7 +38,7 @@ const Sidebar: React.FC = () => {
         {hasRole([Role.Admin, Role.SalesClerk]) && (
           <NavLink to="/sales" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
             <span className="mr-3">💰</span>
-            Chick Sales
+            🐣 Chicks
           </NavLink>
         )}
 
