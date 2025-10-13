@@ -84,9 +84,6 @@ const Sales: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
-  // Scroll synchronization refs
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const bodyScrollRef = useRef<HTMLDivElement>(null);
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -204,18 +201,6 @@ const Sales: React.FC = () => {
     }
   };
 
-  // Scroll synchronization functions
-  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (bodyScrollRef.current) {
-      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
-
-  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
 
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -470,12 +455,10 @@ const Sales: React.FC = () => {
                         </div>
         ) : (
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-            {/* Fixed Header */}
+            {/* Single Table with Sticky Header */}
             <div 
-              ref={headerScrollRef}
-              className="overflow-x-auto" 
-              style={{ flexShrink: 0 }}
-              onScroll={handleHeaderScroll}
+              className="overflow-auto flex-1" 
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
@@ -545,17 +528,6 @@ const Sales: React.FC = () => {
                     })}
                                     </tr>
                                 </thead>
-              </table>
-            </div>
-            
-            {/* Scrollable Body */}
-            <div 
-              ref={bodyScrollRef}
-              className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
-              onScroll={handleBodyScroll}
-            >
-              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {processedRecords.map(record => (
                     <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
