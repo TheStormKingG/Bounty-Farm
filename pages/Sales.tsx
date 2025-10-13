@@ -333,9 +333,9 @@ const Sales: React.FC = () => {
       )}
 
       {/* Combined Filtering and Table Section */}
-      <div className="bg-white rounded-2xl p-4 shadow-md">
+      <div className="bg-white rounded-2xl p-6 shadow-md">
         {/* Filtering Section */}
-        <div className="flex items-end gap-2 mb-4">
+        <div className="flex items-end gap-2 mb-6 mt-2">
           <div className="w-1/6">
             <input
               type="date"
@@ -398,49 +398,66 @@ const Sales: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
-                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '8px 8px 0 0' }}>
+                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '12px 12px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                   {[
                     'PO Number', 'Date Ordered', 'Customer', 'Qty', 'Hatch Date',
                     'Batches Required', 'Trucks Required', 'Created By', 'Created At',
                     'Updated By', 'Updated At', 'Actions'
-                  ].map((header, index) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                      style={{ 
-                        width: '150px', 
-                        minWidth: '150px',
-                        backgroundColor: '#ff8c42',
-                        color: 'white',
-                        fontWeight: '600',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                      }}
-                    >
-                      <div className="flex items-center">
-                        <span className="text-white font-medium text-xs">{header}</span>
-                        {header !== 'Actions' && (
-                          <div className="ml-4 flex space-x-1">
-                            <button
-                              onClick={() => handleSort(header.toLowerCase().replace(/\s+/g, '').replace('number', 'Number').replace('ordered', 'Ordered').replace('required', 'Required').replace('created', 'Created').replace('updated', 'Updated').replace('at', 'At'))}
-                              className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M3 6h18M3 12h18M3 18h18"/>
-                              </svg>
-                            </button>
-                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="11" cy="11" r="8"/>
-                                <path d="M21 21l-4.35-4.35"/>
-                              </svg>
-                            </button>
-                          </div>
-                        )}
+                  ].map((header, index) => {
+                    const fieldName = header.toLowerCase().replace(/\s+/g, '').replace('number', 'Number').replace('ordered', 'Ordered').replace('required', 'Required').replace('created', 'Created').replace('updated', 'Updated').replace('at', 'At');
+                    const isCurrentSort = sortColumn === fieldName;
+                    const isAscending = isCurrentSort && sortDirection === 'asc';
+                    const isDescending = isCurrentSort && sortDirection === 'desc';
+                    
+                    return (
+                      <th
+                        key={header}
+                        className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                        style={{ 
+                          width: '150px', 
+                          minWidth: '150px',
+                          backgroundColor: '#ff8c42',
+                          color: 'white',
+                          fontWeight: '600',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        <div className="flex items-center">
+                          <span className="text-white font-medium text-xs">{header}</span>
+                          {header !== 'Actions' && (
+                            <div className="ml-4 flex space-x-1">
+                              <button
+                                onClick={() => handleSort(fieldName)}
+                                className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
+                              >
+                                {isAscending ? (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 15l-6-6-6 6"/>
+                                  </svg>
+                                ) : isDescending ? (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 9l6 6 6-6"/>
+                                  </svg>
+                                ) : (
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                                  </svg>
+                                )}
+                              </button>
+                              <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="11" cy="11" r="8"/>
+                                  <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                              </button>
+                            </div>
+                          )}
                         </div>
-                    </th>
-                  ))}
-                                    </tr>
-                                </thead>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
               <tbody>
                 {processedRecords.map(record => (
                   <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -474,8 +491,8 @@ const Sales: React.FC = () => {
                                 </tbody>
                             </table>
                     </div>
-          </div>
-        )}
+                </div>
+            )}
       </div>
 
       {/* Add Record Modal */}
