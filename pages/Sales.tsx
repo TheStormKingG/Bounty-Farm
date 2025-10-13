@@ -493,11 +493,11 @@ const Sales: React.FC = () => {
             <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
                         </div>
         ) : (
-          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Single Table with Sticky Header */}
             <div 
               className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+              style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
