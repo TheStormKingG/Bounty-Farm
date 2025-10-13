@@ -922,12 +922,8 @@ const HatchCycleList: React.FC = () => {
       });
     }
 
-    // Row count limiting
-    const limit = rowCount === 'ALL' ? filtered.length : parseInt(rowCount);
-    filtered = filtered.slice(0, limit);
-
     return filtered;
-  }, [cycles, startDate, endDate, searchTerm, rowCount, filters, sortColumn, sortDirection]);
+  }, [cycles, startDate, endDate, searchTerm, filters, sortColumn, sortDirection]);
 
   // Fetch vaccine profiles from Supabase
   useEffect(() => {
@@ -1343,7 +1339,7 @@ const HatchCycleList: React.FC = () => {
             <div className="bg-white rounded-2xl p-6 shadow-md">
                 {/* Filters */}
                 <div className="flex items-end gap-2 mb-6 mt-2">
-                        <div className="w-1/6">
+                        <div className="w-1/4">
                   <input
                     id="hatch-start"
                     type="date"
@@ -1354,7 +1350,7 @@ const HatchCycleList: React.FC = () => {
                     title="Start"
                   />
                         </div>
-                        <div className="w-1/6">
+                        <div className="w-1/4">
                   <input
                     id="hatch-end"
                     type="date"
@@ -1364,21 +1360,6 @@ const HatchCycleList: React.FC = () => {
                     onChange={(e) => setEndDate(e.target.value)}
                     title="End"
                   />
-                        </div>
-                        <div className="w-1/6">
-                  <select 
-                    className="w-full px-3 py-2 rounded-2xl shadow-md" 
-                    style={{ backgroundColor: '#fffae5' }} 
-                    title="Show"
-                    value={rowCount}
-                    onChange={(e) => setRowCount(e.target.value)}
-                  >
-                            <option>50</option>
-                            <option>100</option>
-                            <option>500</option>
-                            <option>1000</option>
-                            <option>ALL</option>
-                        </select>
                         </div>
                         <div className="flex-1">
                   <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>

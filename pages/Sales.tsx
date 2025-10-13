@@ -186,12 +186,8 @@ const Sales: React.FC = () => {
       });
     }
 
-    // Row count limiting
-    const limit = rowCount === 'ALL' ? filtered.length : parseInt(rowCount);
-    filtered = filtered.slice(0, limit);
-
     return filtered;
-  }, [salesDispatch, startDate, endDate, searchTerm, rowCount, sortColumn, sortDirection]);
+  }, [salesDispatch, startDate, endDate, searchTerm, sortColumn, sortDirection]);
 
   // Generate next PO number
   const generateNextPONumber = async (): Promise<string> => {
@@ -416,7 +412,7 @@ const Sales: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
-          <button
+                <button
             onClick={async () => {
               const nextPO = await generateNextPONumber();
               setNewRecordData({ ...newRecordData, poNumber: nextPO });
@@ -429,7 +425,7 @@ const Sales: React.FC = () => {
         </div>
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
-          <div className="w-1/6">
+          <div className="w-1/4">
             <input
               type="date"
               value={startDate}
@@ -438,7 +434,7 @@ const Sales: React.FC = () => {
               placeholder="Start"
             />
           </div>
-          <div className="w-1/6">
+          <div className="w-1/4">
             <input
               type="date"
               value={endDate}
@@ -446,19 +442,6 @@ const Sales: React.FC = () => {
               className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
               placeholder="End"
             />
-          </div>
-          <div className="w-1/6">
-            <select
-              value={rowCount}
-              onChange={(e) => setRowCount(e.target.value)}
-              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
-            >
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="500">500</option>
-              <option value="1000">1000</option>
-              <option value="ALL">ALL</option>
-            </select>
           </div>
           <div className="flex-1">
             <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
@@ -482,7 +465,7 @@ const Sales: React.FC = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                                        </button>
+                </button>
             </div>
           </div>
                 </div>
@@ -632,7 +615,40 @@ const Sales: React.FC = () => {
           <button className="btn-primary px-6 py-3 text-sm">
             <span>+</span> Create Invoice
           </button>
-                        </div>
+        </div>
+        
+        {/* Filtering Section */}
+        <div className="flex items-end gap-2 mb-6 mt-2">
+          <div className="w-1/4">
+            <input
+              type="date"
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="Start"
+            />
+          </div>
+          <div className="w-1/4">
+            <input
+              type="date"
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="End"
+            />
+          </div>
+          <div className="flex-1">
+            <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+              />
+              <button className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
                         
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           <div 
@@ -720,6 +736,39 @@ const Sales: React.FC = () => {
           <button className="btn-primary px-6 py-3 text-sm">
             <span>+</span> Create Dispatch
           </button>
+        </div>
+        
+        {/* Filtering Section */}
+        <div className="flex items-end gap-2 mb-6 mt-2">
+          <div className="w-1/4">
+            <input
+              type="date"
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="Start"
+            />
+          </div>
+          <div className="w-1/4">
+            <input
+              type="date"
+              className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+              placeholder="End"
+            />
+          </div>
+          <div className="flex-1">
+            <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+              />
+              <button className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
         
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
