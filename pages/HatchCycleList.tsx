@@ -125,6 +125,40 @@ if (typeof document !== 'undefined') {
 // --- helpers to keep UI <> DB clean -----------------------------------------
 const colourLabel = (v?: string) => (v ? String(v).split('-').pop() ?? v : '-');
 
+// Generate next Hatch Number
+const generateNextHatchNumber = async (): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('hatch_cycles')
+      .select('hatch_no')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) {
+      console.error('Error fetching last hatch number:', error);
+      return '2025-001-BFL';
+    }
+
+    if (!data || data.length === 0) {
+      return '2025-001-BFL';
+    }
+
+    const lastHatchNumber = data[0].hatch_no;
+    const match = lastHatchNumber.match(/2025-(\d+)-BFL/);
+    
+    if (match) {
+      const lastNumber = parseInt(match[1]);
+      const nextNumber = lastNumber + 1;
+      return `2025-${nextNumber.toString().padStart(3, '0')}-BFL`;
+    }
+
+    return '2025-001-BFL';
+  } catch (error) {
+    console.error('Error generating hatch number:', error);
+    return '2025-001-BFL';
+  }
+};
+
 // Map from table row (hatch_cycles) => UI type
 const mapTableRowToCycle = (r: any): HatchCycle => ({
   id: r.id,
@@ -1282,7 +1316,11 @@ const HatchCycleList: React.FC = () => {
             <div className="flex justify-between items-center">
                 <h1 className="heading-primary">Listing of Hatchery Cycles</h1>
                  <button 
-                    onClick={() => setIsNewCycleModalVisible(true)}
+                    onClick={async () => {
+                      const nextHatch = await generateNextHatchNumber();
+                      setNewCycleData({ ...newCycleData, hatchNo: nextHatch });
+                      setIsNewCycleModalVisible(true);
+                    }}
                     className="btn-primary px-6 py-3"
                 >
                     <span>+</span> Add Hatch Cycle
@@ -1628,6 +1666,18 @@ const HatchCycleList: React.FC = () => {
                             <div className="grid grid-cols-3 gap-6 text-sm">
                                 {/* Column 1 */}
                                 <div className="space-y-4">
+                                <div>
+                                        <label className="block font-bold text-gray-700 mb-2">Hatch Number</label>
+                                        <input
+                                            type="text"
+                                            name="hatchNo"
+                                            value={newCycleData.hatchNo || ''}
+                                            onChange={handleFormChange}
+                                            className="modern-input w-full bg-gray-100"
+                                            placeholder="Auto-generated"
+                                            readOnly
+                                        />
+                                    </div>
                                 <div>
                                         <label className="block font-bold text-gray-700 mb-2">Hatch Colour</label>
                                         <select

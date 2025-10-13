@@ -76,6 +76,10 @@ const Sales: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Scroll synchronization refs
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  
   // Filtering and search state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -191,6 +195,53 @@ const Sales: React.FC = () => {
 
     return filtered;
   }, [salesDispatch, startDate, endDate, searchTerm, rowCount, sortColumn, sortDirection]);
+
+  // Generate next PO number
+  const generateNextPONumber = async (): Promise<string> => {
+    try {
+      const { data, error } = await supabase
+        .from('sales_dispatch')
+        .select('po_number')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching last PO number:', error);
+        return 'BFLOS-001';
+      }
+
+      if (!data || data.length === 0) {
+        return 'BFLOS-001';
+      }
+
+      const lastPONumber = data[0].po_number;
+      const match = lastPONumber.match(/BFLOS-(\d+)/);
+      
+      if (match) {
+        const lastNumber = parseInt(match[1]);
+        const nextNumber = lastNumber + 1;
+        return `BFLOS-${nextNumber.toString().padStart(3, '0')}`;
+      }
+
+      return 'BFLOS-001';
+    } catch (error) {
+      console.error('Error generating PO number:', error);
+      return 'BFLOS-001';
+    }
+  };
+
+  // Scroll synchronization functions
+  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (bodyScrollRef.current) {
+      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (headerScrollRef.current) {
+      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -372,7 +423,11 @@ const Sales: React.FC = () => {
              <div className="flex justify-between items-center">
         <h1 className="heading-primary">Sales & Dispatch</h1>
                 <button
-          onClick={() => setIsAddModalVisible(true)} 
+          onClick={async () => {
+            const nextPO = await generateNextPONumber();
+            setNewRecordData({ ...newRecordData, poNumber: nextPO });
+            setIsAddModalVisible(true);
+          }} 
           className="btn-primary px-6 py-3 text-sm"
                 >
           <span>+</span> Add Sales Dispatch
@@ -455,10 +510,12 @@ const Sales: React.FC = () => {
                         </div>
         ) : (
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-            {/* Single Table with Sticky Header */}
+            {/* Fixed Header */}
             <div 
-              className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+              ref={headerScrollRef}
+              className="overflow-x-auto" 
+              style={{ flexShrink: 0 }}
+              onScroll={handleHeaderScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
@@ -526,8 +583,19 @@ const Sales: React.FC = () => {
                         </th>
                       );
                     })}
-                                    </tr>
-                                </thead>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            
+            {/* Scrollable Body */}
+            <div 
+              ref={bodyScrollRef}
+              className="overflow-auto flex-1" 
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+              onScroll={handleBodyScroll}
+            >
+              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <tbody>
                   {processedRecords.map(record => (
                     <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -577,13 +645,13 @@ const Sales: React.FC = () => {
                           Delete
                         </button>
                       </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                    </div>
-                </div>
-            )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Record Modal */}
@@ -607,8 +675,9 @@ const Sales: React.FC = () => {
                   name="poNumber"
                   value={newRecordData.poNumber || ''}
                   onChange={handleFormChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter PO number"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 bg-gray-100"
+                  placeholder="Auto-generated"
+                  readOnly
                   required
                 />
                             </div>
