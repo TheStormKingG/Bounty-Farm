@@ -85,6 +85,15 @@ const Sales: React.FC = () => {
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
+  // Invoice table state
+  const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({
+    'INV-001': 'Pending',
+    'INV-002': 'Pending'
+  });
+  const [paymentStatuses, setPaymentStatuses] = useState<{[key: string]: string}>({
+    'INV-001': 'Pending',
+    'INV-002': 'Pending'
+  });
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -230,6 +239,20 @@ const Sales: React.FC = () => {
       setSortColumn(column);
       setSortDirection('asc');
     }
+  };
+
+  const handleDateChange = (invoiceNumber: string, date: string) => {
+    setInvoiceDates(prev => ({
+      ...prev,
+      [invoiceNumber]: date
+    }));
+  };
+
+  const handlePaymentStatusToggle = (invoiceNumber: string) => {
+    setPaymentStatuses(prev => ({
+      ...prev,
+      [invoiceNumber]: prev[invoiceNumber] === 'Pending' ? 'Paid' : 'Pending'
+    }));
   };
 
 
@@ -717,100 +740,49 @@ const Sales: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                  <td className="px-4 py-3 text-sm">INV-001</td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="relative">
-                      <input
-                        type="date"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={(e) => {
-                          const input = e.target as HTMLInputElement;
-                          const button = input.nextElementSibling as HTMLButtonElement;
-                          if (input.value) {
-                            button.textContent = input.value;
-                            button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
-                          }
-                        }}
-                      />
+                {['INV-001', 'INV-002'].map((invoiceNumber) => (
+                  <tr key={invoiceNumber} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm">{invoiceNumber}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="relative">
+                        <input
+                          type="date"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={(e) => handleDateChange(invoiceNumber, e.target.value)}
+                        />
+                        <button 
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            input.click();
+                          }}
+                          className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                            invoiceDates[invoiceNumber] === 'Pending' 
+                              ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                              : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          }`}
+                        >
+                          {invoiceDates[invoiceNumber]}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
                       <button 
-                        onClick={(e) => {
-                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                          input.click();
-                        }}
-                        className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                        onClick={() => handlePaymentStatusToggle(invoiceNumber)}
+                        className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                          paymentStatuses[invoiceNumber] === 'Pending' 
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                            : 'bg-green-100 text-green-800 hover:bg-green-200'
+                        }`}
                       >
-                        Pending
+                        {paymentStatuses[invoiceNumber]}
                       </button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <button 
-                      onClick={(e) => {
-                        const button = e.target as HTMLButtonElement;
-                        const isPending = button.textContent === 'Pending';
-                        button.textContent = isPending ? 'Paid' : 'Pending';
-                        button.className = isPending 
-                          ? 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs cursor-pointer hover:bg-green-200'
-                          : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
-                      }}
-                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
-                    >
-                      Pending
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-sm space-x-2">
-                    <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
-                    <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
-                  </td>
-                </tr>
-                <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                  <td className="px-4 py-3 text-sm">INV-002</td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="relative">
-                      <input
-                        type="date"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={(e) => {
-                          const input = e.target as HTMLInputElement;
-                          const button = input.nextElementSibling as HTMLButtonElement;
-                          if (input.value) {
-                            button.textContent = input.value;
-                            button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
-                          }
-                        }}
-                      />
-                      <button 
-                        onClick={(e) => {
-                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                          input.click();
-                        }}
-                        className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
-                      >
-                        Pending
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <button 
-                      onClick={(e) => {
-                        const button = e.target as HTMLButtonElement;
-                        const isPending = button.textContent === 'Pending';
-                        button.textContent = isPending ? 'Paid' : 'Pending';
-                        button.className = isPending 
-                          ? 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs cursor-pointer hover:bg-green-200'
-                          : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
-                      }}
-                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
-                    >
-                      Pending
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-sm space-x-2">
-                    <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
-                    <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
-                  </td>
-                </tr>
+                    </td>
+                    <td className="px-4 py-3 text-sm space-x-2">
+                      <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
+                      <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
                             </div>
