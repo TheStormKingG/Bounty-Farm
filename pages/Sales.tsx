@@ -664,7 +664,7 @@ const Sales: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+                        </div>
                         
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           <div 
@@ -721,15 +721,15 @@ const Sales: React.FC = () => {
                   <td className="px-4 py-3 text-sm">INV-001</td>
                   <td className="px-4 py-3 text-sm">
                     <button 
-                      onClick={() => {
+                      onClick={(e) => {
+                        const button = e.target as HTMLButtonElement;
                         const input = document.createElement('input');
                         input.type = 'date';
-                        input.onchange = (e) => {
-                          const target = e.target as HTMLInputElement;
-                          const button = target.previousElementSibling as HTMLButtonElement;
-                          if (button) {
-                            button.textContent = target.value || 'Pending';
-                            button.className = target.value ? 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200' : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                        input.onchange = (event) => {
+                          const target = event.target as HTMLInputElement;
+                          if (target.value) {
+                            button.textContent = target.value;
+                            button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
                           }
                         };
                         input.click();
@@ -763,15 +763,15 @@ const Sales: React.FC = () => {
                   <td className="px-4 py-3 text-sm">INV-002</td>
                   <td className="px-4 py-3 text-sm">
                     <button 
-                      onClick={() => {
+                      onClick={(e) => {
+                        const button = e.target as HTMLButtonElement;
                         const input = document.createElement('input');
                         input.type = 'date';
-                        input.onchange = (e) => {
-                          const target = e.target as HTMLInputElement;
-                          const button = target.previousElementSibling as HTMLButtonElement;
-                          if (button) {
-                            button.textContent = target.value || 'Pending';
-                            button.className = target.value ? 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200' : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                        input.onchange = (event) => {
+                          const target = event.target as HTMLInputElement;
+                          if (target.value) {
+                            button.textContent = target.value;
+                            button.className = 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200';
                           }
                         };
                         input.click();
