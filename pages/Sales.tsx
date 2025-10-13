@@ -87,8 +87,8 @@ const Sales: React.FC = () => {
   
   // Invoice table state
   const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({
-    'INV-001': 'Pending',
-    'INV-002': 'Pending'
+    'INV-001': '',
+    'INV-002': ''
   });
   const [paymentStatuses, setPaymentStatuses] = useState<{[key: string]: string}>({
     'INV-001': 'Pending',
@@ -744,26 +744,12 @@ const Sales: React.FC = () => {
                   <tr key={invoiceNumber} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                     <td className="px-4 py-3 text-sm">{invoiceNumber}</td>
                     <td className="px-4 py-3 text-sm">
-                      <button 
-                        onClick={() => {
-                          const input = document.createElement('input');
-                          input.type = 'date';
-                          input.onchange = (e) => {
-                            const target = e.target as HTMLInputElement;
-                            if (target.value) {
-                              handleDateChange(invoiceNumber, target.value);
-                            }
-                          };
-                          input.click();
-                        }}
-                        className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                          invoiceDates[invoiceNumber] === 'Pending' 
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        {invoiceDates[invoiceNumber]}
-                      </button>
+                      <input
+                        type="date"
+                        value={invoiceDates[invoiceNumber]}
+                        onChange={(e) => handleDateChange(invoiceNumber, e.target.value)}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm w-full"
+                      />
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button 
