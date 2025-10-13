@@ -4,8 +4,11 @@ import { supabase } from '../src/supabase';
 
 interface VaccineProfile {
   id: string;
-  name: string;
-  vaccines: string[];
+  vaccineProfileName: string;
+  vaccine1Name: string | null;
+  vaccine2Name: string | null;
+  vaccine3Name: string | null;
+  vaccine4Name: string | null;
   createdBy: string;
   createdAt: string;
   updatedBy: string;
@@ -23,7 +26,10 @@ const VaccineProfile: React.FC = () => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<VaccineProfile | null>(null);
   const [newProfileName, setNewProfileName] = useState('');
-  const [newVaccines, setNewVaccines] = useState<string[]>(['']);
+  const [newVaccine1, setNewVaccine1] = useState('');
+  const [newVaccine2, setNewVaccine2] = useState('');
+  const [newVaccine3, setNewVaccine3] = useState('');
+  const [newVaccine4, setNewVaccine4] = useState('');
 
   // Fetch vaccine profiles from database
   useEffect(() => {
@@ -35,7 +41,7 @@ const VaccineProfile: React.FC = () => {
         const { data, error } = await supabase
           .from('vaccine_profiles')
           .select('*')
-          .order('name');
+          .order('vaccine_profile_name');
 
         if (error) {
           console.error('Error fetching vaccine profiles:', error);
@@ -44,8 +50,11 @@ const VaccineProfile: React.FC = () => {
         } else {
           const mappedProfiles: VaccineProfile[] = (data || []).map((profile: any) => ({
             id: profile.id,
-            name: profile.name,
-            vaccines: profile.vaccines || [],
+            vaccineProfileName: profile.vaccine_profile_name,
+            vaccine1Name: profile.vaccine_1_name,
+            vaccine2Name: profile.vaccine_2_name,
+            vaccine3Name: profile.vaccine_3_name,
+            vaccine4Name: profile.vaccine_4_name,
             createdBy: profile.created_by || 'admin',
             createdAt: profile.created_at || new Date().toISOString(),
             updatedBy: profile.updated_by || 'admin',
@@ -72,7 +81,7 @@ const VaccineProfile: React.FC = () => {
       return;
     }
 
-    const vaccines = newVaccines.filter(v => v.trim() !== '');
+    const vaccines = [newVaccine1, newVaccine2, newVaccine3, newVaccine4].filter(v => v.trim() !== '');
     if (vaccines.length === 0) {
       alert('Please add at least one vaccine');
       return;
@@ -84,8 +93,11 @@ const VaccineProfile: React.FC = () => {
       const { data, error } = await supabase
         .from('vaccine_profiles')
         .insert([{
-          name: newProfileName.trim(),
-          vaccines: vaccines,
+          vaccine_profile_name: newProfileName.trim(),
+          vaccine_1_name: newVaccine1.trim() || null,
+          vaccine_2_name: newVaccine2.trim() || null,
+          vaccine_3_name: newVaccine3.trim() || null,
+          vaccine_4_name: newVaccine4.trim() || null,
           created_by: user?.name || 'admin',
           updated_by: user?.name || 'admin',
         }])
@@ -100,8 +112,11 @@ const VaccineProfile: React.FC = () => {
 
       const newProfile: VaccineProfile = {
         id: data.id,
-        name: data.name,
-        vaccines: data.vaccines,
+        vaccineProfileName: data.vaccine_profile_name,
+        vaccine1Name: data.vaccine_1_name,
+        vaccine2Name: data.vaccine_2_name,
+        vaccine3Name: data.vaccine_3_name,
+        vaccine4Name: data.vaccine_4_name,
         createdBy: data.created_by,
         createdAt: data.created_at,
         updatedBy: data.updated_by,
@@ -111,8 +126,11 @@ const VaccineProfile: React.FC = () => {
       setProfiles(prev => [...prev, newProfile]);
       setIsAddModalVisible(false);
       setNewProfileName('');
-      setNewVaccines(['']);
-      alert(`Vaccine profile "${newProfile.name}" added successfully!`);
+      setNewVaccine1('');
+      setNewVaccine2('');
+      setNewVaccine3('');
+      setNewVaccine4('');
+      alert(`Vaccine profile "${newProfile.vaccineProfileName}" added successfully!`);
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('An unexpected error occurred while adding vaccine profile');
@@ -121,8 +139,11 @@ const VaccineProfile: React.FC = () => {
 
   const handleEditProfile = (profile: VaccineProfile) => {
     setCurrentProfile(profile);
-    setNewProfileName(profile.name);
-    setNewVaccines(profile.vaccines.length > 0 ? profile.vaccines : ['']);
+    setNewProfileName(profile.vaccineProfileName);
+    setNewVaccine1(profile.vaccine1Name || '');
+    setNewVaccine2(profile.vaccine2Name || '');
+    setNewVaccine3(profile.vaccine3Name || '');
+    setNewVaccine4(profile.vaccine4Name || '');
     setIsEditModalVisible(true);
   };
 
@@ -135,7 +156,7 @@ const VaccineProfile: React.FC = () => {
       return;
     }
 
-    const vaccines = newVaccines.filter(v => v.trim() !== '');
+    const vaccines = [newVaccine1, newVaccine2, newVaccine3, newVaccine4].filter(v => v.trim() !== '');
     if (vaccines.length === 0) {
       alert('Please add at least one vaccine');
       return;
@@ -147,8 +168,11 @@ const VaccineProfile: React.FC = () => {
       const { error } = await supabase
         .from('vaccine_profiles')
         .update({
-          name: newProfileName.trim(),
-          vaccines: vaccines,
+          vaccine_profile_name: newProfileName.trim(),
+          vaccine_1_name: newVaccine1.trim() || null,
+          vaccine_2_name: newVaccine2.trim() || null,
+          vaccine_3_name: newVaccine3.trim() || null,
+          vaccine_4_name: newVaccine4.trim() || null,
           updated_by: user?.name || 'admin',
         })
         .eq('id', currentProfile.id);
@@ -161,13 +185,25 @@ const VaccineProfile: React.FC = () => {
 
       setProfiles(prev => prev.map(p => 
         p.id === currentProfile.id 
-          ? { ...p, name: newProfileName.trim(), vaccines: vaccines, updatedBy: user?.name || 'admin', updatedAt: new Date().toISOString() }
+          ? { 
+              ...p, 
+              vaccineProfileName: newProfileName.trim(), 
+              vaccine1Name: newVaccine1.trim() || null,
+              vaccine2Name: newVaccine2.trim() || null,
+              vaccine3Name: newVaccine3.trim() || null,
+              vaccine4Name: newVaccine4.trim() || null,
+              updatedBy: user?.name || 'admin', 
+              updatedAt: new Date().toISOString() 
+            }
           : p
       ));
       setIsEditModalVisible(false);
       setCurrentProfile(null);
       setNewProfileName('');
-      setNewVaccines(['']);
+      setNewVaccine1('');
+      setNewVaccine2('');
+      setNewVaccine3('');
+      setNewVaccine4('');
       alert(`Vaccine profile "${newProfileName}" updated successfully!`);
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -202,20 +238,6 @@ const VaccineProfile: React.FC = () => {
     }
   };
 
-  const addVaccineField = () => {
-    setNewVaccines(prev => [...prev, '']);
-  };
-
-  const removeVaccineField = (index: number) => {
-    if (newVaccines.length > 1) {
-      setNewVaccines(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateVaccineField = (index: number, value: string) => {
-    setNewVaccines(prev => prev.map((v, i) => i === index ? value : v));
-  };
-
   return (
     <div className="space-y-8 animate-fade-in-up">
       <div className="flex justify-between items-center">
@@ -246,7 +268,7 @@ const VaccineProfile: React.FC = () => {
             <div key={profile.id} className="bg-[#fffae5] rounded-2xl p-6 shadow-md">
               {/* Header */}
               <div className="bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center">
-                <span className="font-bold text-black">{profile.name}</span>
+                <span className="font-bold text-black">{profile.vaccineProfileName}</span>
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => handleEditProfile(profile)}
@@ -255,7 +277,7 @@ const VaccineProfile: React.FC = () => {
                     ✏️
                   </button>
                   <button 
-                    onClick={() => handleDeleteProfile(profile.id, profile.name)}
+                    onClick={() => handleDeleteProfile(profile.id, profile.vaccineProfileName)}
                     className="text-black hover:text-gray-700"
                   >
                     🗑️
@@ -265,11 +287,13 @@ const VaccineProfile: React.FC = () => {
 
               {/* Vaccine List */}
               <div className="space-y-2 mb-4">
-                {profile.vaccines.map((vaccine, index) => (
-                  <div key={index} className="bg-[#ff8c42] rounded-xl px-4 py-2 text-center">
-                    <span className="text-black font-medium">{vaccine}</span>
-                  </div>
-                ))}
+                {[profile.vaccine1Name, profile.vaccine2Name, profile.vaccine3Name, profile.vaccine4Name]
+                  .filter(vaccine => vaccine && vaccine.trim() !== '')
+                  .map((vaccine, index) => (
+                    <div key={index} className="bg-[#ff8c42] rounded-xl px-4 py-2 text-center">
+                      <span className="text-black font-medium">{vaccine}</span>
+                    </div>
+                  ))}
               </div>
 
               {/* Footer */}
@@ -309,33 +333,36 @@ const VaccineProfile: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Vaccines</label>
-                {newVaccines.map((vaccine, index) => (
-                  <div key={index} className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="text"
-                      value={vaccine}
-                      onChange={(e) => updateVaccineField(index, e.target.value)}
-                      className="flex-1 border-gray-300 rounded-md shadow-sm px-3 py-2"
-                      placeholder={`Vaccine ${index + 1} name`}
-                    />
-                    {newVaccines.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeVaccineField(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addVaccineField}
-                  className="mt-2 text-[#5C3A6B] hover:underline text-sm"
-                >
-                  + Add another vaccine
-                </button>
+                <div className="space-y-2 mt-2">
+                  <input
+                    type="text"
+                    value={newVaccine1}
+                    onChange={(e) => setNewVaccine1(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 1 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine2}
+                    onChange={(e) => setNewVaccine2(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 2 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine3}
+                    onChange={(e) => setNewVaccine3(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 3 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine4}
+                    onChange={(e) => setNewVaccine4(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 4 name"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
@@ -384,33 +411,36 @@ const VaccineProfile: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Vaccines</label>
-                {newVaccines.map((vaccine, index) => (
-                  <div key={index} className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="text"
-                      value={vaccine}
-                      onChange={(e) => updateVaccineField(index, e.target.value)}
-                      className="flex-1 border-gray-300 rounded-md shadow-sm px-3 py-2"
-                      placeholder={`Vaccine ${index + 1} name`}
-                    />
-                    {newVaccines.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeVaccineField(index)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addVaccineField}
-                  className="mt-2 text-[#5C3A6B] hover:underline text-sm"
-                >
-                  + Add another vaccine
-                </button>
+                <div className="space-y-2 mt-2">
+                  <input
+                    type="text"
+                    value={newVaccine1}
+                    onChange={(e) => setNewVaccine1(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 1 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine2}
+                    onChange={(e) => setNewVaccine2(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 2 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine3}
+                    onChange={(e) => setNewVaccine3(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 3 name"
+                  />
+                  <input
+                    type="text"
+                    value={newVaccine4}
+                    onChange={(e) => setNewVaccine4(e.target.value)}
+                    className="w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                    placeholder="Vaccine 4 name"
+                  />
+                </div>
               </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
