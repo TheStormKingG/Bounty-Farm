@@ -3,6 +3,58 @@ import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
 
+// Custom CSS for sticky columns
+const stickyColumnStyles = `
+  .sticky-column-1 {
+    position: sticky !important;
+    left: 0px !important;
+    background-color: #ff8c42 !important;
+    z-index: 10 !important;
+  }
+  
+  .sticky-column-2 {
+    position: sticky !important;
+    left: 150px !important;
+    background-color: #ff8c42 !important;
+    z-index: 10 !important;
+  }
+  
+  .sticky-column-3 {
+    position: sticky !important;
+    left: 300px !important;
+    background-color: #ff8c42 !important;
+    z-index: 10 !important;
+  }
+  
+  .sticky-header-1 {
+    position: sticky !important;
+    left: 0px !important;
+    background-color: #ff8c42 !important;
+    z-index: 20 !important;
+  }
+  
+  .sticky-header-2 {
+    position: sticky !important;
+    left: 150px !important;
+    background-color: #ff8c42 !important;
+    z-index: 20 !important;
+  }
+  
+  .sticky-header-3 {
+    position: sticky !important;
+    left: 300px !important;
+    background-color: #ff8c42 !important;
+    z-index: 20 !important;
+  }
+`;
+
+// Inject the styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = stickyColumnStyles;
+  document.head.appendChild(styleSheet);
+}
+
 interface SalesDispatch {
   id: string;
   poNumber: string;
@@ -398,101 +450,140 @@ const Sales: React.FC = () => {
         {loading ? (
           <div className="flex justify-center items-center py-8">
             <div className="text-lg text-[#AAAAAA]">Loading sales dispatch records...</div>
-          </div>
-        ) : (
-          <div className="overflow-hidden">
-          {/* Table Header */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr style={{ backgroundColor: '#ff8c42', borderRadius: '8px 8px 0 0', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                  {[
-                    'PO Number', 'Date Ordered', 'Customer', 'Qty', 'Hatch Date',
-                    'Batches Required', 'Trucks Required', 'Created By', 'Created At',
-                    'Updated By', 'Updated At', 'Actions'
-                  ].map((header, index) => {
-                    const fieldName = header.toLowerCase().replace(/\s+/g, '').replace('number', 'Number').replace('ordered', 'Ordered').replace('required', 'Required').replace('created', 'Created').replace('updated', 'Updated').replace('at', 'At');
-                    const isCurrentSort = sortColumn === fieldName;
-                    const isAscending = isCurrentSort && sortDirection === 'asc';
-                    const isDescending = isCurrentSort && sortDirection === 'desc';
-                    
-                    return (
-                      <th
-                        key={header}
-                        className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                        style={{ 
-                          width: '150px', 
-                          minWidth: '150px',
-                          backgroundColor: '#ff8c42',
-                          color: 'white',
-                          fontWeight: '600',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                        }}
-                      >
-                        <div className="flex items-center">
-                          <span className="text-white font-medium text-xs">{header}</span>
-                          {header !== 'Actions' && (
-                            <div className="ml-4 flex space-x-1">
-                              <button
-                                onClick={() => handleSort(fieldName)}
-                                className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
-                              >
-                                {isAscending ? (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M18 15l-6-6-6 6"/>
-                                  </svg>
-                                ) : isDescending ? (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M6 9l6 6 6-6"/>
-                                  </svg>
-                                ) : (
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
-                                  </svg>
-                                )}
-                              </button>
-                              <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="11" cy="11" r="8"/>
-                                  <path d="M21 21l-4.35-4.35"/>
-                                </svg>
-                              </button>
-                            </div>
-                          )}
                         </div>
-                      </th>
-                    );
-                  })}
+        ) : (
+          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+            {/* Fixed Header */}
+            <div 
+              className="overflow-x-auto" 
+              style={{ flexShrink: 0 }}
+            >
+              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+                <thead className="sticky top-0 z-10" style={{
+                  backgroundColor: '#ff8c42',
+                  borderRadius: '8px 8px 0 0',
+                  borderBottom: 'none',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  <tr>
+                    {[
+                      'PO Number', 'Date Ordered', 'Customer', 'Qty', 'Hatch Date',
+                      'Batches Required', 'Trucks Required', 'Created By', 'Created At',
+                      'Updated By', 'Updated At', 'Actions'
+                    ].map((header, index) => {
+                      const fieldName = header.toLowerCase().replace(/\s+/g, '').replace('number', 'Number').replace('ordered', 'Ordered').replace('required', 'Required').replace('created', 'Created').replace('updated', 'Updated').replace('at', 'At');
+                      const isCurrentSort = sortColumn === fieldName;
+                      const isAscending = isCurrentSort && sortDirection === 'asc';
+                      const isDescending = isCurrentSort && sortDirection === 'desc';
+                      
+                      return (
+                        <th
+                          key={header}
+                          className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider ${index < 3 ? 'sticky-header-' + (index + 1) : ''}`}
+                          style={{ 
+                            width: '150px', 
+                            minWidth: '150px',
+                            backgroundColor: '#ff8c42',
+                            color: 'white',
+                            fontWeight: '600',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                            left: index < 3 ? `${index * 150}px` : 'auto'
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <span className="text-white font-medium text-xs">{header}</span>
+                            {header !== 'Actions' && (
+                              <div className="ml-4 flex space-x-1">
+                                <button
+                                  onClick={() => handleSort(fieldName)}
+                                  className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
+                                >
+                                  {isAscending ? (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M18 15l-6-6-6 6"/>
+                                    </svg>
+                                  ) : isDescending ? (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M6 9l6 6 6-6"/>
+                                    </svg>
+                                  ) : (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                                    </svg>
+                                  )}
+                                </button>
+                                <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </th>
+                      );
+                    })}
                                     </tr>
                                 </thead>
-              <tbody>
-                {processedRecords.map(record => (
-                  <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium">{record.poNumber}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(record.dateOrdered).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm">{record.customer}</td>
-                    <td className="px-4 py-3 text-sm">{record.qty.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(record.hatchDate).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm">{record.batchesRequired}</td>
-                    <td className="px-4 py-3 text-sm">{record.trucksRequired}</td>
-                    <td className="px-4 py-3 text-sm">{record.createdBy}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(record.createdAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm">{record.updatedBy}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(record.updatedAt).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm space-x-2">
-                      <button 
-                        onClick={() => handleEditRecord(record)}
-                        className="text-[#5C3A6B] hover:underline font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteRecord(record.id, record.poNumber)}
-                        className="text-[#F86F6F] hover:underline font-medium"
-                      >
-                        Delete
-                      </button>
-                    </td>
+              </table>
+            </div>
+            
+            {/* Scrollable Body */}
+            <div 
+              className="overflow-auto flex-1" 
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+            >
+              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+                <tbody>
+                  {processedRecords.map(record => (
+                    <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                      <td className={`px-4 py-3 text-sm font-medium sticky-column-1`} style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white'
+                      }}>
+                        {record.poNumber}
+                      </td>
+                      <td className={`px-4 py-3 text-sm sticky-column-2`} style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white'
+                      }}>
+                        {new Date(record.dateOrdered).toLocaleDateString()}
+                      </td>
+                      <td className={`px-4 py-3 text-sm sticky-column-3`} style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white'
+                      }}>
+                        {record.customer}
+                      </td>
+                      <td className="px-4 py-3 text-sm">{record.qty.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm">{new Date(record.hatchDate).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm">{record.batchesRequired}</td>
+                      <td className="px-4 py-3 text-sm">{record.trucksRequired}</td>
+                      <td className="px-4 py-3 text-sm">{record.createdBy}</td>
+                      <td className="px-4 py-3 text-sm">{new Date(record.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm">{record.updatedBy}</td>
+                      <td className="px-4 py-3 text-sm">{new Date(record.updatedAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm space-x-2">
+                        <button 
+                          onClick={() => handleEditRecord(record)}
+                          className="text-[#5C3A6B] hover:underline font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRecord(record.id, record.poNumber)}
+                          className="text-[#F86F6F] hover:underline font-medium"
+                        >
+                          Delete
+                        </button>
+                      </td>
                                         </tr>
                                     ))}
                                 </tbody>
