@@ -86,14 +86,9 @@ const Sales: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   // Invoice table state
-  const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({
-    'INV-001': '',
-    'INV-002': ''
-  });
-  const [paymentStatuses, setPaymentStatuses] = useState<{[key: string]: string}>({
-    'INV-001': 'Pending',
-    'INV-002': 'Pending'
-  });
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({});
+  const [paymentStatuses, setPaymentStatuses] = useState<{[key: string]: string}>({});
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -144,7 +139,38 @@ const Sales: React.FC = () => {
     };
 
     fetchSalesDispatch();
+    fetchInvoices();
   }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        return;
+      }
+
+      setInvoices(data || []);
+      
+      // Initialize invoice dates and payment statuses
+      const dates: {[key: string]: string} = {};
+      const statuses: {[key: string]: string} = {};
+      
+      data?.forEach(invoice => {
+        dates[invoice.invoice_number] = invoice.date_sent || '';
+        statuses[invoice.invoice_number] = invoice.payment_status || 'pending';
+      });
+      
+      setInvoiceDates(dates);
+      setPaymentStatuses(statuses);
+    } catch (err) {
+      console.error('Unexpected error fetching invoices:', err);
+    }
+  };
 
   // Process and filter sales dispatch records
   const processedRecords = useMemo(() => {
@@ -307,7 +333,16 @@ const Sales: React.FC = () => {
       
       // Auto-create invoice
       const invoiceNumber = newRecordData.poNumber.replace('-PO', '-INV');
-      const { error: invoiceError } = await supabase
+      console.log('Creating invoice with:', {
+        invoice_number: invoiceNumber,
+        date_sent: newRecordData.dateOrdered,
+        payment_status: 'pending',
+        po_number: newRecordData.poNumber,
+        created_by: user?.name || 'admin',
+        updated_by: user?.name || 'admin',
+      });
+      
+      const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .insert([{
           invoice_number: invoiceNumber,
@@ -316,11 +351,17 @@ const Sales: React.FC = () => {
           po_number: newRecordData.poNumber,
           created_by: user?.name || 'admin',
           updated_by: user?.name || 'admin',
-        }]);
+        }])
+        .select()
+        .single();
 
       if (invoiceError) {
         console.error('Error creating invoice:', invoiceError);
-        // Don't show error to user as PO was created successfully
+        alert(`PO created successfully, but invoice creation failed: ${invoiceError.message}`);
+      } else {
+        console.log('Invoice created successfully:', invoiceData);
+        // Refresh invoices from database
+        await fetchInvoices();
       }
       
       setIsAddModalVisible(false);
@@ -740,27 +781,27 @@ const Sales: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {['INV-001', 'INV-002'].map((invoiceNumber) => (
-                  <tr key={invoiceNumber} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                    <td className="px-4 py-3 text-sm">{invoiceNumber}</td>
+                {invoices.map((invoice) => (
+                  <tr key={invoice.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm">{invoice.invoice_number}</td>
                     <td className="px-4 py-3 text-sm">
                       <input
                         type="date"
-                        value={invoiceDates[invoiceNumber]}
-                        onChange={(e) => handleDateChange(invoiceNumber, e.target.value)}
+                        value={invoiceDates[invoice.invoice_number] || ''}
+                        onChange={(e) => handleDateChange(invoice.invoice_number, e.target.value)}
                         className="px-2 py-1 border border-gray-300 rounded text-sm w-full"
                       />
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button 
-                        onClick={() => handlePaymentStatusToggle(invoiceNumber)}
+                        onClick={() => handlePaymentStatusToggle(invoice.invoice_number)}
                         className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                          paymentStatuses[invoiceNumber] === 'Pending' 
+                          paymentStatuses[invoice.invoice_number] === 'pending' 
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
                             : 'bg-green-100 text-green-800 hover:bg-green-200'
                         }`}
                       >
-                        {paymentStatuses[invoiceNumber]}
+                        {paymentStatuses[invoice.invoice_number] || 'pending'}
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
