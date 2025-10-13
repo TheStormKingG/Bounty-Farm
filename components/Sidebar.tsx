@@ -31,14 +31,14 @@ const Sidebar: React.FC = () => {
         {hasRole([Role.Admin, Role.HatcheryClerk]) && (
           <NavLink to="/hatch-cycles" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
             <span className="mr-3">🥚</span>
-            Hatch Cycles
+            Hatches
           </NavLink>
         )}
         
         {hasRole([Role.Admin, Role.SalesClerk]) && (
           <NavLink to="/sales" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
             <span className="mr-3">💰</span>
-            Sales & Dispatch
+            Sales
           </NavLink>
         )}
 
@@ -55,7 +55,7 @@ const Sidebar: React.FC = () => {
             </NavLink>
             <NavLink to="/vaccine-profile" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">💉</span>
-              Vaccine Profile
+              Vaccines
             </NavLink>
             <NavLink to="/customers" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">👥</span>

@@ -1314,7 +1314,7 @@ const HatchCycleList: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in-up">
             <div className="flex justify-between items-center">
-                <h1 className="heading-primary">Listing of Hatchery Cycles</h1>
+                <h1 className="heading-primary">Hatch Cycles</h1>
                  <button 
                     onClick={async () => {
                       const nextHatch = await generateNextHatchNumber();
