@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
@@ -76,9 +76,6 @@ const Sales: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Scroll synchronization refs
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const bodyScrollRef = useRef<HTMLDivElement>(null);
   
   // Filtering and search state
   const [startDate, setStartDate] = useState('');
@@ -227,19 +224,6 @@ const Sales: React.FC = () => {
     } catch (error) {
       console.error('Error generating PO number:', error);
       return 'BFLOS-001';
-    }
-  };
-
-  // Scroll synchronization functions
-  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (bodyScrollRef.current) {
-      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
-
-  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
     }
   };
 
@@ -510,12 +494,10 @@ const Sales: React.FC = () => {
                         </div>
         ) : (
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-            {/* Fixed Header */}
+            {/* Single Table with Sticky Header */}
             <div 
-              ref={headerScrollRef}
-              className="overflow-x-auto" 
-              style={{ flexShrink: 0 }}
-              onScroll={handleHeaderScroll}
+              className="overflow-auto flex-1" 
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
@@ -583,19 +565,8 @@ const Sales: React.FC = () => {
                         </th>
                       );
                     })}
-                  </tr>
-                </thead>
-              </table>
-            </div>
-            
-            {/* Scrollable Body */}
-            <div 
-              ref={bodyScrollRef}
-              className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
-              onScroll={handleBodyScroll}
-            >
-              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+                                    </tr>
+                                </thead>
                 <tbody>
                   {processedRecords.map(record => (
                     <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -645,13 +616,13 @@ const Sales: React.FC = () => {
                           Delete
                         </button>
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                    </div>
+                </div>
+            )}
       </div>
 
       {/* Add Record Modal */}
