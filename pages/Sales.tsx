@@ -744,26 +744,26 @@ const Sales: React.FC = () => {
                   <tr key={invoiceNumber} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                     <td className="px-4 py-3 text-sm">{invoiceNumber}</td>
                     <td className="px-4 py-3 text-sm">
-                      <div className="relative">
-                        <input
-                          type="date"
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          onChange={(e) => handleDateChange(invoiceNumber, e.target.value)}
-                        />
-                        <button 
-                          onClick={(e) => {
-                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                            input.click();
-                          }}
-                          className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                            invoiceDates[invoiceNumber] === 'Pending' 
-                              ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                              : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          }`}
-                        >
-                          {invoiceDates[invoiceNumber]}
-                        </button>
-                      </div>
+                      <button 
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'date';
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement;
+                            if (target.value) {
+                              handleDateChange(invoiceNumber, target.value);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                          invoiceDates[invoiceNumber] === 'Pending' 
+                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                        }`}
+                      >
+                        {invoiceDates[invoiceNumber]}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button 
