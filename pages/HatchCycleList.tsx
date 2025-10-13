@@ -1511,33 +1511,24 @@ const HatchCycleList: React.FC = () => {
                         backgroundColor: '#ff8c42',
                         color: 'white'
                       }}>
-                        {cycle.status === 'OPEN' ? (
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Open
-                            </span>
-                            <button
-                              onClick={() => handleCloseCycle(cycle.id)}
-                              className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title="Close Cycle"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                              Closed
-                            </span>
-                            <button
-                              onClick={() => handleReopenCycle(cycle.id)}
-                              className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                              title="Reopen Cycle"
-                            >
-                              ↻
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-white text-sm font-medium">
+                            {cycle.status === 'OPEN' ? 'Open' : 'Closed'}
+                          </span>
+                          <button
+                            onClick={() => cycle.status === 'OPEN' ? handleCloseCycle(cycle.id) : handleReopenCycle(cycle.id)}
+                            className="text-white hover:opacity-70 transition-opacity"
+                            title={cycle.status === 'OPEN' ? 'Close Cycle' : 'Reopen Cycle'}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              {cycle.status === 'OPEN' ? (
+                                <circle cx="12" cy="12" r="10"/>
+                              ) : (
+                                <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                              )}
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap sticky-column-2" style={{ 
                         width: '150px', 
@@ -1545,7 +1536,9 @@ const HatchCycleList: React.FC = () => {
                         backgroundColor: '#ff8c42',
                         color: 'white'
                       }}>
-                        {renderEditableCell(cycle, 'HATCH NO', cycle.hatchNo, 'white-cell')}
+                        <span className="text-white text-sm font-medium">
+                          {cycle.hatchNo}
+                        </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap yellow-cell" style={{ width: '150px', minWidth: '150px' }}>
                         {renderEditableCell(cycle, 'HATCH COLOUR', cycle.colourCode, 'yellow-cell')}
