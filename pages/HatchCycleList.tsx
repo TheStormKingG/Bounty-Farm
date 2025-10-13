@@ -197,6 +197,7 @@ const toBaseTablePayload = (c: HatchCycle, currentUser?: string) => ({
 const HatchCycleList: React.FC = () => {
   const { user } = useAuth();
   const [cycles, setCycles] = useState<HatchCycle[]>([]);
+  const [vaccineProfiles, setVaccineProfiles] = useState<{id: string, name: string}[]>([]);
     const [isNewCycleModalVisible, setIsNewCycleModalVisible] = useState(false);
   const [newCycleData, setNewCycleData] = useState<Partial<HatchCycle>>({
     status: 'OPEN',
@@ -320,7 +321,7 @@ const HatchCycleList: React.FC = () => {
         'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
         'EGGS CRACKED', 'EGGS SET', 'DATE PACKED', 'DATE SET', 'DATE CANDLED', 
         'EXP HATCH QTY', 'PCT ADJ', 'EXP HATCH QTY ADJ', 'HATCH DATE', 
-        'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINATION PROFILE', 
+        'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINE PROFILE', 
         'CHICKS SOLD', 'STATUS', 'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
       ];
       
@@ -365,7 +366,7 @@ const HatchCycleList: React.FC = () => {
       'SUPPLIER NAME', 'CASES RECVD', 'EGGS RECVD', 'AVG EGG WGT', 
       'EGGS CRACKED', 'EGGS SET', 'DATE PACKED', 'DATE SET', 'DATE CANDLED', 
       'EXP HATCH QTY', 'PCT ADJ', 'EXP HATCH QTY ADJ', 'HATCH DATE', 
-      'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINATION PROFILE', 
+      'AVG CHICKS WGT', 'CHICKS HATCHED', 'CHICKS CULLED', 'VACCINE PROFILE', 
       'CHICKS SOLD', 'STATUS', 'CREATED BY', 'CREATED AT', 'UPDATED BY', 'UPDATED AT'
     ];
     
@@ -423,7 +424,7 @@ const HatchCycleList: React.FC = () => {
         'AVG CHICKS WGT': 'avg_chicks_wgt',
         'CHICKS HATCHED': 'chicks_hatched',
         'CHICKS CULLED': 'chicks_culled',
-        'VACCINATION PROFILE': 'vaccination_profile',
+        'VACCINE PROFILE': 'vaccination_profile',
         'CHICKS SOLD': 'chicks_sold',
         'STATUS': 'status'
       };
@@ -712,6 +713,27 @@ const HatchCycleList: React.FC = () => {
         );
       }
       
+      // Vaccine Profile dropdown
+      if (column === 'VACCINE PROFILE') {
+        return (
+          <select
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onKeyDown={(e) => handleCellKeyDown(e, cycle.id, column)}
+            onBlur={() => saveCellEdit(cycle.id, column)}
+            className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          >
+            <option value="">Select Vaccine Profile</option>
+            {vaccineProfiles.map((profile) => (
+              <option key={profile.id} value={profile.name}>
+                {profile.name}
+              </option>
+            ))}
+          </select>
+        );
+      }
+      
       // Date fields
       if (column.includes('DATE')) {
         return (
@@ -789,7 +811,7 @@ const HatchCycleList: React.FC = () => {
       case 'AVG CHICKS WGT': return cycle.avgChicksWgt || null;
       case 'CHICKS HATCHED': return cycle.outcome.hatched || null;
       case 'CHICKS CULLED': return cycle.outcome.culled || null;
-      case 'VACCINATION PROFILE': return cycle.vaccinationProfile || null;
+      case 'VACCINE PROFILE': return cycle.vaccinationProfile || null;
       case 'CHICKS SOLD': return cycle.chicksSold || null;
       case 'STATUS': return cycle.status;
       case 'CREATED BY': return cycle.createdBy || null;
@@ -872,6 +894,32 @@ const HatchCycleList: React.FC = () => {
 
     return filtered;
   }, [cycles, startDate, endDate, searchTerm, rowCount, filters, sortColumn, sortDirection]);
+
+  // Fetch vaccine profiles from Supabase
+  useEffect(() => {
+    const fetchVaccineProfiles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vaccine_profiles')
+          .select('id, vaccine_profile_name')
+          .order('vaccine_profile_name');
+
+        if (error) {
+          console.error('Error fetching vaccine profiles:', error);
+        } else {
+          const profiles = (data || []).map((profile: any) => ({
+            id: profile.id,
+            name: profile.vaccine_profile_name
+          }));
+          setVaccineProfiles(profiles);
+        }
+      } catch (err) {
+        console.error('Unexpected error fetching vaccine profiles:', err);
+      }
+    };
+
+    fetchVaccineProfiles();
+  }, []);
 
   // Fetch hatch cycles from Supabase (from the new hatch_cycles table)
   useEffect(() => {
@@ -1361,7 +1409,7 @@ const HatchCycleList: React.FC = () => {
                     'AVG CHICKS WGT',
                     'CHICKS HATCHED',
                     'CHICKS CULLED',
-                    'VACCINATION PROFILE',
+                    'VACCINE PROFILE',
                     'CHICKS SOLD',
                     'CREATED BY',
                     'CREATED AT',
@@ -1536,7 +1584,7 @@ const HatchCycleList: React.FC = () => {
                         {renderEditableCell(cycle, 'CHICKS CULLED', cycle.outcome.culled?.toLocaleString(), 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '150px', minWidth: '150px' }}>
-                        {renderEditableCell(cycle, 'VACCINATION PROFILE', cycle.vaccinationProfile, 'white-cell')}
+                        {renderEditableCell(cycle, 'VACCINE PROFILE', cycle.vaccinationProfile, 'white-cell')}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '150px', minWidth: '150px' }}>
                         {renderEditableCell(cycle, 'CHICKS SOLD', cycle.chicksSold?.toLocaleString(), 'white-cell')}
