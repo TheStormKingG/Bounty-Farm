@@ -404,18 +404,6 @@ const Sales: React.FC = () => {
 
     return (
     <div className="space-y-8 animate-fade-in-up">
-             <div className="flex justify-between items-center">
-                <button
-          onClick={async () => {
-            const nextPO = await generateNextPONumber();
-            setNewRecordData({ ...newRecordData, poNumber: nextPO });
-            setIsAddModalVisible(true);
-          }} 
-          className="btn-primary px-6 py-3 text-sm"
-                >
-          <span>+</span> Create PO
-                </button>
-            </div>
 
       {/* Error Message */}
       {error && (
@@ -428,6 +416,16 @@ const Sales: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
+          <button
+            onClick={async () => {
+              const nextPO = await generateNextPONumber();
+              setNewRecordData({ ...newRecordData, poNumber: nextPO });
+              setIsAddModalVisible(true);
+            }} 
+            className="btn-primary px-6 py-3 text-sm"
+          >
+            <span>+</span> Create PO
+          </button>
         </div>
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
