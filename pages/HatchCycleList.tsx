@@ -1305,7 +1305,7 @@ const HatchCycleList: React.FC = () => {
             <div className="modern-card p-6">
                 <div className="p-4 bg-white rounded-lg">
                     {/* Filters */}
-                    <div className="flex items-end gap-2 mb-4">
+                    <div className="flex items-end gap-2 mb-6 mt-2">
                         <div className="w-1/6">
                   <input
                     id="hatch-start"
