@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Card from '../components/Card';
 import AddFlockForm from '../components/AddFlockForm';
 import { HatchCycle, HatchColourCode, Flock } from '../types';
@@ -226,6 +226,12 @@ const HatchCycleList: React.FC = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState<Record<string, boolean>>({});
+  
+  // Table filtering state
+  const [startDate, setStartDate] = useState<string>('2025-09-08');
+  const [endDate, setEndDate] = useState<string>('2025-11-07');
+  const [rowCount, setRowCount] = useState<string>('50');
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Sorting function
   const handleSort = (column: string) => {
@@ -792,9 +798,37 @@ const HatchCycleList: React.FC = () => {
 
   // Process data with sorting and filtering
   const processedCycles = React.useMemo(() => {
-    let filtered = cycles;
+    let filtered = [...cycles];
 
-    // Apply filters
+    // Date range filtering
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      filtered = filtered.filter(cycle => {
+        const cycleDate = new Date(cycle.setDate);
+        return cycleDate >= start && cycleDate <= end;
+      });
+    }
+
+    // Search filtering
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(cycle => {
+        return (
+          cycle.hatchNo?.toLowerCase().includes(searchLower) ||
+          cycle.colourCode?.toLowerCase().includes(searchLower) ||
+          cycle.flocksRecd?.join(', ').toLowerCase().includes(searchLower) ||
+          cycle.supplierFlockNumber?.toLowerCase().includes(searchLower) ||
+          cycle.supplierName?.toLowerCase().includes(searchLower) ||
+          cycle.vaccinationProfile?.toLowerCase().includes(searchLower) ||
+          cycle.createdBy?.toLowerCase().includes(searchLower) ||
+          cycle.updatedBy?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // Apply existing filters
     Object.keys(filters).forEach((column) => {
       const value = filters[column];
       if (value) {
@@ -822,8 +856,12 @@ const HatchCycleList: React.FC = () => {
       });
     }
 
+    // Row count limiting
+    const limit = rowCount === 'ALL' ? filtered.length : parseInt(rowCount);
+    filtered = filtered.slice(0, limit);
+
     return filtered;
-  }, [cycles, filters, sortColumn, sortDirection]);
+  }, [cycles, startDate, endDate, searchTerm, rowCount, filters, sortColumn, sortDirection]);
 
   // Fetch hatch cycles from Supabase (from the new hatch_cycles table)
   useEffect(() => {
@@ -1216,7 +1254,8 @@ const HatchCycleList: React.FC = () => {
                     type="date"
                     className="w-full px-3 py-2 rounded-2xl shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
-                    defaultValue="2025-09-08"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
                     title="Start"
                   />
                         </div>
@@ -1226,12 +1265,19 @@ const HatchCycleList: React.FC = () => {
                     type="date"
                     className="w-full px-3 py-2 rounded-2xl shadow-md"
                     style={{ backgroundColor: '#fffae5' }}
-                    defaultValue="2025-11-07"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
                     title="End"
                   />
                         </div>
                         <div className="w-1/6">
-                  <select className="w-full px-3 py-2 rounded-2xl shadow-md" style={{ backgroundColor: '#fffae5' }} title="Show">
+                  <select 
+                    className="w-full px-3 py-2 rounded-2xl shadow-md" 
+                    style={{ backgroundColor: '#fffae5' }} 
+                    title="Show"
+                    value={rowCount}
+                    onChange={(e) => setRowCount(e.target.value)}
+                  >
                             <option>50</option>
                             <option>100</option>
                             <option>500</option>
@@ -1245,6 +1291,8 @@ const HatchCycleList: React.FC = () => {
                       type="text"
                       placeholder="Search..."
                       className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
                       <svg
