@@ -298,8 +298,8 @@ const VaccineProfile: React.FC = () => {
                 {[profile.vaccine1Name, profile.vaccine2Name, profile.vaccine3Name, profile.vaccine4Name]
                   .filter(vaccine => vaccine && vaccine.trim() !== '')
                   .map((vaccine, index) => (
-                    <div key={index} className="bg-[#ff8c42] rounded-xl px-4 py-2 text-center">
-                      <span className="text-black font-medium">{vaccine}</span>
+                    <div key={index} className="bg-white rounded-xl px-4 py-2 text-center shadow-md">
+                      <span className="text-gray-800 font-medium">{vaccine}</span>
                     </div>
                   ))}
               </div>
