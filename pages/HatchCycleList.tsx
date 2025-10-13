@@ -3,6 +3,7 @@ import Card from '../components/Card';
 import AddFlockForm from '../components/AddFlockForm';
 import { HatchCycle, HatchColourCode, Flock } from '../types';
 import { supabase } from '../src/supabase';
+import { useAuth } from '../context/AuthContext';
 
 const initialCycles: HatchCycle[] = [
     { 
@@ -164,7 +165,7 @@ const mapTableRowToCycle = (r: any): HatchCycle => ({
 });
 
 // Map from UI newCycle => base table payload with quoted keys
-const toBaseTablePayload = (c: HatchCycle) => ({
+const toBaseTablePayload = (c: HatchCycle, currentUser?: string) => ({
   hatch_no: c.hatchNo,
   hatch_colour: c.colourCode ?? null, // Store full format (1-BLUE, 2-ORANGE, etc.)
   flocks_recvd: (c.flocksRecd ?? []).join(', '),
@@ -189,11 +190,12 @@ const toBaseTablePayload = (c: HatchCycle) => ({
   vaccination_profile: c.vaccinationProfile ?? null,
   chicks_sold: c.chicksSold ?? null,
   status: c.status ?? 'OPEN',
-  created_by: c.createdBy ?? 'admin',
+  created_by: c.createdBy ?? currentUser ?? 'admin',
 });
 // -----------------------------------------------------------------------------
 
 const HatchCycleList: React.FC = () => {
+  const { user } = useAuth();
   const [cycles, setCycles] = useState<HatchCycle[]>([]);
     const [isNewCycleModalVisible, setIsNewCycleModalVisible] = useState(false);
   const [newCycleData, setNewCycleData] = useState<Partial<HatchCycle>>({
@@ -506,6 +508,10 @@ const HatchCycleList: React.FC = () => {
 
       // Update in Supabase
       console.log('Updating Supabase with:', updateData);
+      
+      // Add updated_by field with current user's name
+      updateData.updated_by = user?.name || 'admin';
+      
       const { error } = await supabase
         .from('hatch_cycles')
         .update(updateData)
@@ -599,6 +605,10 @@ const HatchCycleList: React.FC = () => {
             updatedCycle.supplierName = supplierName || undefined;
             console.log('Updated SUPPLIER NAME in local state:', supplierName);
           }
+          
+          // Always update updated_by with current user's name
+          updatedCycle.updatedBy = user?.name || 'admin';
+          updatedCycle.updatedAt = new Date().toISOString();
           
           console.log('Updated cycle in local state:', updatedCycle);
           return updatedCycle;
@@ -1181,12 +1191,12 @@ const HatchCycleList: React.FC = () => {
               hatched: chicksHatched, // Submitted as blank
               culled: chicksCulled, // Auto-calculated
             },
-        createdBy: 'clerk-01', // mock user (not stored in DB)
-            createdAt: new Date().toISOString(),
+        createdBy: user?.name || 'admin',
+        createdAt: new Date().toISOString(),
         };
 
       // Insert into base table with QUOTED column names
-      const payload = toBaseTablePayload(newCycle);
+      const payload = toBaseTablePayload(newCycle, user?.name);
       console.log('Payload being sent to Supabase:', payload);
       const { error } = await supabase.from('hatch_cycles').insert([payload]);
 
