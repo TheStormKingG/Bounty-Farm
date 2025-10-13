@@ -1436,23 +1436,34 @@ const HatchCycleList: React.FC = () => {
                         <div className="flex items-center space-x-1 ml-4">
                           <button
                             onClick={() => handleSort(header)}
-                            className="p-1 hover:bg-white hover:bg-opacity-20 rounded text-xs"
-                            style={{ color: 'white' }}
+                            className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
                             title={`Sort by ${header}`}
                           >
                             {sortColumn === header ? (
-                              sortDirection === 'asc' ? '↑' : '↓'
+                              sortDirection === 'asc' ? (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M18 15l-6-6-6 6"/>
+                                </svg>
+                              ) : (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M6 9l6 6 6-6"/>
+                                </svg>
+                              )
                             ) : (
-                              '↕'
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                              </svg>
                             )}
                           </button>
                           <button
                             onClick={() => toggleFilter(header)}
-                            className="p-1 hover:bg-white hover:bg-opacity-20 rounded text-xs"
-                            style={{ color: 'white' }}
+                            className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
                             title={`Filter ${header}`}
                           >
-                            🔍
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="11" cy="11" r="8"/>
+                              <path d="M21 21l-4.35-4.35"/>
+                            </svg>
                           </button>
                         </div>
                       </div>
