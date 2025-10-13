@@ -720,21 +720,39 @@ const Sales: React.FC = () => {
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-001</td>
                   <td className="px-4 py-3 text-sm">
-                    <input
-                      type="date"
-                      defaultValue="2025-10-15"
-                      className="px-2 py-1 border border-gray-300 rounded text-sm"
-                    />
+                    <button 
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'date';
+                        input.onchange = (e) => {
+                          const target = e.target as HTMLInputElement;
+                          const button = target.previousElementSibling as HTMLButtonElement;
+                          if (button) {
+                            button.textContent = target.value || 'Pending';
+                            button.className = target.value ? 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200' : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                    >
+                      Pending
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pending</span>
-                      <button className="text-gray-600 hover:text-green-600">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20,6 9,17 4,12"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+                    <button 
+                      onClick={(e) => {
+                        const button = e.target as HTMLButtonElement;
+                        const isPending = button.textContent === 'Pending';
+                        button.textContent = isPending ? 'Paid' : 'Pending';
+                        button.className = isPending 
+                          ? 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs cursor-pointer hover:bg-green-200'
+                          : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                      }}
+                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                    >
+                      Pending
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm space-x-2">
                     <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
@@ -744,21 +762,39 @@ const Sales: React.FC = () => {
                 <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">INV-002</td>
                   <td className="px-4 py-3 text-sm">
-                    <input
-                      type="date"
-                      defaultValue="2025-10-16"
-                      className="px-2 py-1 border border-gray-300 rounded text-sm"
-                    />
+                    <button 
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'date';
+                        input.onchange = (e) => {
+                          const target = e.target as HTMLInputElement;
+                          const button = target.previousElementSibling as HTMLButtonElement;
+                          if (button) {
+                            button.textContent = target.value || 'Pending';
+                            button.className = target.value ? 'px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs cursor-pointer hover:bg-blue-200' : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                    >
+                      Pending
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Paid</span>
-                      <button className="text-green-600">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20,6 9,17 4,12"></polyline>
-                        </svg>
-                      </button>
-                    </div>
+                    <button 
+                      onClick={(e) => {
+                        const button = e.target as HTMLButtonElement;
+                        const isPending = button.textContent === 'Pending';
+                        button.textContent = isPending ? 'Paid' : 'Pending';
+                        button.className = isPending 
+                          ? 'px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs cursor-pointer hover:bg-green-200'
+                          : 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200';
+                      }}
+                      className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs cursor-pointer hover:bg-yellow-200"
+                    >
+                      Pending
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-sm space-x-2">
                     <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
