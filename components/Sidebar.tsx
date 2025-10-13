@@ -47,11 +47,19 @@ const Sidebar: React.FC = () => {
             <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
             <NavLink to="/flock-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">🐔</span>
-              Flock Management
+              Flocks
             </NavLink>
             <NavLink to="/breed-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">🧬</span>
-              Breed Management
+              Breeds
+            </NavLink>
+            <NavLink to="/vaccine-profile" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">💉</span>
+              Vaccine Profile
+            </NavLink>
+            <NavLink to="/customers" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">👥</span>
+              Customers
             </NavLink>
             <NavLink to="/settings" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">⚙️</span>
