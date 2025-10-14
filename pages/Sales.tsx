@@ -93,7 +93,9 @@ const Sales: React.FC = () => {
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isInvoiceModalVisible, setIsInvoiceModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] = useState<SalesDispatch | null>(null);
+  const [currentInvoice, setCurrentInvoice] = useState<any>(null);
   const [newRecordData, setNewRecordData] = useState<Partial<SalesDispatch>>({});
 
   // Fetch sales dispatch records from database
@@ -316,6 +318,11 @@ const Sales: React.FC = () => {
     }
   };
 
+  // Function to handle viewing invoice
+  const handleViewInvoice = (invoice: any) => {
+    setCurrentInvoice(invoice);
+    setIsInvoiceModalVisible(true);
+  };
 
   // Function to find hatches by date and calculate batches required
   const calculateBatchesRequired = async (hatchDate: string, quantity: number): Promise<number> => {
@@ -834,7 +841,7 @@ const Sales: React.FC = () => {
               }}>
                 <tr>
                   {[
-                    'Invoice Number', 'Date Sent', 'Payment Status', 'Actions'
+                    'Invoice Number', 'Date Sent', 'Payment Status', 'FILE'
                   ].map((header, index) => (
                     <th
                       key={header}
@@ -895,8 +902,12 @@ const Sales: React.FC = () => {
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
-                      <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
-                      <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
+                      <button 
+                        onClick={() => handleViewInvoice(invoice)}
+                        className="text-[#5C3A6B] hover:underline font-medium"
+                      >
+                        View
+                      </button>
                     </td>
                                         </tr>
                                     ))}
@@ -1112,7 +1123,152 @@ const Sales: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+
+        {/* Invoice View Modal */}
+        {isInvoiceModalVisible && currentInvoice && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-800">Invoice - {currentInvoice.invoice_number}</h3>
+                <button 
+                  onClick={() => setIsInvoiceModalVisible(false)} 
+                  className="text-gray-500 hover:text-gray-800 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+              
+              {/* Invoice Content */}
+              <div className="p-6">
+                {/* Invoice Header */}
+                <div className="flex justify-between items-start mb-8">
+                  {/* Company Info */}
+                  <div className="flex items-start space-x-4">
+                    {/* Logo placeholder */}
+                    <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
+                      <div className="text-yellow-600 font-bold text-xs text-center">
+                        BOUNTY<br/>FARM<br/>LTD
+                      </div>
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
+                      <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
+                      <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
+                      <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
+                    </div>
+                  </div>
+                  
+                  {/* Invoice Details */}
+                  <div className="text-right">
+                    <h2 className="text-2xl font-bold text-black uppercase mb-4">TAX INVOICE</h2>
+                    <div className="border border-black p-3">
+                      <p className="text-sm font-bold">Tin #010067340</p>
+                      <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+                        <div>
+                          <p className="font-semibold">Date</p>
+                          <p>{invoiceDates[currentInvoice.invoice_number] || new Date().toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                          <p className="font-semibold">Tax Invoice #</p>
+                          <p>{currentInvoice.invoice_number}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bill To Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Bill To:</h3>
+                  <div className="border border-gray-300 p-4 bg-gray-50">
+                    <p className="font-semibold">EAT INS FARMS</p>
+                    <p>COWAN & HIGH STREET</p>
+                    <p className="text-gray-500">ATTN: RECHANNA RAHAMAN</p>
+                    <p>TEL: +5926335874</p>
+                  </div>
+                </div>
+
+                {/* Line Items Table */}
+                <div className="mb-6">
+                  <table className="w-full border border-black">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-black p-2 text-left">#</th>
+                        <th className="border border-black p-2 text-left">Description</th>
+                        <th className="border border-black p-2 text-left">Unit</th>
+                        <th className="border border-black p-2 text-left">Quantity</th>
+                        <th className="border border-black p-2 text-left">Unit Price</th>
+                        <th className="border border-black p-2 text-left">Line Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border border-black p-2">1</td>
+                        <td className="border border-black p-2">Day Old Chicks</td>
+                        <td className="border border-black p-2">Each</td>
+                        <td className="border border-black p-2">{currentInvoice.qty?.toLocaleString() || '0'}</td>
+                        <td className="border border-black p-2">$0.00</td>
+                        <td className="border border-black p-2">$0.00</td>
+                      </tr>
+                      {/* Empty rows */}
+                      {[2, 3, 4, 5, 6].map((num) => (
+                        <tr key={num}>
+                          <td className="border border-black p-2">{num}</td>
+                          <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2"></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer Section */}
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-sm mb-4">Merchandise remains the property of Bounty Farm until paid for in full</p>
+                    <div className="space-y-2">
+                      <p className="text-sm"><span className="font-semibold">Prepared by:</span> Sarah Francis</p>
+                      <p className="text-sm"><span className="font-semibold">Approved by:</span> ________________</p>
+                    </div>
+                  </div>
+                  
+                  {/* Summary Table */}
+                  <div className="w-64">
+                    <table className="w-full border border-black">
+                      <tbody>
+                        <tr>
+                          <td className="border border-black p-2 font-semibold">Invoice Disc.</td>
+                          <td className="border border-black p-2">$0.00</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-2 font-semibold">Subtotal</td>
+                          <td className="border border-black p-2">$0.00</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-2 font-semibold">VAT (0%)</td>
+                          <td className="border border-black p-2">$0.00</td>
+                        </tr>
+                        <tr>
+                          <td className="border border-black p-2 font-bold bg-gray-100">TOTAL</td>
+                          <td className="border border-black p-2 font-bold bg-gray-100">$0.00</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Company Slogan */}
+                <div className="text-center mt-8">
+                  <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
 };
 
