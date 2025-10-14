@@ -330,6 +330,10 @@ const Sales: React.FC = () => {
       };
 
       setSalesDispatch(prev => [newRecord, ...prev]);
+      
+      // Refresh invoices to show the newly created invoice (from database trigger)
+      await fetchInvoices();
+      
       setIsAddModalVisible(false);
       setNewRecordData({});
       alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
