@@ -274,12 +274,12 @@ const Sales: React.FC = () => {
     }));
   };
 
-  const handlePaymentStatusToggle = async (invoiceNumber: string) => {
+  const handlePaymentStatusToggle = async (invoiceId: string, invoiceNumber: string) => {
     try {
       const currentStatus = paymentStatuses[invoiceNumber] || 'pending';
       const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
       
-      // Update the database
+      // Update the database using invoice ID
       const { error } = await supabase
         .from('invoices')
         .update({ 
@@ -287,7 +287,7 @@ const Sales: React.FC = () => {
           updated_at: new Date().toISOString(),
           updated_by: user?.name || 'admin'
         })
-        .eq('invoice_number', invoiceNumber);
+        .eq('id', invoiceId);
 
       if (error) {
         console.error('Error updating payment status:', error);
@@ -797,7 +797,7 @@ const Sales: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button 
-                        onClick={() => handlePaymentStatusToggle(invoice.invoice_number)}
+                        onClick={() => handlePaymentStatusToggle(invoice.id, invoice.invoice_number)}
                         className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
                           paymentStatuses[invoice.invoice_number] === 'pending' 
                             ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
