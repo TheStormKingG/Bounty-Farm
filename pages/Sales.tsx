@@ -481,22 +481,53 @@ const Sales: React.FC = () => {
     let customerType = invoice.customerType;
     
     // If not in invoice, try to get from sales_dispatch
-    if (!customerName || !customerType) {
+    if (!customerName) {
       console.log('Customer info not in invoice, fetching from sales_dispatch...');
       try {
         const { data: salesData, error: salesError } = await supabase
           .from('sales_dispatch')
-          .select('customer, customer_type')
+          .select('customer')
           .eq('po_number', invoice.po_number || invoice.invoice_number?.replace('INV', 'PO'))
           .single();
           
         if (!salesError && salesData) {
           customerName = salesData.customer;
-          customerType = salesData.customer_type;
-          console.log('Found customer info from sales_dispatch:', customerName, customerType);
+          console.log('Found customer info from sales_dispatch:', customerName);
         }
       } catch (error) {
         console.error('Error fetching customer from sales_dispatch:', error);
+      }
+    }
+    
+    // Determine customer type by checking which table the customer exists in
+    if (customerName && !customerType) {
+      console.log('Determining customer type for:', customerName);
+      
+      // Try farm customers first
+      const { data: farmData, error: farmError } = await supabase
+        .from('farm_customers')
+        .select('farm_name')
+        .eq('farm_name', customerName)
+        .single();
+        
+      if (!farmError && farmData) {
+        customerType = 'Farm';
+        console.log('Customer found in farm_customers, type: Farm');
+      } else {
+        // Try individual customers
+        const { data: individualData, error: individualError } = await supabase
+          .from('individual_customers')
+          .select('name')
+          .eq('name', customerName)
+          .single();
+          
+        if (!individualError && individualData) {
+          customerType = 'Individual';
+          console.log('Customer found in individual_customers, type: Individual');
+        } else {
+          console.log('Customer not found in either table, defaulting to Farm');
+          customerType = 'Farm'; // Default fallback
+        }
       }
     }
     
@@ -729,7 +760,6 @@ const Sales: React.FC = () => {
           po_number: newRecordData.poNumber,
           date_ordered: newRecordData.dateOrdered,
           customer: newRecordData.customer,
-          customer_type: newRecordData.customerType,
           qty: newRecordData.qty,
           hatch_date: newRecordData.hatchDate,
           batches_required: batchesRequired,
