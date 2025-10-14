@@ -9,7 +9,6 @@ interface Dispatch {
   date_dispatched: string;
   type: string;
   trucks: number;
-  receipt: string;
   created_by: string;
   created_at: string;
   updated_by: string;
@@ -27,6 +26,11 @@ const Dispatch: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Modal state for delivery receipt
+  const [isReceiptModalVisible, setIsReceiptModalVisible] = useState(false);
+  const [currentDispatch, setCurrentDispatch] = useState<Dispatch | null>(null);
+  const [dispatchInvoiceData, setDispatchInvoiceData] = useState<any>(null);
 
   // Fetch dispatches from database
   const fetchDispatches = async () => {
@@ -159,6 +163,31 @@ const Dispatch: React.FC = () => {
               : dispatch
           )
         );
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Handle viewing delivery receipt
+  const handleViewReceipt = async (dispatch: Dispatch) => {
+    try {
+      setCurrentDispatch(dispatch);
+      
+      // Fetch invoice data for this dispatch
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', dispatch.invoice_id)
+        .single();
+
+      if (invoiceError) {
+        console.error('Error fetching invoice data:', invoiceError);
+        setError('Failed to fetch invoice data: ' + invoiceError.message);
+      } else {
+        setDispatchInvoiceData(invoiceData);
+        setIsReceiptModalVisible(true);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -322,10 +351,7 @@ const Dispatch: React.FC = () => {
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
                       <td className="px-4 py-3 text-sm">
                         <button
-                          onClick={() => {
-                            // TODO: Implement receipt view functionality
-                            console.log('View receipt for dispatch:', dispatch.dispatch_number);
-                          }}
+                          onClick={() => handleViewReceipt(dispatch)}
                           className="text-[#5c3a6b] hover:text-[#4a2c5a] underline cursor-pointer"
                         >
                           View
@@ -342,9 +368,154 @@ const Dispatch: React.FC = () => {
             <div className="text-center py-8 text-gray-500">
               No dispatches found matching your criteria.
             </div>
-          )}
-        </div>
+        )}
       </div>
+
+      {/* Delivery Receipt Modal */}
+      {isReceiptModalVisible && currentDispatch && dispatchInvoiceData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Delivery Receipt - {currentDispatch.dispatch_number}</h3>
+              <button 
+                onClick={() => setIsReceiptModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            
+            {/* Delivery Receipt Content */}
+            <div className="p-6">
+              {/* Receipt Header */}
+              <div className="flex justify-between items-start mb-8">
+                {/* Company Info */}
+                <div className="flex items-start space-x-4">
+                  {/* Company Logo */}
+                  <div className="w-20 h-20">
+                    <img 
+                      src="/images/BPF-Stefan-8.png" 
+                      alt="Bounty Farm Logo" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
+                    <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
+                    <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
+                    <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
+                  </div>
+                </div>
+                
+                {/* Receipt Details */}
+                <div className="text-right">
+                  <h2 className="text-2xl font-bold text-black uppercase mb-4">DELIVERY RECEIPT</h2>
+                  <div className="border border-black p-3">
+                    <p className="text-sm font-bold">Tin #010067340</p>
+                    <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+                      <div>
+                        <p className="font-semibold">Date</p>
+                        <p>{new Date(currentDispatch.date_dispatched).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold">Dispatch #</p>
+                        <p>{currentDispatch.dispatch_number}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delivery Info Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Delivery Information:</h3>
+                <div className="border border-gray-300 p-4 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-semibold">Dispatch Type</p>
+                      <p className="text-lg">{currentDispatch.type || 'Delivery'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Number of Trucks</p>
+                      <p className="text-lg">{currentDispatch.trucks || 1}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Trip Information */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Trip Details:</h3>
+                <table className="w-full border border-black">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-black p-2 text-left">Trip ID</th>
+                      <th className="border border-black p-2 text-left">Truck Number</th>
+                      <th className="border border-black p-2 text-left">Driver</th>
+                      <th className="border border-black p-2 text-left">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from({ length: currentDispatch.trucks || 1 }, (_, index) => (
+                      <tr key={index}>
+                        <td className="border border-black p-2">TRIP-{currentDispatch.dispatch_number}-{String(index + 1).padStart(2, '0')}</td>
+                        <td className="border border-black p-2">TRUCK-{String(index + 1).padStart(2, '0')}</td>
+                        <td className="border border-black p-2">Driver {index + 1}</td>
+                        <td className="border border-black p-2">
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            Completed
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Invoice Information */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Related Invoice:</h3>
+                <div className="border border-gray-300 p-4 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-semibold">Invoice Number</p>
+                      <p>{dispatchInvoiceData.invoice_number}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Customer</p>
+                      <p>{dispatchInvoiceData.customer}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Quantity</p>
+                      <p>{dispatchInvoiceData.qty?.toLocaleString() || '0'}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold">Hatch Date</p>
+                      <p>{dispatchInvoiceData.hatch_date ? new Date(dispatchInvoiceData.hatch_date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <p className="text-sm mb-4">Delivery completed successfully. All chicks delivered in good condition.</p>
+                  <div className="space-y-2">
+                    <p className="text-sm"><span className="font-semibold">Dispatched by:</span> {currentDispatch.created_by || 'admin'}</p>
+                    <p className="text-sm"><span className="font-semibold">Dispatch Date:</span> {new Date(currentDispatch.date_dispatched).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Company Slogan */}
+              <div className="text-center mt-8">
+                <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,17 +1,12 @@
 -- Update dispatches table structure
--- This script modifies the existing dispatches table to replace 'trips' column with 'receipt' column
+-- This script removes the 'receipt' column from dispatches table
+-- The receipt functionality will be handled in the app frontend
 
--- First, add the new 'receipt' column
-ALTER TABLE dispatches ADD COLUMN IF NOT EXISTS receipt VARCHAR(255);
-
--- Update existing records to have a default receipt value
-UPDATE dispatches SET receipt = 'RECEIPT-' || dispatch_number WHERE receipt IS NULL;
+-- Drop the 'receipt' column if it exists
+ALTER TABLE dispatches DROP COLUMN IF EXISTS receipt;
 
 -- Drop the old 'trips' column (if it exists)
 ALTER TABLE dispatches DROP COLUMN IF EXISTS trips;
-
--- Add an index for better performance on receipt lookups
-CREATE INDEX IF NOT EXISTS idx_dispatches_receipt ON dispatches(receipt);
 
 -- Verify the changes
 SELECT 

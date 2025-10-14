@@ -14,6 +14,7 @@ import FlockManagement from './pages/FlockManagement';
 import BreedManagement from './pages/BreedManagement';
 import VaccineProfile from './pages/VaccineProfile';
 import Customers from './pages/Customers';
+import Delivery from './pages/Delivery';
 
 const App: React.FC = () => {
   const { user, loading } = useAuth();
@@ -72,6 +73,7 @@ const App: React.FC = () => {
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin, Role.SalesClerk]} />}>
           <Route path="/sales" element={<Sales />} />
           <Route path="/dispatch" element={<Dispatch />} />
+          <Route path="/delivery" element={<Delivery />} />
           <Route path="/customers" element={<Customers />} />
         </Route>
 
