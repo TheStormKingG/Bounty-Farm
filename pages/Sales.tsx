@@ -1527,14 +1527,25 @@ const Sales: React.FC = () => {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-2">Bill To:</h3>
                   <div className="border border-gray-300 p-4 bg-gray-50">
-                    <p className="font-semibold">{currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}</p>
-                    <p>{currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}</p>
+                    {/* Customer Name */}
+                    <p className="font-semibold">
+                      {currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}
+                    </p>
+                    
+                    {/* Customer Address */}
+                    <p>
+                      {currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}
+                    </p>
+                    
+                    {/* Contact Person (only for Farm customers) */}
                     {currentInvoice.customerDetails?.type === 'Farm' && currentInvoice.customerDetails?.contactPerson && (
                       <p className="text-gray-500">ATTN: {currentInvoice.customerDetails.contactPerson}</p>
                     )}
+                    
+                    {/* Contact Number */}
                     <p>TEL: {currentInvoice.customerDetails?.contactNumber || '+5926335874'}</p>
-                            </div>
-                            </div>
+                  </div>
+                </div>
 
                 {/* Line Items Table */}
                 <div className="mb-6">
