@@ -356,68 +356,117 @@ const Sales: React.FC = () => {
 
   // Function to handle viewing invoice
   const handleViewInvoice = async (invoice: any) => {
+    console.log('Viewing invoice:', invoice);
     setCurrentInvoice(invoice);
     
     // Fetch hatch details for this invoice
     try {
-      const { data: hatchData, error } = await supabase
-        .from('hatch_cycles')
-        .select('hatch_no, chicks_hatched')
-        .eq('hatch_date', invoice.hatch_date)
-        .not('chicks_hatched', 'is', null)
-        .gt('chicks_hatched', 0)
-        .order('chicks_hatched', { ascending: false });
-
-      if (!error && hatchData) {
-        // Calculate which hatches were used (same logic as calculateBatchesRequired)
-        const quantity = invoice.qty || 0;
-        let remainingQuantity = quantity;
-        const usedHatches: Array<{hatchNo: string, chicksUsed: number}> = [];
-
-        // First pass: Use largest hatches first
-        for (const hatch of hatchData) {
-          if (remainingQuantity <= 0) break;
+      // First, try to get hatch_date from the invoice
+      let hatchDate = invoice.hatch_date;
+      
+      // If no hatch_date in invoice, try to get it from sales_dispatch
+      if (!hatchDate) {
+        console.log('No hatch_date in invoice, fetching from sales_dispatch...');
+        const { data: salesData, error: salesError } = await supabase
+          .from('sales_dispatch')
+          .select('hatch_date')
+          .eq('po_number', invoice.po_number || invoice.invoice_number?.replace('INV', 'PO'))
+          .single();
           
-          const chicksAvailable = hatch.chicks_hatched || 0;
-          const chicksToUse = Math.min(remainingQuantity, chicksAvailable);
-          
-          if (chicksToUse > 0) {
-            remainingQuantity -= chicksToUse;
-            usedHatches.push({
-              hatchNo: hatch.hatch_no,
-              chicksUsed: chicksToUse
-            });
-          }
+        if (!salesError && salesData) {
+          hatchDate = salesData.hatch_date;
+          console.log('Found hatch_date from sales_dispatch:', hatchDate);
         }
+      }
+      
+      if (hatchDate) {
+        console.log('Fetching hatch data for date:', hatchDate);
+        const { data: hatchData, error } = await supabase
+          .from('hatch_cycles')
+          .select('hatch_no, chicks_hatched')
+          .eq('hatch_date', hatchDate)
+          .not('chicks_hatched', 'is', null)
+          .gt('chicks_hatched', 0)
+          .order('chicks_hatched', { ascending: false });
 
-        // If we still need more chicks, find the closest match
-        if (remainingQuantity > 0) {
-          const unusedHatches = hatchData.filter(h => 
-            !usedHatches.some(uh => uh.hatchNo === h.hatch_no)
-          );
-          
-          if (unusedHatches.length > 0) {
-            const closestHatch = unusedHatches.reduce((closest, current) => {
-              const currentDiff = Math.abs((current.chicks_hatched || 0) - remainingQuantity);
-              const closestDiff = Math.abs((closest.chicks_hatched || 0) - remainingQuantity);
-              return currentDiff < closestDiff ? current : closest;
-            }, unusedHatches[0]);
+        console.log('Hatch data fetched:', hatchData);
 
-            usedHatches.push({
-              hatchNo: closestHatch.hatch_no,
-              chicksUsed: Math.min(remainingQuantity, closestHatch.chicks_hatched || 0)
-            });
+        if (!error && hatchData && hatchData.length > 0) {
+          // Calculate which hatches were used (same logic as calculateBatchesRequired)
+          const quantity = invoice.qty || 0;
+          let remainingQuantity = quantity;
+          const usedHatches: Array<{hatchNo: string, chicksUsed: number}> = [];
+
+          console.log('Calculating used hatches for quantity:', quantity);
+
+          // First pass: Use largest hatches first
+          for (const hatch of hatchData) {
+            if (remainingQuantity <= 0) break;
+            
+            const chicksAvailable = hatch.chicks_hatched || 0;
+            const chicksToUse = Math.min(remainingQuantity, chicksAvailable);
+            
+            if (chicksToUse > 0) {
+              remainingQuantity -= chicksToUse;
+              usedHatches.push({
+                hatchNo: hatch.hatch_no,
+                chicksUsed: chicksToUse
+              });
+              console.log(`Using hatch ${hatch.hatch_no}: ${chicksToUse} chicks`);
+            }
           }
-        }
 
-        // Add hatch details to invoice object
+          // If we still need more chicks, find the closest match
+          if (remainingQuantity > 0) {
+            const unusedHatches = hatchData.filter(h => 
+              !usedHatches.some(uh => uh.hatchNo === h.hatch_no)
+            );
+            
+            if (unusedHatches.length > 0) {
+              const closestHatch = unusedHatches.reduce((closest, current) => {
+                const currentDiff = Math.abs((current.chicks_hatched || 0) - remainingQuantity);
+                const closestDiff = Math.abs((closest.chicks_hatched || 0) - remainingQuantity);
+                return currentDiff < closestDiff ? current : closest;
+              }, unusedHatches[0]);
+
+              usedHatches.push({
+                hatchNo: closestHatch.hatch_no,
+                chicksUsed: Math.min(remainingQuantity, closestHatch.chicks_hatched || 0)
+              });
+              console.log(`Using closest hatch ${closestHatch.hatch_no}: ${Math.min(remainingQuantity, closestHatch.chicks_hatched || 0)} chicks`);
+            }
+          }
+
+          console.log('Final used hatches:', usedHatches);
+
+          // Add hatch details to invoice object
+          setCurrentInvoice({
+            ...invoice,
+            usedHatches: usedHatches
+          });
+        } else {
+          console.log('No hatch data found or error:', error);
+          // Set empty usedHatches if no data found
+          setCurrentInvoice({
+            ...invoice,
+            usedHatches: []
+          });
+        }
+      } else {
+        console.log('No hatch_date found for invoice');
+        // Set empty usedHatches if no hatch_date
         setCurrentInvoice({
           ...invoice,
-          usedHatches: usedHatches
+          usedHatches: []
         });
       }
     } catch (error) {
       console.error('Error fetching hatch details:', error);
+      // Set empty usedHatches on error
+      setCurrentInvoice({
+        ...invoice,
+        usedHatches: []
+      });
     }
     
     setIsInvoiceModalVisible(true);
@@ -1343,19 +1392,28 @@ const Sales: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {currentInvoice.usedHatches?.map((hatch: any, index: number) => (
-                        <tr key={index}>
-                          <td className="border border-black p-2">{index + 1}</td>
-                          <td className="border border-black p-2">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
-                          <td className="border border-black p-2">Each</td>
-                          <td className="border border-black p-2">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
-                          <td className="border border-black p-2">$200.00</td>
-                          <td className="border border-black p-2">${(hatch.chicksUsed * 200).toLocaleString()}.00</td>
-                        </tr>
-                      )) || (
+                      {currentInvoice.usedHatches?.length > 0 ? (
+                        currentInvoice.usedHatches.map((hatch: any, index: number) => (
+                          <tr key={index}>
+                            <td className="border border-black p-2">{index + 1}</td>
+                            <td className="border border-black p-2">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
+                            <td className="border border-black p-2">Each</td>
+                            <td className="border border-black p-2">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
+                            <td className="border border-black p-2">$200.00</td>
+                            <td className="border border-black p-2">${(hatch.chicksUsed * 200).toLocaleString()}.00</td>
+                          </tr>
+                        ))
+                      ) : (
                         <tr>
                           <td className="border border-black p-2">1</td>
-                          <td className="border border-black p-2">Day Old Chicks</td>
+                          <td className="border border-black p-2">
+                            Day Old Chicks
+                            {currentInvoice.usedHatches?.length === 0 && (
+                              <span className="text-red-600 text-xs block mt-1">
+                                (Hatch details not available - check console for details)
+                              </span>
+                            )}
+                          </td>
                           <td className="border border-black p-2">Each</td>
                           <td className="border border-black p-2">{currentInvoice.qty?.toLocaleString() || '0'}</td>
                           <td className="border border-black p-2">$200.00</td>
