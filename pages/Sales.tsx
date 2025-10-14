@@ -473,10 +473,37 @@ const Sales: React.FC = () => {
   // Function to handle viewing invoice
   const handleViewInvoice = async (invoice: any) => {
     console.log('Viewing invoice:', invoice);
+    console.log('Invoice fields:', Object.keys(invoice));
     setCurrentInvoice(invoice);
     
+    // First, try to get customer details from the invoice
+    let customerName = invoice.customer;
+    let customerType = invoice.customerType;
+    
+    // If not in invoice, try to get from sales_dispatch
+    if (!customerName || !customerType) {
+      console.log('Customer info not in invoice, fetching from sales_dispatch...');
+      try {
+        const { data: salesData, error: salesError } = await supabase
+          .from('sales_dispatch')
+          .select('customer, customerType')
+          .eq('po_number', invoice.po_number || invoice.invoice_number?.replace('INV', 'PO'))
+          .single();
+          
+        if (!salesError && salesData) {
+          customerName = salesData.customer;
+          customerType = salesData.customerType;
+          console.log('Found customer info from sales_dispatch:', customerName, customerType);
+        }
+      } catch (error) {
+        console.error('Error fetching customer from sales_dispatch:', error);
+      }
+    }
+    
+    console.log('Final customer info:', customerName, customerType);
+    
     // Fetch customer details
-    const customerDetails = await getCustomerDetails(invoice.customer, invoice.customerType);
+    const customerDetails = await getCustomerDetails(customerName, customerType);
     console.log('Customer details:', customerDetails);
     
     // Fetch hatch details for this invoice
