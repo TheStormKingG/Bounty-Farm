@@ -354,10 +354,63 @@ const Sales: React.FC = () => {
     }
   };
 
+  // Function to get customer details for invoice
+  const getCustomerDetails = async (customerName: string, customerType: string) => {
+    try {
+      if (customerType === 'Farm') {
+        const { data: farmData, error } = await supabase
+          .from('farm_customers')
+          .select('farm_name, farm_address, contact_person, contact_number')
+          .eq('farm_name', customerName)
+          .single();
+          
+        if (!error && farmData) {
+          return {
+            name: farmData.farm_name,
+            address: farmData.farm_address,
+            contactPerson: farmData.contact_person,
+            contactNumber: farmData.contact_number,
+            type: 'Farm'
+          };
+        }
+      } else if (customerType === 'Individual') {
+        const { data: individualData, error } = await supabase
+          .from('individual_customers')
+          .select('name, address, phone_number')
+          .eq('name', customerName)
+          .single();
+          
+        if (!error && individualData) {
+          return {
+            name: individualData.name,
+            address: individualData.address,
+            contactNumber: individualData.phone_number,
+            type: 'Individual'
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
+    
+    // Fallback to default values
+    return {
+      name: customerName || 'EAT INS FARMS',
+      address: 'COWAN & HIGH STREET',
+      contactPerson: 'RECHANNA RAHAMAN',
+      contactNumber: '+5926335874',
+      type: customerType || 'Farm'
+    };
+  };
+
   // Function to handle viewing invoice
   const handleViewInvoice = async (invoice: any) => {
     console.log('Viewing invoice:', invoice);
     setCurrentInvoice(invoice);
+    
+    // Fetch customer details
+    const customerDetails = await getCustomerDetails(invoice.customer, invoice.customerType);
+    console.log('Customer details:', customerDetails);
     
     // Fetch hatch details for this invoice
     try {
@@ -369,12 +422,17 @@ const Sales: React.FC = () => {
         console.log('No hatch_date in invoice, fetching from sales_dispatch...');
         const { data: salesData, error: salesError } = await supabase
           .from('sales_dispatch')
-          .select('hatch_date')
+          .select('hatch_date, qty')
           .eq('po_number', invoice.po_number || invoice.invoice_number?.replace('INV', 'PO'))
           .single();
           
         if (!salesError && salesData) {
           hatchDate = salesData.hatch_date;
+          // Also get the quantity from sales_dispatch if invoice quantity is 0
+          if ((invoice.qty || 0) === 0 && salesData.qty) {
+            invoice.qty = salesData.qty;
+            console.log('Updated invoice quantity from sales_dispatch:', salesData.qty);
+          }
           console.log('Found hatch_date from sales_dispatch:', hatchDate);
         }
       }
@@ -439,17 +497,19 @@ const Sales: React.FC = () => {
 
           console.log('Final used hatches:', usedHatches);
 
-          // Add hatch details to invoice object
+          // Add hatch details and customer details to invoice object
           setCurrentInvoice({
             ...invoice,
-            usedHatches: usedHatches
+            usedHatches: usedHatches,
+            customerDetails: customerDetails
           });
         } else {
           console.log('No hatch data found or error:', error);
           // Set empty usedHatches if no data found
           setCurrentInvoice({
             ...invoice,
-            usedHatches: []
+            usedHatches: [],
+            customerDetails: customerDetails
           });
         }
       } else {
@@ -457,7 +517,8 @@ const Sales: React.FC = () => {
         // Set empty usedHatches if no hatch_date
         setCurrentInvoice({
           ...invoice,
-          usedHatches: []
+          usedHatches: [],
+          customerDetails: customerDetails
         });
       }
     } catch (error) {
@@ -465,7 +526,8 @@ const Sales: React.FC = () => {
       // Set empty usedHatches on error
       setCurrentInvoice({
         ...invoice,
-        usedHatches: []
+        usedHatches: [],
+        customerDetails: customerDetails
       });
     }
     
@@ -1371,10 +1433,12 @@ const Sales: React.FC = () => {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-2">Bill To:</h3>
                   <div className="border border-gray-300 p-4 bg-gray-50">
-                    <p className="font-semibold">EAT INS FARMS</p>
-                    <p>COWAN & HIGH STREET</p>
-                    <p className="text-gray-500">ATTN: RECHANNA RAHAMAN</p>
-                    <p>TEL: +5926335874</p>
+                    <p className="font-semibold">{currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}</p>
+                    <p>{currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}</p>
+                    {currentInvoice.customerDetails?.type === 'Farm' && currentInvoice.customerDetails?.contactPerson && (
+                      <p className="text-gray-500">ATTN: {currentInvoice.customerDetails.contactPerson}</p>
+                    )}
+                    <p>TEL: {currentInvoice.customerDetails?.contactNumber || '+5926335874'}</p>
                   </div>
                 </div>
 
