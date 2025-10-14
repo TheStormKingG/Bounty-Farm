@@ -335,7 +335,7 @@ const Sales: React.FC = () => {
 
       // Update local state
       setPaymentStatuses(prev => ({
-        ...prev,
+            ...prev,
         [invoiceNumber]: newStatus
       }));
 
@@ -354,16 +354,40 @@ const Sales: React.FC = () => {
     }
   };
 
+  // Function to calculate invoice totals
+  const calculateInvoiceTotals = (usedHatches: any[]) => {
+    const subtotal = usedHatches.reduce((sum, hatch) => {
+      return sum + ((hatch.chicksUsed || 0) * 200);
+    }, 0);
+    
+    const invoiceDiscount = 0; // No discount for now
+    const vatRate = 0; // 0% VAT
+    const vatAmount = 0; // No VAT
+    const total = subtotal - invoiceDiscount + vatAmount;
+    
+    return {
+      subtotal,
+      invoiceDiscount,
+      vatAmount,
+      total
+    };
+  };
+
   // Function to get customer details for invoice
   const getCustomerDetails = async (customerName: string, customerType: string) => {
+    console.log('Fetching customer details for:', customerName, 'Type:', customerType);
+    
     try {
       if (customerType === 'Farm') {
+        console.log('Searching in farm_customers table...');
         const { data: farmData, error } = await supabase
           .from('farm_customers')
           .select('farm_name, farm_address, contact_person, contact_number')
           .eq('farm_name', customerName)
           .single();
           
+        console.log('Farm data result:', farmData, 'Error:', error);
+        
         if (!error && farmData) {
           return {
             name: farmData.farm_name,
@@ -374,12 +398,15 @@ const Sales: React.FC = () => {
           };
         }
       } else if (customerType === 'Individual') {
+        console.log('Searching in individual_customers table...');
         const { data: individualData, error } = await supabase
           .from('individual_customers')
           .select('name, address, phone_number')
           .eq('name', customerName)
           .single();
           
+        console.log('Individual data result:', individualData, 'Error:', error);
+        
         if (!error && individualData) {
           return {
             name: individualData.name,
@@ -389,11 +416,51 @@ const Sales: React.FC = () => {
           };
         }
       }
+      
+      // If no specific type or not found, try both tables
+      console.log('Trying both tables as fallback...');
+      
+      // Try farm customers first
+      const { data: farmData, error: farmError } = await supabase
+        .from('farm_customers')
+        .select('farm_name, farm_address, contact_person, contact_number')
+        .eq('farm_name', customerName)
+        .single();
+        
+      if (!farmError && farmData) {
+        console.log('Found in farm_customers:', farmData);
+        return {
+          name: farmData.farm_name,
+          address: farmData.farm_address,
+          contactPerson: farmData.contact_person,
+          contactNumber: farmData.contact_number,
+          type: 'Farm'
+        };
+      }
+      
+      // Try individual customers
+      const { data: individualData, error: individualError } = await supabase
+        .from('individual_customers')
+        .select('name, address, phone_number')
+        .eq('name', customerName)
+        .single();
+        
+      if (!individualError && individualData) {
+        console.log('Found in individual_customers:', individualData);
+        return {
+          name: individualData.name,
+          address: individualData.address,
+          contactNumber: individualData.phone_number,
+          type: 'Individual'
+        };
+      }
+      
     } catch (error) {
       console.error('Error fetching customer details:', error);
     }
     
     // Fallback to default values
+    console.log('Using fallback values for customer:', customerName);
     return {
       name: customerName || 'EAT INS FARMS',
       address: 'COWAN & HIGH STREET',
@@ -611,7 +678,7 @@ const Sales: React.FC = () => {
   };
 
   const handleAddRecord = async (e: React.FormEvent) => {
-    e.preventDefault();
+        e.preventDefault();
     if (!newRecordData.poNumber || !newRecordData.customer || !newRecordData.qty) {
       alert('Please fill in all required fields');
       return;
@@ -695,7 +762,7 @@ const Sales: React.FC = () => {
   };
 
   const handleUpdateRecord = async (e: React.FormEvent) => {
-    e.preventDefault();
+        e.preventDefault();
     if (!currentRecord) return;
     
     if (!newRecordData.poNumber || !newRecordData.customer || !newRecordData.qty) {
@@ -811,7 +878,7 @@ const Sales: React.FC = () => {
             className="btn-primary px-6 py-3 text-sm"
           >
             <span>+</span> Create PO
-          </button>
+                </button>
         </div>
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
@@ -858,7 +925,7 @@ const Sales: React.FC = () => {
                 </button>
             </div>
           </div>
-                </div>
+            </div>
 
         {/* Loading State */}
         {loading ? (
@@ -908,7 +975,7 @@ const Sales: React.FC = () => {
                             <span className="text-white font-medium text-xs">{header}</span>
                             {header !== 'Actions' && (
                               <div className="ml-4 flex space-x-1">
-                <button
+                                        <button 
                                   onClick={() => handleSort(fieldName)}
                                   className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
                                 >
@@ -925,7 +992,7 @@ const Sales: React.FC = () => {
                                       <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
                                     </svg>
                                   )}
-                                </button>
+                                        </button>
                                 <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="11" cy="11" r="8"/>
@@ -950,7 +1017,7 @@ const Sales: React.FC = () => {
                         color: 'white'
                       }}>
                         {record.poNumber}
-                      </td>
+                                    </td>
                       <td className={`px-4 py-3 text-sm sticky-column-2`} style={{ 
                         width: '150px', 
                         minWidth: '150px',
@@ -958,7 +1025,7 @@ const Sales: React.FC = () => {
                         color: 'white'
                       }}>
                         {new Date(record.dateOrdered).toLocaleDateString()}
-                      </td>
+                                    </td>
                       <td className={`px-4 py-3 text-sm sticky-column-3`} style={{ 
                         width: '150px', 
                         minWidth: '150px',
@@ -1002,7 +1069,7 @@ const Sales: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Invoices</h2>
-        </div>
+                        </div>
         
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
@@ -1124,8 +1191,8 @@ const Sales: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     </div>
-                </div>
 
       {/* Add Record Modal */}
       {isAddModalVisible && (
@@ -1139,9 +1206,9 @@ const Sales: React.FC = () => {
               >
                 &times;
               </button>
-            </div>
+                        </div>
             <form onSubmit={handleAddRecord} className="space-y-4">
-                                <div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">PO Number</label>
                 <input
                   type="text"
@@ -1153,8 +1220,8 @@ const Sales: React.FC = () => {
                   readOnly
                   required
                 />
-                                </div>
-                                <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
                 <input
                   type="date"
@@ -1164,8 +1231,8 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-                                </div>
-                                <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Customer Type</label>
                 <div className="mt-2 space-x-4">
                   <label className="inline-flex items-center">
@@ -1191,8 +1258,8 @@ const Sales: React.FC = () => {
                     <span className="ml-2 text-sm text-gray-700">Individual</span>
                   </label>
                 </div>
-                                </div>
-                                <div>
+                            </div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
                 <select
                   name="customer"
@@ -1216,7 +1283,7 @@ const Sales: React.FC = () => {
                     ))
                   ) : null}
                 </select>
-                                </div>
+                            </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
@@ -1228,7 +1295,7 @@ const Sales: React.FC = () => {
                   placeholder="Enter quantity"
                   required
                 />
-                                </div>
+                        </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
                 <input
@@ -1254,7 +1321,7 @@ const Sales: React.FC = () => {
                 >
                   Create PO
                 </button>
-                            </div>
+                        </div>
                         </form>
                     </div>
                 </div>
@@ -1386,8 +1453,8 @@ const Sales: React.FC = () => {
                 >
                   &times;
                 </button>
-              </div>
-              
+                        </div>
+                        
               {/* Invoice Content */}
               <div className="p-6">
                 {/* Invoice Header */}
@@ -1401,14 +1468,14 @@ const Sales: React.FC = () => {
                         alt="Bounty Farm Logo" 
                         className="w-full h-full object-contain"
                       />
-                    </div>
-                    <div>
+                                </div>
+                                <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
                       <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
                       <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
                       <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
-                    </div>
-                  </div>
+                                </div>
+                                </div>
                   
                   {/* Invoice Details */}
                   <div className="text-right">
@@ -1416,18 +1483,18 @@ const Sales: React.FC = () => {
                     <div className="border border-black p-3">
                       <p className="text-sm font-bold">Tin #010067340</p>
                       <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
-                        <div>
+                                <div>
                           <p className="font-semibold">Date</p>
                           <p>{invoiceDates[currentInvoice.invoice_number] || new Date().toLocaleDateString()}</p>
-                        </div>
-                        <div>
+                                </div>
+                                <div>
                           <p className="font-semibold">Tax Invoice #</p>
                           <p>{currentInvoice.invoice_number}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
+                                </div>
 
                 {/* Bill To Section */}
                 <div className="mb-6">
@@ -1439,8 +1506,8 @@ const Sales: React.FC = () => {
                       <p className="text-gray-500">ATTN: {currentInvoice.customerDetails.contactPerson}</p>
                     )}
                     <p>TEL: {currentInvoice.customerDetails?.contactNumber || '+5926335874'}</p>
-                  </div>
-                </div>
+                            </div>
+                            </div>
 
                 {/* Line Items Table */}
                 <div className="mb-6">
@@ -1514,19 +1581,19 @@ const Sales: React.FC = () => {
                       <tbody>
                         <tr>
                           <td className="border border-black p-2 font-semibold">Invoice Disc.</td>
-                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">${calculateInvoiceTotals(currentInvoice.usedHatches || []).invoiceDiscount.toLocaleString()}.00</td>
                         </tr>
                         <tr>
                           <td className="border border-black p-2 font-semibold">Subtotal</td>
-                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">${calculateInvoiceTotals(currentInvoice.usedHatches || []).subtotal.toLocaleString()}.00</td>
                         </tr>
                         <tr>
                           <td className="border border-black p-2 font-semibold">VAT (0%)</td>
-                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">${calculateInvoiceTotals(currentInvoice.usedHatches || []).vatAmount.toLocaleString()}.00</td>
                         </tr>
                         <tr>
                           <td className="border border-black p-2 font-bold bg-gray-100">TOTAL</td>
-                          <td className="border border-black p-2 font-bold bg-gray-100">$0.00</td>
+                          <td className="border border-black p-2 font-bold bg-gray-100">${calculateInvoiceTotals(currentInvoice.usedHatches || []).total.toLocaleString()}.00</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1538,10 +1605,10 @@ const Sales: React.FC = () => {
                   <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
