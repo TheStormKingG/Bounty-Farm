@@ -1336,7 +1336,7 @@ const Sales: React.FC = () => {
                   ) : null}
                 </select>
                             </div>
-                                <div>
+                            <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
                   type="number"
@@ -1347,7 +1347,7 @@ const Sales: React.FC = () => {
                   placeholder="Enter quantity"
                   required
                 />
-                        </div>
+                            </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Hatch Date</label>
                 <input
@@ -1358,7 +1358,7 @@ const Sales: React.FC = () => {
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
                 />
-                                </div>
+                        </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <button
                   type="button"
@@ -1373,7 +1373,7 @@ const Sales: React.FC = () => {
                 >
                   Create PO
                 </button>
-                        </div>
+                                </div>
                         </form>
                     </div>
                 </div>
@@ -1499,12 +1499,41 @@ const Sales: React.FC = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
               <div className="flex justify-between items-center p-6 border-b">
                 <h3 className="text-xl font-semibold text-gray-800">Invoice - {currentInvoice.invoice_number}</h3>
-                <button 
-                  onClick={() => setIsInvoiceModalVisible(false)} 
-                  className="text-gray-500 hover:text-gray-800 text-2xl"
-                >
-                  &times;
-                </button>
+                <div className="flex items-center space-x-3">
+                  {/* Download PDF Button */}
+                  <button 
+                    onClick={() => {
+                      // TODO: Implement PDF download functionality
+                      console.log('Download PDF for invoice:', currentInvoice.invoice_number);
+                    }}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                    title="Download PDF"
+                  >
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7,10 12,15 17,10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span className="text-sm">Download PDF</span>
+                  </button>
+                  
+                  {/* Close Button */}
+                  <button 
+                    onClick={() => setIsInvoiceModalVisible(false)} 
+                    className="text-gray-500 hover:text-gray-800 text-2xl"
+                  >
+                    &times;
+                  </button>
+                </div>
                         </div>
                         
               {/* Invoice Content */}
@@ -1516,11 +1545,15 @@ const Sales: React.FC = () => {
                     {/* Company Logo */}
                     <div className="w-20 h-20">
                       <img 
-                        src="/images/BPF-Stefan-8.png" 
+                        src="images/BPF-Stefan-8.png" 
                         alt="Bounty Farm Logo" 
                         className="w-full h-full object-contain"
+                        onError={(e) => {
+                          console.error('Logo failed to load:', e);
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
-                                </div>
+                    </div>
                                 <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
                       <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
