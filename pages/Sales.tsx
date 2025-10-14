@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
+import html2pdf from 'html2pdf.js';
 
 // Custom CSS for sticky columns
 const stickyColumnStyles = `
@@ -101,6 +102,9 @@ const Sales: React.FC = () => {
   // Customer data state
   const [farmCustomers, setFarmCustomers] = useState<any[]>([]);
   const [individualCustomers, setIndividualCustomers] = useState<any[]>([]);
+
+  // Ref for PDF generation
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
   // Fetch customers from database
   const fetchCustomers = async () => {
@@ -352,6 +356,35 @@ const Sales: React.FC = () => {
       console.error('Unexpected error updating payment status:', err);
       alert('An unexpected error occurred while updating payment status');
     }
+  };
+
+  // Function to download invoice as PDF
+  const downloadInvoicePDF = () => {
+    if (!invoiceRef.current) {
+      console.error('Invoice content not found');
+      return;
+    }
+
+    const element = invoiceRef.current;
+    const filename = `Invoice-${currentInvoice?.invoice_number || 'Unknown'}.pdf`;
+    
+    const opt = {
+      margin: 0.5,
+      filename: filename,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        letterRendering: true
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait' as const
+      }
+    };
+
+    html2pdf().set(opt).from(element).save();
   };
 
   // Function to calculate invoice totals
@@ -1502,10 +1535,7 @@ const Sales: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   {/* Download PDF Button */}
                   <button 
-                    onClick={() => {
-                      // TODO: Implement PDF download functionality
-                      console.log('Download PDF for invoice:', currentInvoice.invoice_number);
-                    }}
+                    onClick={downloadInvoicePDF}
                     className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
                     title="Download PDF"
                   >
@@ -1537,7 +1567,7 @@ const Sales: React.FC = () => {
                         </div>
                         
               {/* Invoice Content */}
-              <div className="p-6">
+              <div ref={invoiceRef} className="p-6">
                 {/* Invoice Header */}
                 <div className="flex justify-between items-start mb-8">
                   {/* Company Info */}
@@ -1553,7 +1583,7 @@ const Sales: React.FC = () => {
                           e.currentTarget.style.display = 'none';
                         }}
                       />
-                    </div>
+                                </div>
                                 <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
                       <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
