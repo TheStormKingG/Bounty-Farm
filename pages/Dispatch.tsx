@@ -370,6 +370,7 @@ const Dispatch: React.FC = () => {
             </div>
         )}
       </div>
+    </div>
 
       {/* Delivery Receipt Modal */}
       {isReceiptModalVisible && currentDispatch && dispatchInvoiceData && (
