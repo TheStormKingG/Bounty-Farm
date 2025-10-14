@@ -1144,10 +1144,62 @@ const Sales: React.FC = () => {
                 <div className="flex justify-between items-start mb-8">
                   {/* Company Info */}
                   <div className="flex items-start space-x-4">
-                    {/* Logo placeholder */}
-                    <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center">
-                      <div className="text-yellow-600 font-bold text-xs text-center">
-                        BOUNTY<br/>FARM<br/>LTD
+                    {/* Company Logo */}
+                    <div className="w-20 h-20 relative">
+                      <div className="w-full h-full rounded-full border-4 border-yellow-400 bg-white relative overflow-hidden">
+                        {/* Red inner border */}
+                        <div className="absolute inset-1 rounded-full border-2 border-red-500"></div>
+                        
+                        {/* Company name arc */}
+                        <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
+                          <div className="text-blue-800 font-bold text-xs text-center">
+                            BOUNTY FARM LTD
+                          </div>
+                        </div>
+                        
+                        {/* Slogan arc */}
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                          <div className="text-blue-800 font-bold text-xs text-center">
+                            SUPERIOR QUALITY CHICKEN
+                          </div>
+                        </div>
+                        
+                        {/* Address */}
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 -mb-1">
+                          <div className="text-black text-xs text-center leading-tight">
+                            PROCESSED BY: BOUNTY FARM LIMITED,<br/>
+                            PUBLIC ROAD TIMEHRI.<br/>
+                            EAST BANK DEMERARA.
+                          </div>
+                        </div>
+                        
+                        {/* Chicken character */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <div className="w-8 h-8 relative">
+                            {/* Chicken body */}
+                            <div className="w-6 h-6 bg-white rounded-full relative">
+                              {/* Head */}
+                              <div className="w-4 h-4 bg-white rounded-full absolute -top-1 left-1/2 transform -translate-x-1/2">
+                                {/* Comb */}
+                                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-red-500 rounded-full"></div>
+                                {/* Eyes with sunglasses */}
+                                <div className="absolute top-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                                  <div className="w-1 h-1 bg-black rounded-full"></div>
+                                  <div className="w-1 h-1 bg-black rounded-full"></div>
+                                </div>
+                                {/* Beak */}
+                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"></div>
+                              </div>
+                              {/* Wing with peace sign */}
+                              <div className="absolute top-1 -right-1 w-2 h-2 bg-white rounded-full">
+                                <div className="absolute top-0 right-0 w-1 h-1 bg-white"></div>
+                                <div className="absolute top-1 right-0 w-1 h-1 bg-white"></div>
+                              </div>
+                              {/* Bow tie */}
+                              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-blue-600 rounded-full"></div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div>
@@ -1230,8 +1282,7 @@ const Sales: React.FC = () => {
                   <div className="flex-1">
                     <p className="text-sm mb-4">Merchandise remains the property of Bounty Farm until paid for in full</p>
                     <div className="space-y-2">
-                      <p className="text-sm"><span className="font-semibold">Prepared by:</span> Sarah Francis</p>
-                      <p className="text-sm"><span className="font-semibold">Approved by:</span> ________________</p>
+                      <p className="text-sm"><span className="font-semibold">Prepared by:</span> {currentInvoice.created_by || 'admin'}</p>
                     </div>
                   </div>
                   
