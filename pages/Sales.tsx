@@ -1031,6 +1031,33 @@ const Sales: React.FC = () => {
                 />
                                 </div>
                                 <div>
+                <label className="block text-sm font-medium text-gray-700">Customer Type</label>
+                <div className="mt-2 space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="Farm"
+                      checked={newRecordData.customerType === 'Farm'}
+                      onChange={handleFormChange}
+                      className="form-radio h-4 w-4 text-[#5c3a6b]"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Farm</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="Individual"
+                      checked={newRecordData.customerType === 'Individual'}
+                      onChange={handleFormChange}
+                      className="form-radio h-4 w-4 text-[#5c3a6b]"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Individual</span>
+                  </label>
+                </div>
+                                </div>
+                                <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>
                 <input
                   type="number"
@@ -1273,8 +1300,8 @@ const Sales: React.FC = () => {
                           <td className="border border-black p-2">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
                           <td className="border border-black p-2">Each</td>
                           <td className="border border-black p-2">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
-                          <td className="border border-black p-2">$0.00</td>
-                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">$200.00</td>
+                          <td className="border border-black p-2">${(hatch.chicksUsed * 200).toLocaleString()}.00</td>
                         </tr>
                       )) || (
                         <tr>
@@ -1282,8 +1309,8 @@ const Sales: React.FC = () => {
                           <td className="border border-black p-2">Day Old Chicks</td>
                           <td className="border border-black p-2">Each</td>
                           <td className="border border-black p-2">{currentInvoice.qty?.toLocaleString() || '0'}</td>
-                          <td className="border border-black p-2">$0.00</td>
-                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">$200.00</td>
+                          <td className="border border-black p-2">${((currentInvoice.qty || 0) * 200).toLocaleString()}.00</td>
                         </tr>
                       )}
                       {/* Fill remaining empty rows */}
