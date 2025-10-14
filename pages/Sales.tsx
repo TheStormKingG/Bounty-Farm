@@ -486,13 +486,13 @@ const Sales: React.FC = () => {
       try {
         const { data: salesData, error: salesError } = await supabase
           .from('sales_dispatch')
-          .select('customer, customerType')
+          .select('customer, customer_type')
           .eq('po_number', invoice.po_number || invoice.invoice_number?.replace('INV', 'PO'))
           .single();
           
         if (!salesError && salesData) {
           customerName = salesData.customer;
-          customerType = salesData.customerType;
+          customerType = salesData.customer_type;
           console.log('Found customer info from sales_dispatch:', customerName, customerType);
         }
       } catch (error) {
@@ -729,6 +729,7 @@ const Sales: React.FC = () => {
           po_number: newRecordData.poNumber,
           date_ordered: newRecordData.dateOrdered,
           customer: newRecordData.customer,
+          customer_type: newRecordData.customerType,
           qty: newRecordData.qty,
           hatch_date: newRecordData.hatchDate,
           batches_required: batchesRequired,
@@ -1544,8 +1545,8 @@ const Sales: React.FC = () => {
                     
                     {/* Contact Number */}
                     <p>TEL: {currentInvoice.customerDetails?.contactNumber || '+5926335874'}</p>
-                  </div>
-                </div>
+                            </div>
+                            </div>
 
                 {/* Line Items Table */}
                 <div className="mb-6">
