@@ -12,8 +12,11 @@ DECLARE
     new_dispatch_number VARCHAR(255);
     po_number_var VARCHAR(255);
     sales_record RECORD;
+    existing_dispatch RECORD;
 BEGIN
-    -- Only create dispatch when payment_status changes from 'pending' to 'paid'
+    -- Handle payment status changes
+    
+    -- Case 1: Status changed from 'pending' to 'paid' - CREATE dispatch
     IF OLD.payment_status = 'pending' AND NEW.payment_status = 'paid' THEN
         
         -- Convert invoice number to dispatch number (BFLOS-007-INV → BFLOS-007-DISP)
@@ -58,6 +61,16 @@ BEGIN
         );
         
         RAISE NOTICE 'Dispatch % created for paid invoice %', new_dispatch_number, NEW.invoice_number;
+    END IF;
+    
+    -- Case 2: Status changed from 'paid' to 'pending' - DELETE dispatch
+    IF OLD.payment_status = 'paid' AND NEW.payment_status = 'pending' THEN
+        
+        -- Find and delete the corresponding dispatch
+        DELETE FROM dispatches 
+        WHERE invoice_id = NEW.id;
+        
+        RAISE NOTICE 'Dispatch deleted for invoice % (status changed to pending)', NEW.invoice_number;
     END IF;
     
     RETURN NEW;

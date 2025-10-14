@@ -301,9 +301,9 @@ const Sales: React.FC = () => {
         [invoiceNumber]: newStatus
       }));
 
-      // If status changed to 'paid', refresh dispatches
-      if (newStatus === 'paid') {
-        console.log('Invoice marked as paid, triggering dispatch refresh event');
+      // If status changed to 'paid' or 'pending', refresh dispatches
+      if (newStatus === 'paid' || currentStatus === 'paid') {
+        console.log('Invoice payment status changed, triggering dispatch refresh event');
         // Trigger dispatch refresh by calling a global refresh function
         // We'll implement this using a custom event
         window.dispatchEvent(new CustomEvent('refreshDispatches'));

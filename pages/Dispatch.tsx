@@ -34,6 +34,8 @@ const Dispatch: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Attempting to fetch dispatches from Supabase...');
+      
       const { data, error } = await supabase
         .from('dispatches')
         .select('*')
@@ -41,11 +43,13 @@ const Dispatch: React.FC = () => {
 
       if (error) {
         console.error('Error fetching dispatches:', error);
+        console.error('Error details:', error.message, error.code, error.details);
         setError('Failed to fetch dispatches: ' + error.message);
         return;
       }
 
       console.log('Fetched dispatches:', data); // Debug log
+      console.log('Number of dispatches found:', data?.length || 0);
       setDispatches(data || []);
     } catch (err) {
       console.error('Unexpected error fetching dispatches:', err);
