@@ -274,11 +274,44 @@ const Sales: React.FC = () => {
     }));
   };
 
-  const handlePaymentStatusToggle = (invoiceNumber: string) => {
-    setPaymentStatuses(prev => ({
-      ...prev,
-      [invoiceNumber]: prev[invoiceNumber] === 'Pending' ? 'Paid' : 'Pending'
-    }));
+  const handlePaymentStatusToggle = async (invoiceNumber: string) => {
+    try {
+      const currentStatus = paymentStatuses[invoiceNumber] || 'pending';
+      const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
+      
+      // Update the database
+      const { error } = await supabase
+        .from('invoices')
+        .update({ 
+          payment_status: newStatus,
+          updated_at: new Date().toISOString(),
+          updated_by: user?.name || 'admin'
+        })
+        .eq('invoice_number', invoiceNumber);
+
+      if (error) {
+        console.error('Error updating payment status:', error);
+        alert('Failed to update payment status: ' + error.message);
+        return;
+      }
+
+      // Update local state
+      setPaymentStatuses(prev => ({
+        ...prev,
+        [invoiceNumber]: newStatus
+      }));
+
+      // If status changed to 'paid', refresh dispatches
+      if (newStatus === 'paid') {
+        // Trigger dispatch refresh by calling a global refresh function
+        // We'll implement this using a custom event
+        window.dispatchEvent(new CustomEvent('refreshDispatches'));
+      }
+
+    } catch (err) {
+      console.error('Unexpected error updating payment status:', err);
+      alert('An unexpected error occurred while updating payment status');
+    }
   };
 
 

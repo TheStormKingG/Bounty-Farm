@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import HatchCycleList from './pages/HatchCycleList';
 import Sales from './pages/Sales';
+import Dispatch from './pages/Dispatch';
 import Login from './pages/Login';
 import { useAuth } from './context/AuthContext';
 import { Role } from './types';
@@ -69,6 +70,7 @@ const App: React.FC = () => {
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin, Role.SalesClerk]} />}>
           <Route path="/sales" element={<Sales />} />
+          <Route path="/dispatch" element={<Dispatch />} />
         </Route>
 
         <Route path="/login" element={<Navigate to={getHomeRouteForRole(user.role)} />} />

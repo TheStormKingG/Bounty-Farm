@@ -42,6 +42,13 @@ const Sidebar: React.FC = () => {
           </NavLink>
         )}
 
+        {hasRole([Role.Admin, Role.SalesClerk]) && (
+          <NavLink to="/dispatch" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+            <span className="mr-3">🚚</span>
+            Dispatch
+          </NavLink>
+        )}
+
         {hasRole([Role.Admin]) && (
           <>
             <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
