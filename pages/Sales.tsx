@@ -1210,7 +1210,7 @@ const Sales: React.FC = () => {
                     {/* Company Logo */}
                     <div className="w-20 h-20">
                       <img 
-                        src="/images/BPF Stefan-8.png" 
+                        src="/images/BPF-Stefan-8.png" 
                         alt="Bounty Farm Logo" 
                         className="w-full h-full object-contain"
                       />
