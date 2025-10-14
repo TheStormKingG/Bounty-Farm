@@ -369,7 +369,7 @@ const Sales: React.FC = () => {
     const filename = `Invoice-${currentInvoice?.invoice_number || 'Unknown'}.pdf`;
     
     const opt = {
-      margin: 0.5,
+      margin: 0.3,
       filename: filename,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { 
@@ -1739,8 +1739,8 @@ const Sales: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Company Slogan - positioned 1 inch from bottom */}
-                <div className="text-center mt-auto" style={{ marginBottom: '1in' }}>
+                {/* Company Slogan - positioned exactly 1 inch from page bottom (0.7in from content bottom) */}
+                <div className="text-center mt-auto" style={{ marginBottom: '0.7in' }}>
                   <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
                 </div>
               </div>
