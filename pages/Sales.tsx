@@ -1019,18 +1019,6 @@ const Sales: React.FC = () => {
                 />
                                 </div>
                                 <div>
-                <label className="block text-sm font-medium text-gray-700">Customer</label>
-                <input
-                  type="text"
-                  name="customer"
-                  value={newRecordData.customer || ''}
-                  onChange={handleFormChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter customer name"
-                  required
-                />
-                                </div>
-                                <div>
                 <label className="block text-sm font-medium text-gray-700">Customer Type</label>
                 <div className="mt-2 space-x-4">
                   <label className="inline-flex items-center">
@@ -1056,6 +1044,18 @@ const Sales: React.FC = () => {
                     <span className="ml-2 text-sm text-gray-700">Individual</span>
                   </label>
                 </div>
+                                </div>
+                                <div>
+                <label className="block text-sm font-medium text-gray-700">Customer</label>
+                <input
+                  type="text"
+                  name="customer"
+                  value={newRecordData.customer || ''}
+                  onChange={handleFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter customer name"
+                  required
+                />
                                 </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>

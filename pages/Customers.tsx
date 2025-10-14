@@ -246,7 +246,7 @@ const Customers: React.FC = () => {
       {/* Farm Customers Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Farm Customers</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Farms</h2>
         </div>
         
         {/* Filtering Section */}
@@ -385,7 +385,7 @@ const Customers: React.FC = () => {
       {/* Individual Customers Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Individual Customers</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Individuals</h2>
         </div>
         
         {/* Filtering Section */}
