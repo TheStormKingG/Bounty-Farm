@@ -97,6 +97,41 @@ const Sales: React.FC = () => {
   const [currentRecord, setCurrentRecord] = useState<SalesDispatch | null>(null);
   const [currentInvoice, setCurrentInvoice] = useState<any>(null);
   const [newRecordData, setNewRecordData] = useState<Partial<SalesDispatch>>({});
+  
+  // Customer data state
+  const [farmCustomers, setFarmCustomers] = useState<any[]>([]);
+  const [individualCustomers, setIndividualCustomers] = useState<any[]>([]);
+
+  // Fetch customers from database
+  const fetchCustomers = async () => {
+    try {
+      // Fetch farm customers
+      const { data: farmData, error: farmError } = await supabase
+        .from('farm_customers')
+        .select('*')
+        .order('farm_name', { ascending: true });
+
+      if (farmError) {
+        console.error('Error fetching farm customers:', farmError);
+      } else {
+        setFarmCustomers(farmData || []);
+      }
+
+      // Fetch individual customers
+      const { data: individualData, error: individualError } = await supabase
+        .from('individual_customers')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (individualError) {
+        console.error('Error fetching individual customers:', individualError);
+      } else {
+        setIndividualCustomers(individualData || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching customers:', err);
+    }
+  };
 
   // Fetch sales dispatch records from database
   useEffect(() => {
@@ -142,6 +177,7 @@ const Sales: React.FC = () => {
 
     fetchSalesDispatch();
     fetchInvoices();
+    fetchCustomers();
   }, []);
 
   const fetchInvoices = async () => {
@@ -1047,15 +1083,28 @@ const Sales: React.FC = () => {
                                 </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Customer</label>
-                <input
-                  type="text"
+                <select
                   name="customer"
                   value={newRecordData.customer || ''}
                   onChange={handleFormChange}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter customer name"
                   required
-                />
+                >
+                  <option value="">Select a customer</option>
+                  {newRecordData.customerType === 'Farm' ? (
+                    farmCustomers.map((customer) => (
+                      <option key={customer.id} value={customer.farm_name}>
+                        {customer.farm_name} - {customer.contact_person}
+                      </option>
+                    ))
+                  ) : newRecordData.customerType === 'Individual' ? (
+                    individualCustomers.map((customer) => (
+                      <option key={customer.id} value={customer.name}>
+                        {customer.name} - {customer.phone_number}
+                      </option>
+                    ))
+                  ) : null}
+                </select>
                                 </div>
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">Quantity</label>

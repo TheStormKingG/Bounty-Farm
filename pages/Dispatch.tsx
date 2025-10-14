@@ -9,7 +9,7 @@ interface Dispatch {
   date_dispatched: string;
   type: string;
   trucks: number;
-  trips: number;
+  receipt: string;
   created_by: string;
   created_at: string;
   updated_by: string;
@@ -134,6 +134,38 @@ const Dispatch: React.FC = () => {
     }
   };
 
+  // Toggle dispatch type between Delivery and Pick Up
+  const handleTypeToggle = async (dispatchId: string, currentType: string) => {
+    try {
+      const newType = currentType === 'Delivery' ? 'Pick Up' : 'Delivery';
+      
+      const { error } = await supabase
+        .from('dispatches')
+        .update({ 
+          type: newType,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', dispatchId);
+
+      if (error) {
+        console.error('Error updating dispatch type:', error);
+        setError('Failed to update dispatch type: ' + error.message);
+      } else {
+        // Update local state
+        setDispatches(prev => 
+          prev.map(dispatch => 
+            dispatch.id === dispatchId 
+              ? { ...dispatch, type: newType }
+              : dispatch
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
   const handleSearch = () => {
     // Search is handled by the processedDispatches useMemo
     // This function can be used for additional search logic if needed
@@ -226,14 +258,14 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'TRIPS'
+                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'RECEIPT'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
                         'DATE': 'date_dispatched',
                         'TYPE': 'type',
                         'TRUCKS': 'trucks',
-                        'TRIPS': 'trips'
+                        'RECEIPT': 'receipt'
                       };
                       
                       return (
@@ -276,16 +308,29 @@ const Dispatch: React.FC = () => {
                       <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
                       <td className="px-4 py-3 text-sm">{new Date(dispatch.date_dispatched).toLocaleDateString()}</td>
                       <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          dispatch.type === 'Delivery' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
+                        <button
+                          onClick={() => handleTypeToggle(dispatch.id, dispatch.type || 'Delivery')}
+                          className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 transition-opacity ${
+                            dispatch.type === 'Delivery' 
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                              : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                          }`}
+                        >
                           {dispatch.type || 'Delivery'}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
-                      <td className="px-4 py-3 text-sm">{dispatch.trips || 1}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <button
+                          onClick={() => {
+                            // TODO: Implement receipt view functionality
+                            console.log('View receipt for dispatch:', dispatch.dispatch_number);
+                          }}
+                          className="text-[#5c3a6b] hover:text-[#4a2c5a] underline cursor-pointer"
+                        >
+                          View
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

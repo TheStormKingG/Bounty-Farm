@@ -46,6 +46,78 @@ const Customers: React.FC = () => {
   const [individualSortColumn, setIndividualSortColumn] = useState<string>('');
   const [individualSortDirection, setIndividualSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Modal states
+  const [isFarmModalVisible, setIsFarmModalVisible] = useState(false);
+  const [isIndividualModalVisible, setIsIndividualModalVisible] = useState(false);
+  const [newFarmData, setNewFarmData] = useState<Partial<FarmCustomer>>({});
+  const [newIndividualData, setNewIndividualData] = useState<Partial<IndividualCustomer>>({});
+
+  // Form handlers
+  const handleFarmFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewFarmData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleIndividualFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setNewIndividualData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Add farm customer
+  const handleAddFarmCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('farm_customers')
+        .insert([{
+          farm_name: newFarmData.farmName,
+          farm_address: newFarmData.farmAddress,
+          contact_person: newFarmData.contactPerson,
+          contact_number: newFarmData.contactNumber,
+          created_by: user?.email || 'admin'
+        }]);
+
+      if (error) {
+        console.error('Error adding farm customer:', error);
+        setError('Failed to add farm customer: ' + error.message);
+      } else {
+        setIsFarmModalVisible(false);
+        setNewFarmData({});
+        fetchFarmCustomers(); // Refresh the table
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Add individual customer
+  const handleAddIndividualCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('individual_customers')
+        .insert([{
+          name: newIndividualData.name,
+          address: newIndividualData.address,
+          phone_number: newIndividualData.phoneNumber,
+          created_by: user?.email || 'admin'
+        }]);
+
+      if (error) {
+        console.error('Error adding individual customer:', error);
+        setError('Failed to add individual customer: ' + error.message);
+      } else {
+        setIsIndividualModalVisible(false);
+        setNewIndividualData({});
+        fetchIndividualCustomers(); // Refresh the table
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
   // Fetch farm customers
   const fetchFarmCustomers = async () => {
     try {
@@ -247,6 +319,12 @@ const Customers: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Farms</h2>
+          <button
+            onClick={() => setIsFarmModalVisible(true)}
+            className="btn-primary px-4 py-2 text-sm"
+          >
+            + Add Farm
+          </button>
         </div>
         
         {/* Filtering Section */}
@@ -386,6 +464,12 @@ const Customers: React.FC = () => {
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Individuals</h2>
+          <button
+            onClick={() => setIsIndividualModalVisible(true)}
+            className="btn-primary px-4 py-2 text-sm"
+          >
+            + Add Individual
+          </button>
         </div>
         
         {/* Filtering Section */}
@@ -519,6 +603,158 @@ const Customers: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add Farm Modal */}
+      {isFarmModalVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Farm</h3>
+              <button 
+                onClick={() => setIsFarmModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddFarmCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Farm Name</label>
+                <input
+                  type="text"
+                  name="farmName"
+                  value={newFarmData.farmName || ''}
+                  onChange={handleFarmFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter farm name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Farm Address</label>
+                <input
+                  type="text"
+                  name="farmAddress"
+                  value={newFarmData.farmAddress || ''}
+                  onChange={handleFarmFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter farm address"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contact Person</label>
+                <input
+                  type="text"
+                  name="contactPerson"
+                  value={newFarmData.contactPerson || ''}
+                  onChange={handleFarmFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter contact person name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contact Number</label>
+                <input
+                  type="text"
+                  name="contactNumber"
+                  value={newFarmData.contactNumber || ''}
+                  onChange={handleFarmFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter contact number"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsFarmModalVisible(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-4 py-2"
+                >
+                  Add Farm
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Individual Modal */}
+      {isIndividualModalVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Individual</h3>
+              <button 
+                onClick={() => setIsIndividualModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleAddIndividualCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={newIndividualData.name || ''}
+                  onChange={handleIndividualFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter customer name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={newIndividualData.address || ''}
+                  onChange={handleIndividualFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter address"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={newIndividualData.phoneNumber || ''}
+                  onChange={handleIndividualFormChange}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter phone number"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsIndividualModalVisible(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-4 py-2"
+                >
+                  Add Individual
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
