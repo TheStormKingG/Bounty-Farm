@@ -317,6 +317,82 @@ const Sales: React.FC = () => {
   };
 
 
+  // Function to find hatches by date and calculate batches required
+  const calculateBatchesRequired = async (hatchDate: string, quantity: number): Promise<number> => {
+    try {
+      // Fetch hatches that hatched on the specified date
+      const { data, error } = await supabase
+        .from('hatch_cycles')
+        .select('hatch_no, chicks_hatched')
+        .eq('hatch_date', hatchDate)
+        .not('chicks_hatched', 'is', null)
+        .gt('chicks_hatched', 0);
+
+      if (error) {
+        console.error('Error fetching hatches:', error);
+        return 1; // Default fallback
+      }
+
+      if (!data || data.length === 0) {
+        console.warn(`No hatches found for date ${hatchDate}`);
+        return 1; // Default fallback
+      }
+
+      // Sort hatches by chicks_hatched (largest first)
+      const sortedHatches = data.sort((a, b) => (b.chicks_hatched || 0) - (a.chicks_hatched || 0));
+      
+      let remainingQuantity = quantity;
+      let batchesRequired = 0;
+      const usedHatches: Array<{hatchNo: string, chicksUsed: number}> = [];
+
+      // First pass: Use largest hatches first
+      for (const hatch of sortedHatches) {
+        if (remainingQuantity <= 0) break;
+        
+        const chicksAvailable = hatch.chicks_hatched || 0;
+        const chicksToUse = Math.min(remainingQuantity, chicksAvailable);
+        
+        if (chicksToUse > 0) {
+          remainingQuantity -= chicksToUse;
+          batchesRequired++;
+          usedHatches.push({
+            hatchNo: hatch.hatch_no,
+            chicksUsed: chicksToUse
+          });
+        }
+      }
+
+      // If we still need more chicks, find the closest match
+      if (remainingQuantity > 0) {
+        const unusedHatches = sortedHatches.filter(h => 
+          !usedHatches.some(uh => uh.hatchNo === h.hatch_no)
+        );
+        
+        // Find hatch with chicks closest to remaining quantity
+        const closestHatch = unusedHatches.reduce((closest, current) => {
+          const currentDiff = Math.abs((current.chicks_hatched || 0) - remainingQuantity);
+          const closestDiff = Math.abs((closest.chicks_hatched || 0) - remainingQuantity);
+          return currentDiff < closestDiff ? current : closest;
+        }, unusedHatches[0]);
+
+        if (closestHatch) {
+          batchesRequired++;
+          usedHatches.push({
+            hatchNo: closestHatch.hatch_no,
+            chicksUsed: Math.min(remainingQuantity, closestHatch.chicks_hatched || 0)
+          });
+        }
+      }
+
+      console.log(`Calculated ${batchesRequired} batches for ${quantity} chicks using hatches:`, usedHatches);
+      return batchesRequired;
+
+    } catch (error) {
+      console.error('Error calculating batches required:', error);
+      return 1; // Default fallback
+    }
+  };
+
   const handleAddRecord = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRecordData.poNumber || !newRecordData.customer || !newRecordData.qty) {
@@ -327,6 +403,12 @@ const Sales: React.FC = () => {
     try {
       setError(null);
       
+      // Calculate batches required based on hatch date and quantity
+      const batchesRequired = await calculateBatchesRequired(
+        newRecordData.hatchDate || '', 
+        newRecordData.qty || 0
+      );
+      
       const { data, error } = await supabase
         .from('sales_dispatch')
         .insert([{
@@ -335,8 +417,8 @@ const Sales: React.FC = () => {
           customer: newRecordData.customer,
           qty: newRecordData.qty,
           hatch_date: newRecordData.hatchDate,
-          batches_required: newRecordData.batchesRequired || 1,
-          trucks_required: newRecordData.trucksRequired || 1,
+          batches_required: batchesRequired,
+          trucks_required: Math.ceil(batchesRequired / 2), // Auto-calculate trucks (2 batches per truck)
           created_by: user?.name || 'admin',
           updated_by: user?.name || 'admin',
         }])
@@ -833,7 +915,7 @@ const Sales: React.FC = () => {
               >
                 &times;
               </button>
-                        </div>
+            </div>
             <form onSubmit={handleAddRecord} className="space-y-4">
                                 <div>
                 <label className="block text-sm font-medium text-gray-700">PO Number</label>
@@ -892,28 +974,6 @@ const Sales: React.FC = () => {
                   onChange={handleFormChange}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
                   required
-                />
-                                </div>
-                                <div>
-                <label className="block text-sm font-medium text-gray-700">Batches Required</label>
-                <input
-                  type="number"
-                  name="batchesRequired"
-                  value={newRecordData.batchesRequired || ''}
-                  onChange={handleFormChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter batches required"
-                />
-                                </div>
-                                <div>
-                <label className="block text-sm font-medium text-gray-700">Trucks Required</label>
-                <input
-                  type="number"
-                  name="trucksRequired"
-                  value={newRecordData.trucksRequired || ''}
-                  onChange={handleFormChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter trucks required"
                 />
                                 </div>
               <div className="flex justify-end space-x-3 pt-4 border-t">
