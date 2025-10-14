@@ -319,8 +319,71 @@ const Sales: React.FC = () => {
   };
 
   // Function to handle viewing invoice
-  const handleViewInvoice = (invoice: any) => {
+  const handleViewInvoice = async (invoice: any) => {
     setCurrentInvoice(invoice);
+    
+    // Fetch hatch details for this invoice
+    try {
+      const { data: hatchData, error } = await supabase
+        .from('hatch_cycles')
+        .select('hatch_no, chicks_hatched')
+        .eq('hatch_date', invoice.hatch_date)
+        .not('chicks_hatched', 'is', null)
+        .gt('chicks_hatched', 0)
+        .order('chicks_hatched', { ascending: false });
+
+      if (!error && hatchData) {
+        // Calculate which hatches were used (same logic as calculateBatchesRequired)
+        const quantity = invoice.qty || 0;
+        let remainingQuantity = quantity;
+        const usedHatches: Array<{hatchNo: string, chicksUsed: number}> = [];
+
+        // First pass: Use largest hatches first
+        for (const hatch of hatchData) {
+          if (remainingQuantity <= 0) break;
+          
+          const chicksAvailable = hatch.chicks_hatched || 0;
+          const chicksToUse = Math.min(remainingQuantity, chicksAvailable);
+          
+          if (chicksToUse > 0) {
+            remainingQuantity -= chicksToUse;
+            usedHatches.push({
+              hatchNo: hatch.hatch_no,
+              chicksUsed: chicksToUse
+            });
+          }
+        }
+
+        // If we still need more chicks, find the closest match
+        if (remainingQuantity > 0) {
+          const unusedHatches = hatchData.filter(h => 
+            !usedHatches.some(uh => uh.hatchNo === h.hatch_no)
+          );
+          
+          if (unusedHatches.length > 0) {
+            const closestHatch = unusedHatches.reduce((closest, current) => {
+              const currentDiff = Math.abs((current.chicks_hatched || 0) - remainingQuantity);
+              const closestDiff = Math.abs((closest.chicks_hatched || 0) - remainingQuantity);
+              return currentDiff < closestDiff ? current : closest;
+            }, unusedHatches[0]);
+
+            usedHatches.push({
+              hatchNo: closestHatch.hatch_no,
+              chicksUsed: Math.min(remainingQuantity, closestHatch.chicks_hatched || 0)
+            });
+          }
+        }
+
+        // Add hatch details to invoice object
+        setCurrentInvoice({
+          ...invoice,
+          usedHatches: usedHatches
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching hatch details:', error);
+    }
+    
     setIsInvoiceModalVisible(true);
   };
 
@@ -1145,62 +1208,12 @@ const Sales: React.FC = () => {
                   {/* Company Info */}
                   <div className="flex items-start space-x-4">
                     {/* Company Logo */}
-                    <div className="w-20 h-20 relative">
-                      <div className="w-full h-full rounded-full border-4 border-yellow-400 bg-white relative overflow-hidden">
-                        {/* Red inner border */}
-                        <div className="absolute inset-1 rounded-full border-2 border-red-500"></div>
-                        
-                        {/* Company name arc */}
-                        <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
-                          <div className="text-blue-800 font-bold text-xs text-center">
-                            BOUNTY FARM LTD
-                          </div>
-                        </div>
-                        
-                        {/* Slogan arc */}
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                          <div className="text-blue-800 font-bold text-xs text-center">
-                            SUPERIOR QUALITY CHICKEN
-                          </div>
-                        </div>
-                        
-                        {/* Address */}
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 -mb-1">
-                          <div className="text-black text-xs text-center leading-tight">
-                            PROCESSED BY: BOUNTY FARM LIMITED,<br/>
-                            PUBLIC ROAD TIMEHRI.<br/>
-                            EAST BANK DEMERARA.
-                          </div>
-                        </div>
-                        
-                        {/* Chicken character */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <div className="w-8 h-8 relative">
-                            {/* Chicken body */}
-                            <div className="w-6 h-6 bg-white rounded-full relative">
-                              {/* Head */}
-                              <div className="w-4 h-4 bg-white rounded-full absolute -top-1 left-1/2 transform -translate-x-1/2">
-                                {/* Comb */}
-                                <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-red-500 rounded-full"></div>
-                                {/* Eyes with sunglasses */}
-                                <div className="absolute top-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                                  <div className="w-1 h-1 bg-black rounded-full"></div>
-                                  <div className="w-1 h-1 bg-black rounded-full"></div>
-                                </div>
-                                {/* Beak */}
-                                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-orange-400 rounded-full"></div>
-                              </div>
-                              {/* Wing with peace sign */}
-                              <div className="absolute top-1 -right-1 w-2 h-2 bg-white rounded-full">
-                                <div className="absolute top-0 right-0 w-1 h-1 bg-white"></div>
-                                <div className="absolute top-1 right-0 w-1 h-1 bg-white"></div>
-                              </div>
-                              {/* Bow tie */}
-                              <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-blue-600 rounded-full"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                    <div className="w-20 h-20">
+                      <img 
+                        src="/images/BPF Stefan-8.png" 
+                        alt="Bounty Farm Logo" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
@@ -1254,18 +1267,29 @@ const Sales: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="border border-black p-2">1</td>
-                        <td className="border border-black p-2">Day Old Chicks</td>
-                        <td className="border border-black p-2">Each</td>
-                        <td className="border border-black p-2">{currentInvoice.qty?.toLocaleString() || '0'}</td>
-                        <td className="border border-black p-2">$0.00</td>
-                        <td className="border border-black p-2">$0.00</td>
-                      </tr>
-                      {/* Empty rows */}
-                      {[2, 3, 4, 5, 6].map((num) => (
-                        <tr key={num}>
-                          <td className="border border-black p-2">{num}</td>
+                      {currentInvoice.usedHatches?.map((hatch: any, index: number) => (
+                        <tr key={index}>
+                          <td className="border border-black p-2">{index + 1}</td>
+                          <td className="border border-black p-2">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
+                          <td className="border border-black p-2">Each</td>
+                          <td className="border border-black p-2">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
+                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">$0.00</td>
+                        </tr>
+                      )) || (
+                        <tr>
+                          <td className="border border-black p-2">1</td>
+                          <td className="border border-black p-2">Day Old Chicks</td>
+                          <td className="border border-black p-2">Each</td>
+                          <td className="border border-black p-2">{currentInvoice.qty?.toLocaleString() || '0'}</td>
+                          <td className="border border-black p-2">$0.00</td>
+                          <td className="border border-black p-2">$0.00</td>
+                        </tr>
+                      )}
+                      {/* Fill remaining empty rows */}
+                      {Array.from({ length: Math.max(0, 6 - (currentInvoice.usedHatches?.length || 1)) }, (_, index) => (
+                        <tr key={(currentInvoice.usedHatches?.length || 1) + index + 1}>
+                          <td className="border border-black p-2">{(currentInvoice.usedHatches?.length || 1) + index + 1}</td>
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2"></td>
