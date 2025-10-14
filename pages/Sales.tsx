@@ -1586,7 +1586,7 @@ const Sales: React.FC = () => {
                                 </div>
                     <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
-                      <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
+                      <p className="text-sm text-gray-600">14 Barima Ave., Bel Air Park, Georgetown, Guyana</p>
                       <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
                       <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
                     </div>
@@ -1595,9 +1595,9 @@ const Sales: React.FC = () => {
                   {/* Invoice Details */}
                   <div className="text-right">
                     <h2 className="text-2xl font-bold text-black uppercase mb-4">TAX INVOICE</h2>
-                    <div className="border border-black p-4">
+                    <div className="border border-black p-3">
                       <p className="text-sm font-bold">Tin #010067340</p>
-                      <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
+                      <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
                                 <div>
                           <p className="font-semibold">Date</p>
                           <p>{invoiceDates[currentInvoice.invoice_number] || new Date().toLocaleDateString()}</p>
