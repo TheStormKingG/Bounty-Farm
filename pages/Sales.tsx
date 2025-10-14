@@ -900,7 +900,12 @@ const Sales: React.FC = () => {
                 <button
             onClick={async () => {
               const nextPO = await generateNextPONumber();
-              setNewRecordData({ ...newRecordData, poNumber: nextPO });
+              const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+              setNewRecordData({ 
+                ...newRecordData, 
+                poNumber: nextPO,
+                dateOrdered: today
+              });
               setIsAddModalVisible(true);
             }} 
             className="btn-primary px-6 py-3 text-sm"
@@ -1250,17 +1255,6 @@ const Sales: React.FC = () => {
                 />
                             </div>
                             <div>
-                <label className="block text-sm font-medium text-gray-700">Date Ordered</label>
-                <input
-                  type="date"
-                  name="dateOrdered"
-                  value={newRecordData.dateOrdered || ''}
-                  onChange={handleFormChange}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  required
-                />
-                            </div>
-                            <div>
                 <label className="block text-sm font-medium text-gray-700">Customer Type</label>
                 <div className="mt-2 space-x-4">
                   <label className="inline-flex items-center">
@@ -1528,23 +1522,36 @@ const Sales: React.FC = () => {
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-2">Bill To:</h3>
                   <div className="border border-gray-300 p-4 bg-gray-50">
-                    {/* Customer Name */}
-                    <p className="font-semibold">
-                      {currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}
-                    </p>
-                    
-                    {/* Customer Address */}
-                    <p>
-                      {currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}
-                    </p>
-                    
-                    {/* Contact Person (only for Farm customers) */}
-                    {currentInvoice.customerDetails?.type === 'Farm' && currentInvoice.customerDetails?.contactPerson && (
-                      <p className="text-gray-500">ATTN: {currentInvoice.customerDetails.contactPerson}</p>
-                    )}
-                    
-                    {/* Contact Number */}
-                    <p>TEL: {currentInvoice.customerDetails?.contactNumber || '+5926335874'}</p>
+                    <table className="w-full">
+                      <tbody>
+                        <tr>
+                          <td className="font-semibold pr-4 py-1">Customer Name:</td>
+                          <td className="py-1">
+                            {currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-semibold pr-4 py-1">Address:</td>
+                          <td className="py-1">
+                            {currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}
+                          </td>
+                        </tr>
+                        {currentInvoice.customerDetails?.type === 'Farm' && currentInvoice.customerDetails?.contactPerson && (
+                          <tr>
+                            <td className="font-semibold pr-4 py-1">Contact Person:</td>
+                            <td className="py-1 text-gray-500">
+                              {currentInvoice.customerDetails.contactPerson}
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td className="font-semibold pr-4 py-1">Phone:</td>
+                          <td className="py-1">
+                            {currentInvoice.customerDetails?.contactNumber || '+5926335874'}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                             </div>
                             </div>
 
