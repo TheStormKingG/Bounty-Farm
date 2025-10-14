@@ -379,7 +379,7 @@ const Sales: React.FC = () => {
     
     try {
       if (customerType === 'Farm') {
-        console.log('Searching in farm_customers table...');
+        console.log('Searching in farm_customers table for farm_name:', customerName);
         const { data: farmData, error } = await supabase
           .from('farm_customers')
           .select('farm_name, farm_address, contact_person, contact_number')
@@ -398,7 +398,7 @@ const Sales: React.FC = () => {
           };
         }
       } else if (customerType === 'Individual') {
-        console.log('Searching in individual_customers table...');
+        console.log('Searching in individual_customers table for name:', customerName);
         const { data: individualData, error } = await supabase
           .from('individual_customers')
           .select('name, address, phone_number')
@@ -420,7 +420,7 @@ const Sales: React.FC = () => {
       // If no specific type or not found, try both tables
       console.log('Trying both tables as fallback...');
       
-      // Try farm customers first
+      // Try farm customers first (search by farm_name)
       const { data: farmData, error: farmError } = await supabase
         .from('farm_customers')
         .select('farm_name, farm_address, contact_person, contact_number')
@@ -438,7 +438,7 @@ const Sales: React.FC = () => {
         };
       }
       
-      // Try individual customers
+      // Try individual customers (search by name)
       const { data: individualData, error: individualError } = await supabase
         .from('individual_customers')
         .select('name, address, phone_number')
