@@ -369,15 +369,13 @@ const Sales: React.FC = () => {
     const filename = `Invoice-${currentInvoice?.invoice_number || 'Unknown'}.pdf`;
     
     const opt = {
-      margin: 0.3,
+      margin: 0.5,
       filename: filename,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { 
-        scale: 1.5,
+        scale: 2,
         useCORS: true,
-        letterRendering: true,
-        height: window.innerHeight,
-        width: window.innerWidth
+        letterRendering: true
       },
       jsPDF: { 
         unit: 'in', 
@@ -1569,13 +1567,13 @@ const Sales: React.FC = () => {
                         </div>
                         
               {/* Invoice Content */}
-              <div ref={invoiceRef} className="p-4 text-sm">
+              <div ref={invoiceRef} className="p-6 text-base max-w-4xl mx-auto">
                 {/* Invoice Header */}
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex justify-between items-start mb-6">
                   {/* Company Info */}
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-start space-x-4">
                     {/* Company Logo */}
-                    <div className="w-16 h-16">
+                    <div className="w-24 h-24">
                       <img 
                         src="images/BPF-Stefan-8.png" 
                         alt="Bounty Farm Logo" 
@@ -1587,19 +1585,19 @@ const Sales: React.FC = () => {
                       />
                                 </div>
                                 <div>
-                      <h1 className="text-lg font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
-                      <p className="text-xs text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
-                      <p className="text-xs text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
-                      <p className="text-xs text-gray-600">office@bountyfarmgy.com</p>
+                      <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
+                      <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
+                      <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
+                      <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
                                 </div>
                                 </div>
                   
                   {/* Invoice Details */}
                   <div className="text-right">
-                    <h2 className="text-lg font-bold text-black uppercase mb-2">TAX INVOICE</h2>
-                    <div className="border border-black p-2">
-                      <p className="text-xs font-bold">Tin #010067340</p>
-                      <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                    <h2 className="text-2xl font-bold text-black uppercase mb-4">TAX INVOICE</h2>
+                    <div className="border border-black p-4">
+                      <p className="text-sm font-bold">Tin #010067340</p>
+                      <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
                                 <div>
                           <p className="font-semibold">Date</p>
                           <p>{invoiceDates[currentInvoice.invoice_number] || new Date().toLocaleDateString()}</p>
@@ -1614,34 +1612,34 @@ const Sales: React.FC = () => {
                                 </div>
 
                 {/* Bill To Section */}
-                <div className="mb-3">
-                  <h3 className="text-sm font-semibold mb-1">Bill To:</h3>
-                  <div className="border border-gray-300 p-2 bg-gray-50">
-                    <table className="w-full text-xs">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3">Bill To:</h3>
+                  <div className="border border-gray-300 p-4 bg-gray-50">
+                    <table className="w-full text-sm">
                       <tbody>
                         <tr>
-                          <td className="font-semibold pr-2 py-0.5">Customer Name:</td>
-                          <td className="py-0.5">
+                          <td className="font-semibold pr-4 py-2">Customer Name:</td>
+                          <td className="py-2">
                             {currentInvoice.customerDetails?.name || currentInvoice.customer || 'EAT INS FARMS'}
                           </td>
                         </tr>
                         <tr>
-                          <td className="font-semibold pr-2 py-0.5">Address:</td>
-                          <td className="py-0.5">
+                          <td className="font-semibold pr-4 py-2">Address:</td>
+                          <td className="py-2">
                             {currentInvoice.customerDetails?.address || 'COWAN & HIGH STREET'}
                           </td>
                         </tr>
                         {currentInvoice.customerDetails?.type === 'Farm' && currentInvoice.customerDetails?.contactPerson && (
                           <tr>
-                            <td className="font-semibold pr-2 py-0.5">Contact Person:</td>
-                            <td className="py-0.5 text-gray-500">
+                            <td className="font-semibold pr-4 py-2">Contact Person:</td>
+                            <td className="py-2 text-gray-500">
                               {currentInvoice.customerDetails.contactPerson}
                             </td>
                           </tr>
                         )}
                         <tr>
-                          <td className="font-semibold pr-2 py-0.5">Phone:</td>
-                          <td className="py-0.5">
+                          <td className="font-semibold pr-4 py-2">Phone:</td>
+                          <td className="py-2">
                             {currentInvoice.customerDetails?.contactNumber || '+5926335874'}
                           </td>
                         </tr>
@@ -1651,34 +1649,34 @@ const Sales: React.FC = () => {
                 </div>
 
                 {/* Line Items Table */}
-                <div className="mb-3">
-                  <table className="w-full border border-black text-xs">
+                <div className="mb-6">
+                  <table className="w-full border border-black text-sm">
                     <thead>
                       <tr className="bg-gray-100">
-                        <th className="border border-black p-1 text-left">#</th>
-                        <th className="border border-black p-1 text-left">Description</th>
-                        <th className="border border-black p-1 text-left">Unit</th>
-                        <th className="border border-black p-1 text-left">Quantity</th>
-                        <th className="border border-black p-1 text-left">Unit Price</th>
-                        <th className="border border-black p-1 text-left">Line Total</th>
+                        <th className="border border-black p-3 text-left">#</th>
+                        <th className="border border-black p-3 text-left">Description</th>
+                        <th className="border border-black p-3 text-left">Unit</th>
+                        <th className="border border-black p-3 text-left">Quantity</th>
+                        <th className="border border-black p-3 text-left">Unit Price</th>
+                        <th className="border border-black p-3 text-left">Line Total</th>
                       </tr>
                     </thead>
                     <tbody>
                       {currentInvoice.usedHatches?.length > 0 ? (
                         currentInvoice.usedHatches.map((hatch: any, index: number) => (
                           <tr key={index}>
-                            <td className="border border-black p-1">{index + 1}</td>
-                            <td className="border border-black p-1">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
-                            <td className="border border-black p-1">Each</td>
-                            <td className="border border-black p-1">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
-                            <td className="border border-black p-1">$200.00</td>
-                            <td className="border border-black p-1">${(hatch.chicksUsed * 200).toLocaleString()}.00</td>
+                            <td className="border border-black p-3">{index + 1}</td>
+                            <td className="border border-black p-3">Day Old Chicks with Hatch No. {hatch.hatchNo}</td>
+                            <td className="border border-black p-3">Each</td>
+                            <td className="border border-black p-3">{hatch.chicksUsed?.toLocaleString() || '0'}</td>
+                            <td className="border border-black p-3">$200.00</td>
+                            <td className="border border-black p-3">${(hatch.chicksUsed * 200).toLocaleString()}.00</td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td className="border border-black p-1">1</td>
-                          <td className="border border-black p-1">
+                          <td className="border border-black p-3">1</td>
+                          <td className="border border-black p-3">
                             Day Old Chicks
                             {currentInvoice.usedHatches?.length === 0 && (
                               <span className="text-red-600 text-xs block mt-1">
@@ -1686,21 +1684,21 @@ const Sales: React.FC = () => {
                               </span>
                             )}
                           </td>
-                          <td className="border border-black p-1">Each</td>
-                          <td className="border border-black p-1">{currentInvoice.qty?.toLocaleString() || '0'}</td>
-                          <td className="border border-black p-1">$200.00</td>
-                          <td className="border border-black p-1">${((currentInvoice.qty || 0) * 200).toLocaleString()}.00</td>
+                          <td className="border border-black p-3">Each</td>
+                          <td className="border border-black p-3">{currentInvoice.qty?.toLocaleString() || '0'}</td>
+                          <td className="border border-black p-3">$200.00</td>
+                          <td className="border border-black p-3">${((currentInvoice.qty || 0) * 200).toLocaleString()}.00</td>
                         </tr>
                       )}
                       {/* Fill remaining empty rows */}
-                      {Array.from({ length: Math.max(0, 4 - (currentInvoice.usedHatches?.length || 1)) }, (_, index) => (
+                      {Array.from({ length: Math.max(0, 3 - (currentInvoice.usedHatches?.length || 1)) }, (_, index) => (
                         <tr key={(currentInvoice.usedHatches?.length || 1) + index + 1}>
-                          <td className="border border-black p-1">{(currentInvoice.usedHatches?.length || 1) + index + 1}</td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
-                          <td className="border border-black p-1"></td>
+                          <td className="border border-black p-3">{(currentInvoice.usedHatches?.length || 1) + index + 1}</td>
+                          <td className="border border-black p-3"></td>
+                          <td className="border border-black p-3"></td>
+                          <td className="border border-black p-3"></td>
+                          <td className="border border-black p-3"></td>
+                          <td className="border border-black p-3"></td>
                         </tr>
                       ))}
                     </tbody>
@@ -1710,31 +1708,31 @@ const Sales: React.FC = () => {
                 {/* Footer Section */}
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <p className="text-xs mb-2">Merchandise remains the property of Bounty Farm until paid for in full</p>
-                    <div className="space-y-1">
-                      <p className="text-xs"><span className="font-semibold">Prepared by:</span> {currentInvoice.created_by || 'admin'}</p>
+                    <p className="text-sm mb-4">Merchandise remains the property of Bounty Farm until paid for in full</p>
+                    <div className="space-y-2">
+                      <p className="text-sm"><span className="font-semibold">Prepared by:</span> {currentInvoice.created_by || 'admin'}</p>
                     </div>
                   </div>
                   
                   {/* Summary Table */}
-                  <div className="w-48">
-                    <table className="w-full border border-black text-xs">
+                  <div className="w-64">
+                    <table className="w-full border border-black text-sm">
                       <tbody>
                         <tr>
-                          <td className="border border-black p-1 font-semibold">Invoice Disc.</td>
-                          <td className="border border-black p-1">${calculateInvoiceTotals(currentInvoice.usedHatches || []).invoiceDiscount.toLocaleString()}.00</td>
+                          <td className="border border-black p-3 font-semibold">Invoice Disc.</td>
+                          <td className="border border-black p-3">${calculateInvoiceTotals(currentInvoice.usedHatches || []).invoiceDiscount.toLocaleString()}.00</td>
                         </tr>
                         <tr>
-                          <td className="border border-black p-1 font-semibold">Subtotal</td>
-                          <td className="border border-black p-1">${calculateInvoiceTotals(currentInvoice.usedHatches || []).subtotal.toLocaleString()}.00</td>
+                          <td className="border border-black p-3 font-semibold">Subtotal</td>
+                          <td className="border border-black p-3">${calculateInvoiceTotals(currentInvoice.usedHatches || []).subtotal.toLocaleString()}.00</td>
                         </tr>
                         <tr>
-                          <td className="border border-black p-1 font-semibold">VAT (0%)</td>
-                          <td className="border border-black p-1">${calculateInvoiceTotals(currentInvoice.usedHatches || []).vatAmount.toLocaleString()}.00</td>
+                          <td className="border border-black p-3 font-semibold">VAT (0%)</td>
+                          <td className="border border-black p-3">${calculateInvoiceTotals(currentInvoice.usedHatches || []).vatAmount.toLocaleString()}.00</td>
                         </tr>
                         <tr>
-                          <td className="border border-black p-1 font-bold bg-gray-100">TOTAL</td>
-                          <td className="border border-black p-1 font-bold bg-gray-100">${calculateInvoiceTotals(currentInvoice.usedHatches || []).total.toLocaleString()}.00</td>
+                          <td className="border border-black p-3 font-bold bg-gray-100">TOTAL</td>
+                          <td className="border border-black p-3 font-bold bg-gray-100">${calculateInvoiceTotals(currentInvoice.usedHatches || []).total.toLocaleString()}.00</td>
                         </tr>
                       </tbody>
                     </table>
@@ -1742,8 +1740,8 @@ const Sales: React.FC = () => {
                 </div>
 
                 {/* Company Slogan */}
-                <div className="text-center mt-3">
-                  <p className="text-sm font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
+                <div className="text-center mt-6">
+                  <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
                 </div>
               </div>
                     </div>
