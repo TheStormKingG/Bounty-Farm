@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION create_dispatch_on_invoice_paid()
 RETURNS TRIGGER AS $$
 DECLARE
     new_dispatch_number VARCHAR(255);
-    po_number VARCHAR(255);
+    po_number_var VARCHAR(255);
     sales_record RECORD;
 BEGIN
     -- Only create dispatch when payment_status changes from 'pending' to 'paid'
@@ -39,17 +39,17 @@ BEGIN
         new_dispatch_number := REPLACE(NEW.invoice_number, '-INV', '-DISP');
         
         -- Convert invoice number back to PO number to find the sales_dispatch record
-        po_number := REPLACE(NEW.invoice_number, '-INV', '-PO');
+        po_number_var := REPLACE(NEW.invoice_number, '-INV', '-PO');
         
         -- Find the corresponding sales_dispatch record
         SELECT id, trucks_required, batches_required
         INTO sales_record
         FROM sales_dispatch
-        WHERE po_number = po_number;
+        WHERE po_number = po_number_var;
         
         -- Check if sales_dispatch record exists
         IF NOT FOUND THEN
-            RAISE WARNING 'Sales dispatch record for PO % not found when creating dispatch for invoice %', po_number, NEW.invoice_number;
+            RAISE WARNING 'Sales dispatch record for PO % not found when creating dispatch for invoice %', po_number_var, NEW.invoice_number;
             RETURN NEW;
         END IF;
         

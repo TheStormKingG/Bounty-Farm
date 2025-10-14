@@ -303,9 +303,11 @@ const Sales: React.FC = () => {
 
       // If status changed to 'paid', refresh dispatches
       if (newStatus === 'paid') {
+        console.log('Invoice marked as paid, triggering dispatch refresh event');
         // Trigger dispatch refresh by calling a global refresh function
         // We'll implement this using a custom event
         window.dispatchEvent(new CustomEvent('refreshDispatches'));
+        console.log('Dispatch refresh event dispatched');
       }
 
     } catch (err) {
@@ -585,8 +587,8 @@ const Sales: React.FC = () => {
                       const isCurrentSort = sortColumn === fieldName;
                       const isAscending = isCurrentSort && sortDirection === 'asc';
                       const isDescending = isCurrentSort && sortDirection === 'desc';
-                      
-                      return (
+
+    return (
                         <th
                           key={header}
                           className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider ${index < 3 ? 'sticky-header-' + (index + 1) : ''}`}
@@ -604,7 +606,7 @@ const Sales: React.FC = () => {
                             <span className="text-white font-medium text-xs">{header}</span>
                             {header !== 'Actions' && (
                               <div className="ml-4 flex space-x-1">
-                                <button
+                <button
                                   onClick={() => handleSort(fieldName)}
                                   className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1"
                                 >
@@ -627,15 +629,15 @@ const Sales: React.FC = () => {
                                     <circle cx="11" cy="11" r="8"/>
                                     <path d="M21 21l-4.35-4.35"/>
                                   </svg>
-                                </button>
-                              </div>
+                </button>
+            </div>
                             )}
                           </div>
                         </th>
                       );
                     })}
-                                    </tr>
-                                </thead>
+                            </tr>
+                        </thead>
                 <tbody>
                   {processedRecords.map(record => (
                     <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -678,18 +680,18 @@ const Sales: React.FC = () => {
                         >
                           Edit
                         </button>
-                        <button 
+                                        <button 
                           onClick={() => handleDeleteRecord(record.id, record.poNumber)}
                           className="text-[#F86F6F] hover:underline font-medium"
-                        >
+                                        >
                           Delete
-                        </button>
-                      </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                    </div>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 </div>
             )}
       </div>
@@ -781,8 +783,8 @@ const Sales: React.FC = () => {
                             </div>
                     </th>
                   ))}
-                </tr>
-              </thead>
+                                    </tr>
+                                </thead>
               <tbody>
                 {invoices.map((invoice) => (
                   <tr key={invoice.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -811,20 +813,20 @@ const Sales: React.FC = () => {
                       <button className="text-[#5C3A6B] hover:underline font-medium">View</button>
                       <button className="text-[#5C3A6B] hover:underline font-medium">Print</button>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-                            </div>
-                            </div>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+                </div>
 
       {/* Dispatch Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Dispatch</h2>
-        </div>
-        
+                        </div>
+                        
         {/* Filtering Section */}
         <div className="flex items-end gap-2 mb-6 mt-2">
           <div className="w-1/4">
@@ -833,14 +835,14 @@ const Sales: React.FC = () => {
               className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
               placeholder="Start"
             />
-          </div>
+                            </div>
           <div className="w-1/4">
             <input
               type="date"
               className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
               placeholder="End"
             />
-          </div>
+                            </div>
           <div className="flex-1">
             <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
               <input
@@ -854,10 +856,10 @@ const Sales: React.FC = () => {
                   <path d="M21 21l-4.35-4.35"/>
                 </svg>
               </button>
-            </div>
-          </div>
-        </div>
-        
+                            </div>
+                            </div>
+                        </div>
+
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           <div 
             className="overflow-auto flex-1" 

@@ -62,13 +62,16 @@ const Dispatch: React.FC = () => {
   // Listen for refresh events from other components
   useEffect(() => {
     const handleRefreshDispatches = () => {
+      console.log('Dispatch component received refreshDispatches event');
       console.log('Refreshing dispatches due to invoice payment status change');
       fetchDispatches();
     };
 
+    console.log('Dispatch component setting up event listener for refreshDispatches');
     window.addEventListener('refreshDispatches', handleRefreshDispatches);
     
     return () => {
+      console.log('Dispatch component removing event listener');
       window.removeEventListener('refreshDispatches', handleRefreshDispatches);
     };
   }, []);
@@ -152,7 +155,15 @@ const Dispatch: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] to-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl p-6 shadow-md">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Dispatch</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-800">Dispatch</h1>
+            <button 
+              onClick={fetchDispatches}
+              className="px-4 py-2 bg-[#5c3a6b] text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Refresh Dispatches
+            </button>
+          </div>
           
           {/* Filtering Section */}
           <div className="flex items-end gap-2 mb-6 mt-2">
