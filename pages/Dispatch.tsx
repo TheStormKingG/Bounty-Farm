@@ -45,6 +45,7 @@ const Dispatch: React.FC = () => {
         return;
       }
 
+      console.log('Fetched dispatches:', data); // Debug log
       setDispatches(data || []);
     } catch (err) {
       console.error('Unexpected error fetching dispatches:', err);
@@ -265,11 +266,11 @@ const Dispatch: React.FC = () => {
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {dispatch.type}
+                          {dispatch.type || 'Delivery'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm">{dispatch.trucks}</td>
-                      <td className="px-4 py-3 text-sm">{dispatch.trips}</td>
+                      <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
+                      <td className="px-4 py-3 text-sm">{dispatch.trips || 1}</td>
                     </tr>
                   ))}
                 </tbody>
