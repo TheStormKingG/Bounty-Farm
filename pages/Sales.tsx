@@ -330,40 +330,6 @@ const Sales: React.FC = () => {
       };
 
       setSalesDispatch(prev => [newRecord, ...prev]);
-      
-      // Auto-create invoice
-      const invoiceNumber = newRecordData.poNumber.replace('-PO', '-INV');
-      console.log('Creating invoice with:', {
-        invoice_number: invoiceNumber,
-        date_sent: newRecordData.dateOrdered,
-        payment_status: 'pending',
-        po_number: newRecordData.poNumber,
-        created_by: user?.name || 'admin',
-        updated_by: user?.name || 'admin',
-      });
-      
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from('invoices')
-        .insert([{
-          invoice_number: invoiceNumber,
-          date_sent: newRecordData.dateOrdered,
-          payment_status: 'pending',
-          po_number: newRecordData.poNumber,
-          created_by: user?.name || 'admin',
-          updated_by: user?.name || 'admin',
-        }])
-        .select()
-        .single();
-
-      if (invoiceError) {
-        console.error('Error creating invoice:', invoiceError);
-        alert(`PO created successfully, but invoice creation failed: ${invoiceError.message}`);
-      } else {
-        console.log('Invoice created successfully:', invoiceData);
-        // Refresh invoices from database
-        await fetchInvoices();
-      }
-      
       setIsAddModalVisible(false);
       setNewRecordData({});
       alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
