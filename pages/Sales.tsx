@@ -409,6 +409,9 @@ const Sales: React.FC = () => {
         newRecordData.qty || 0
       );
       
+      // Calculate trucks required based on quantity (1 truck = 56,000 chicks)
+      const trucksRequired = Math.ceil((newRecordData.qty || 0) / 56000);
+      
       const { data, error } = await supabase
         .from('sales_dispatch')
         .insert([{
@@ -418,7 +421,7 @@ const Sales: React.FC = () => {
           qty: newRecordData.qty,
           hatch_date: newRecordData.hatchDate,
           batches_required: batchesRequired,
-          trucks_required: Math.ceil(batchesRequired / 2), // Auto-calculate trucks (2 batches per truck)
+          trucks_required: trucksRequired,
           created_by: user?.name || 'admin',
           updated_by: user?.name || 'admin',
         }])
