@@ -19,12 +19,12 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <header className="modern-header p-4 lg:p-6 flex justify-between items-center">
+      <header className="modern-header p-4 lg:p-6 flex items-center relative">
         {/* Mobile menu button */}
         {user?.role === Role.Admin && (
           <button
             onClick={toggleMobileMenu}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 absolute left-4"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -32,8 +32,8 @@ const Header: React.FC = () => {
           </button>
         )}
         
-        {/* Logo and BFLOS version */}
-        <div className="flex items-center space-x-2 lg:space-x-4">
+        {/* Logo and BFLOS version - Centered */}
+        <div className="flex items-center space-x-2 lg:space-x-4 mx-auto">
           <div className="w-8 h-8 lg:w-12 lg:h-12">
             <img 
               src="images/BPF-Stefan-8.png" 
@@ -45,13 +45,13 @@ const Header: React.FC = () => {
               }}
             />
           </div>
-              <div>
-                <h1 className="text-lg lg:text-xl font-bold text-[#333333]">BFLOS Version 1.0</h1>
-              </div>
+          <div>
+            <h1 className="text-lg lg:text-xl font-bold text-[#333333]">BFLOS Version 1.0</h1>
+          </div>
         </div>
         
-        {/* User info and logout */}
-        <div className="flex items-center space-x-2 lg:space-x-6">
+        {/* User info and logout - Right aligned */}
+        <div className="flex items-center space-x-2 lg:space-x-6 absolute right-4">
           {user && (
             <div className="text-right hidden sm:block">
               <p className="font-semibold text-[#333333] text-sm lg:text-lg">{user.name}</p>
