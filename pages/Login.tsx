@@ -207,8 +207,19 @@ const Login: React.FC = () => {
             <div className="decorative-sphere sphere-small bottom-12 left-16"></div>
             <div className="decorative-sphere sphere-small bottom-8 right-8"></div>
             
-            {/* Welcome Content */}
+            {/* Bounty Farm Logo */}
             <div className="text-center text-white z-10">
+              <div className="w-32 h-32 mx-auto mb-6">
+                <img 
+                  src="images/BPF-Stefan-8.png" 
+                  alt="Bounty Farm Logo" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    console.error('Logo failed to load:', e);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
               <h1 className="text-4xl font-bold mb-4">Welcome</h1>
               <p className="text-xl opacity-90">To the zone of happiness.</p>
             </div>
@@ -217,7 +228,7 @@ const Login: React.FC = () => {
           {/* Right Panel - Login Form */}
           <div className="w-3/5 bg-[#F5F0EE] p-8 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
-              <h2 className="heading-secondary mb-8">Hello! Please tell us a little bit about yourself.</h2>
+              <h2 className="heading-secondary mb-8">Welcome to BFLOS (Bounty Farm Limited's Operational Software)</h2>
               
               {/* Role Selection */}
               <div className="space-y-4 mb-6">
