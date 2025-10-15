@@ -15,14 +15,14 @@ const stickyColumnStyles = `
   
   .sticky-column-2 {
     position: sticky !important;
-    left: 150px !important;
+    left: 120px !important;
     background-color: #ff8c42 !important;
     z-index: 10 !important;
   }
   
   .sticky-column-3 {
     position: sticky !important;
-    left: 300px !important;
+    left: 240px !important;
     background-color: #ff8c42 !important;
     z-index: 10 !important;
   }
@@ -36,14 +36,14 @@ const stickyColumnStyles = `
   
   .sticky-header-2 {
     position: sticky !important;
-    left: 150px !important;
+    left: 120px !important;
     background-color: #ff8c42 !important;
     z-index: 20 !important;
   }
   
   .sticky-header-3 {
     position: sticky !important;
-    left: 300px !important;
+    left: 240px !important;
     background-color: #ff8c42 !important;
     z-index: 20 !important;
   }
@@ -1032,10 +1032,10 @@ const Sales: React.FC = () => {
           <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Single Table with Sticky Header */}
             <div 
-              className="overflow-auto flex-1" 
+              className="table-responsive overflow-auto flex-1" 
               style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
             >
-              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <table className="modern-table min-w-full" style={{ tableLayout: 'auto', width: 'max-content' }}>
                 <thead className="sticky top-0 z-10" style={{
                   backgroundColor: '#ff8c42',
                   borderRadius: '8px 8px 0 0',
@@ -1058,13 +1058,13 @@ const Sales: React.FC = () => {
                           key={header}
                           className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider ${index < 3 ? 'sticky-header-' + (index + 1) : ''}`}
                           style={{ 
-                            width: '150px', 
-                            minWidth: '150px',
+                            width: '120px', 
+                            minWidth: '120px',
                             backgroundColor: '#ff8c42',
                             color: 'white',
                             fontWeight: '600',
                             textShadow: '0 1px 2px rgba(0,0,0,0.2)',
-                            left: index < 3 ? `${index * 150}px` : 'auto'
+                            left: index < 3 ? `${index * 120}px` : 'auto'
                           }}
                         >
                           <div className="flex items-center">
@@ -1107,24 +1107,24 @@ const Sales: React.FC = () => {
                   {processedRecords.map(record => (
                     <tr key={record.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                       <td className={`px-4 py-3 text-sm font-medium sticky-column-1`} style={{ 
-                        width: '150px', 
-                        minWidth: '150px',
+                        width: '120px', 
+                        minWidth: '120px',
                         backgroundColor: '#ff8c42',
                         color: 'white'
                       }}>
                         {record.poNumber}
                                     </td>
                       <td className={`px-4 py-3 text-sm sticky-column-2`} style={{ 
-                        width: '150px', 
-                        minWidth: '150px',
+                        width: '120px', 
+                        minWidth: '120px',
                         backgroundColor: '#ff8c42',
                         color: 'white'
                       }}>
                         {new Date(record.dateOrdered).toLocaleDateString()}
                                     </td>
                       <td className={`px-4 py-3 text-sm sticky-column-3`} style={{ 
-                        width: '150px', 
-                        minWidth: '150px',
+                        width: '120px', 
+                        minWidth: '120px',
                         backgroundColor: '#ff8c42',
                         color: 'white'
                       }}>
@@ -1202,10 +1202,10 @@ const Sales: React.FC = () => {
                         
         <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
           <div 
-            className="overflow-auto flex-1" 
+            className="table-responsive overflow-auto flex-1" 
             style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
           >
-            <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+            <table className="modern-table min-w-full" style={{ tableLayout: 'auto', width: 'max-content' }}>
               <thead className="sticky top-0 z-10" style={{
                 backgroundColor: '#ff8c42',
                 borderRadius: '8px 8px 0 0',
@@ -1220,8 +1220,8 @@ const Sales: React.FC = () => {
                       key={header}
                       className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
                       style={{ 
-                        width: '200px', 
-                        minWidth: '200px',
+                        width: '150px', 
+                        minWidth: '150px',
                         backgroundColor: '#ff8c42',
                         color: 'white',
                         fontWeight: '600',
@@ -1584,12 +1584,12 @@ const Sales: React.FC = () => {
                         }}
                       />
                                 </div>
-                    <div>
+                                <div>
                       <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
                       <p className="text-sm text-gray-600">14 Barima Ave., Bel Air Park, Georgetown, Guyana</p>
                       <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
                       <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
-                    </div>
+                                </div>
                                 </div>
                   
                   {/* Invoice Details */}
@@ -1645,8 +1645,8 @@ const Sales: React.FC = () => {
                         </tr>
                       </tbody>
                     </table>
-                  </div>
-                </div>
+                            </div>
+                            </div>
 
                 {/* Line Items Table */}
                 <div className="mb-6">

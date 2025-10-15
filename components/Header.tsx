@@ -87,6 +87,15 @@ const Header: React.FC = () => {
                 <a href="/dashboard" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
                   📊 Dashboard
                 </a>
+                <a href="/hatch-cycles" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  🥚 Hatches
+                </a>
+                <a href="/sales" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  🐣 Chicks
+                </a>
+                <a href="/dispatch" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  🚚 Dispatch
+                </a>
                 <a href="/farm" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
                   🚜 Farm
                 </a>
@@ -113,6 +122,22 @@ const Header: React.FC = () => {
                 </a>
                 <a href="/qhse" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
                   🛡️ QHSE
+                </a>
+                <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
+                <a href="/flock-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  🐔 Flocks
+                </a>
+                <a href="/breed-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  🧬 Breeds
+                </a>
+                <a href="/vaccine-profile" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  💉 Vaccines
+                </a>
+                <a href="/customers" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  👥 Customers
+                </a>
+                <a href="/settings" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                  ⚙️ Settings
                 </a>
               </div>
             </div>
