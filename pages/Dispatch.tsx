@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../src/supabase';
+import html2pdf from 'html2pdf.js';
 
 interface Dispatch {
   id: string;
@@ -31,6 +32,10 @@ const Dispatch: React.FC = () => {
   const [isReceiptModalVisible, setIsReceiptModalVisible] = useState(false);
   const [currentDispatch, setCurrentDispatch] = useState<Dispatch | null>(null);
   const [dispatchInvoiceData, setDispatchInvoiceData] = useState<any>(null);
+  const [customerDetails, setCustomerDetails] = useState<any>(null);
+  
+  // PDF download ref
+  const dispatchRef = useRef<HTMLDivElement>(null);
 
   // Fetch dispatches from database
   const fetchDispatches = async () => {
@@ -83,6 +88,78 @@ const Dispatch: React.FC = () => {
       window.removeEventListener('refreshDispatches', handleRefreshDispatches);
     };
   }, []);
+
+  // Function to download dispatch as PDF
+  const downloadDispatchPDF = () => {
+    if (!dispatchRef.current) {
+      console.error('Dispatch content not found');
+      return;
+    }
+
+    const element = dispatchRef.current;
+    const filename = `Dispatch-${currentDispatch?.dispatch_number || 'Unknown'}.pdf`;
+    
+    const opt = {
+      margin: 0.3,
+      filename: filename,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { 
+        scale: 1.8,
+        useCORS: true,
+        letterRendering: true
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'letter', 
+        orientation: 'portrait' as const
+      }
+    };
+
+    html2pdf().set(opt).from(element).save();
+  };
+
+  // Function to get customer details
+  const getCustomerDetails = async (customerName: string) => {
+    try {
+      // Try farm customers first
+      const { data: farmData, error: farmError } = await supabase
+        .from('farm_customers')
+        .select('*')
+        .eq('farm_name', customerName)
+        .single();
+
+      if (farmData && !farmError) {
+        return {
+          type: 'Farm',
+          name: farmData.farm_name,
+          address: farmData.farm_address,
+          contactPerson: farmData.contact_person,
+          contactNumber: farmData.contact_number
+        };
+      }
+
+      // Try individual customers
+      const { data: individualData, error: individualError } = await supabase
+        .from('individual_customers')
+        .select('*')
+        .eq('name', customerName)
+        .single();
+
+      if (individualData && !individualError) {
+        return {
+          type: 'Individual',
+          name: individualData.name,
+          address: individualData.address,
+          contactNumber: individualData.phone_number
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+      return null;
+    }
+  };
 
   // Process and filter dispatches
   const processedDispatches = React.useMemo(() => {
@@ -186,7 +263,11 @@ const Dispatch: React.FC = () => {
         console.error('Error fetching invoice data:', invoiceError);
         setError('Failed to fetch invoice data: ' + invoiceError.message);
       } else {
+        // Fetch customer details
+        const customerDetails = await getCustomerDetails(invoiceData.customer || '');
+        
         setDispatchInvoiceData(invoiceData);
+        setCustomerDetails(customerDetails);
         setIsReceiptModalVisible(true);
       }
     } catch (err) {
@@ -372,48 +453,78 @@ const Dispatch: React.FC = () => {
       </div>
     </div>
 
-      {/* Delivery Receipt Modal */}
+      {/* Dispatch Note Modal */}
       {isReceiptModalVisible && currentDispatch && dispatchInvoiceData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">Delivery Receipt - {currentDispatch.dispatch_number}</h3>
-              <button 
-                onClick={() => setIsReceiptModalVisible(false)} 
-                className="text-gray-500 hover:text-gray-800 text-2xl"
-              >
-                &times;
-              </button>
+              <h3 className="text-xl font-semibold text-gray-800">Dispatch Note - {currentDispatch.dispatch_number}</h3>
+              <div className="flex items-center space-x-3">
+                {/* Download PDF Button */}
+                <button 
+                  onClick={downloadDispatchPDF}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                  title="Download PDF"
+                >
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span className="text-sm">Download PDF</span>
+                </button>
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setIsReceiptModalVisible(false)} 
+                  className="text-gray-500 hover:text-gray-800 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
             
-            {/* Delivery Receipt Content */}
-            <div className="p-6">
-              {/* Receipt Header */}
-              <div className="flex justify-between items-start mb-8">
+            {/* Dispatch Note Content */}
+            <div ref={dispatchRef} className="p-6 text-sm max-w-4xl mx-auto" style={{ minHeight: 'calc(100vh - 2rem)', display: 'flex', flexDirection: 'column' }}>
+              {/* Dispatch Header */}
+              <div className="flex justify-between items-start mb-6">
                 {/* Company Info */}
                 <div className="flex items-start space-x-4">
                   {/* Company Logo */}
-                  <div className="w-20 h-20">
+                  <div className="w-24 h-24">
                     <img 
-                      src="/images/BPF-Stefan-8.png" 
+                      src="images/BPF-Stefan-8.png" 
                       alt="Bounty Farm Logo" 
                       className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error('Logo failed to load:', e);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold text-black uppercase">BOUNTY FARM LIMITED</h1>
-                    <p className="text-sm text-gray-600">14 BARIMA AVENUE, BEL AIR PARK, GUYANA Georgetown</p>
+                    <p className="text-sm text-gray-600">14 Barima Ave., Bel Air Park, Georgetown, Guyana</p>
                     <p className="text-sm text-gray-600">Tel No. 225-9311-4 | Fax No.2271032</p>
                     <p className="text-sm text-gray-600">office@bountyfarmgy.com</p>
                   </div>
                 </div>
                 
-                {/* Receipt Details */}
+                {/* Dispatch Details */}
                 <div className="text-right">
-                  <h2 className="text-2xl font-bold text-black uppercase mb-4">DELIVERY RECEIPT</h2>
+                  <h2 className="text-2xl font-bold text-black uppercase mb-4">DISPATCH NOTE</h2>
                   <div className="border border-black p-3">
                     <p className="text-sm font-bold">Tin #010067340</p>
-                    <div className="grid grid-cols-2 gap-4 mt-2 text-sm">
+                    <div className="grid grid-cols-2 gap-3 mt-2 text-sm">
                       <div>
                         <p className="font-semibold">Date</p>
                         <p>{new Date(currentDispatch.date_dispatched).toLocaleDateString()}</p>
@@ -427,45 +538,67 @@ const Dispatch: React.FC = () => {
                 </div>
               </div>
 
-              {/* Delivery Info Section */}
+              {/* Deliver To / Dispatch To Section */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Delivery Information:</h3>
+                <h3 className="text-lg font-semibold mb-3">
+                  {currentDispatch.type === 'Delivery' ? 'Deliver To:' : 'Dispatch To:'}
+                </h3>
                 <div className="border border-gray-300 p-4 bg-gray-50">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-semibold">Dispatch Type</p>
-                      <p className="text-lg">{currentDispatch.type || 'Delivery'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Number of Trucks</p>
-                      <p className="text-lg">{currentDispatch.trucks || 1}</p>
-                    </div>
-                  </div>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Customer Name:</td>
+                        <td className="py-2">
+                          {customerDetails?.name || dispatchInvoiceData.customer || 'EAT INS FARMS'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Address:</td>
+                        <td className="py-2">
+                          {customerDetails?.address || 'COWAN & HIGH STREET'}
+                        </td>
+                      </tr>
+                      {customerDetails?.type === 'Farm' && customerDetails?.contactPerson && (
+                        <tr>
+                          <td className="font-semibold pr-4 py-2">Contact Person:</td>
+                          <td className="py-2 text-gray-500">
+                            {customerDetails.contactPerson}
+                          </td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Phone:</td>
+                        <td className="py-2">
+                          {customerDetails?.contactNumber || '+5926335874'}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              {/* Trip Information */}
+              {/* Trip Details Table */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Trip Details:</h3>
-                <table className="w-full border border-black">
+                <h3 className="text-lg font-semibold mb-3">Trip Details:</h3>
+                <table className="w-full border border-black text-sm">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-2 text-left">Trip ID</th>
-                      <th className="border border-black p-2 text-left">Truck Number</th>
-                      <th className="border border-black p-2 text-left">Driver</th>
-                      <th className="border border-black p-2 text-left">Status</th>
+                      <th className="border border-black p-3 text-left">Trip ID</th>
+                      <th className="border border-black p-3 text-left">Hatch NO's</th>
+                      <th className="border border-black p-3 text-left">Trip Quantity</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Array.from({ length: currentDispatch.trucks || 1 }, (_, index) => (
                       <tr key={index}>
-                        <td className="border border-black p-2">TRIP-{currentDispatch.dispatch_number}-{String(index + 1).padStart(2, '0')}</td>
-                        <td className="border border-black p-2">TRUCK-{String(index + 1).padStart(2, '0')}</td>
-                        <td className="border border-black p-2">Driver {index + 1}</td>
-                        <td className="border border-black p-2">
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                            Completed
-                          </span>
+                        <td className="border border-black p-3">TRIP-{currentDispatch.dispatch_number}-{String(index + 1).padStart(2, '0')}</td>
+                        <td className="border border-black p-3">
+                          {dispatchInvoiceData.usedHatches?.map((hatch: any, hatchIndex: number) => (
+                            <div key={hatchIndex}>{hatch.hatchNo}</div>
+                          )) || 'N/A'}
+                        </td>
+                        <td className="border border-black p-3">
+                          {dispatchInvoiceData.qty ? Math.ceil(dispatchInvoiceData.qty / (currentDispatch.trucks || 1)) : 'N/A'}
                         </td>
                       </tr>
                     ))}
@@ -473,35 +606,15 @@ const Dispatch: React.FC = () => {
                 </table>
               </div>
 
-              {/* Invoice Information */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Related Invoice:</h3>
-                <div className="border border-gray-300 p-4 bg-gray-50">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-semibold">Invoice Number</p>
-                      <p>{dispatchInvoiceData.invoice_number}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Customer</p>
-                      <p>{dispatchInvoiceData.customer}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Quantity</p>
-                      <p>{dispatchInvoiceData.qty?.toLocaleString() || '0'}</p>
-                    </div>
-                    <div>
-                      <p className="font-semibold">Hatch Date</p>
-                      <p>{dispatchInvoiceData.hatch_date ? new Date(dispatchInvoiceData.hatch_date).toLocaleDateString() : 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Footer Section */}
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
-                  <p className="text-sm mb-4">Delivery completed successfully. All chicks delivered in good condition.</p>
+                  <p className="text-sm mb-4">
+                    {currentDispatch.type === 'Delivery' 
+                      ? 'Delivery completed successfully. All chicks delivered in good condition.'
+                      : 'Dispatch completed successfully. All chicks dispatched in good condition.'
+                    }
+                  </p>
                   <div className="space-y-2">
                     <p className="text-sm"><span className="font-semibold">Dispatched by:</span> {currentDispatch.created_by || 'admin'}</p>
                     <p className="text-sm"><span className="font-semibold">Dispatch Date:</span> {new Date(currentDispatch.date_dispatched).toLocaleDateString()}</p>
@@ -509,8 +622,8 @@ const Dispatch: React.FC = () => {
                 </div>
               </div>
 
-              {/* Company Slogan */}
-              <div className="text-center mt-8">
+              {/* Company Slogan - positioned exactly 1 inch from page bottom (0.7in from content bottom) */}
+              <div className="text-center mt-auto" style={{ marginBottom: '0.7in' }}>
                 <p className="text-lg font-bold text-gray-700">BOUNTY FARM... THINK QUALITY, BUY BOUNTY!</p>
               </div>
             </div>
