@@ -21,10 +21,9 @@ jobs:
       - run: |
           npm run build
           git rev-parse --short HEAD > dist/build-sha.txt
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           path: ./dist
-          name: github-pages
   deploy:
     needs: build
     runs-on: ubuntu-latest
