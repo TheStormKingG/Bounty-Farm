@@ -45,9 +45,9 @@ const Header: React.FC = () => {
               }}
             />
           </div>
-          <div>
-            <h1 className="text-lg lg:text-xl font-bold text-[#333333]">BFLOS 1.0</h1>
-          </div>
+              <div>
+                <h1 className="text-lg lg:text-xl font-bold text-[#333333]">BFLOS Version 1.0</h1>
+              </div>
         </div>
         
         {/* User info and logout */}

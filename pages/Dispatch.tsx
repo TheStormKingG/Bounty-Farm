@@ -524,33 +524,37 @@ const Dispatch: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-800">Dispatch</h1>
             <button 
               onClick={fetchDispatches}
-              className="px-4 py-2 bg-[#5c3a6b] text-white rounded-lg hover:opacity-90 transition-opacity"
+              className="px-3 py-1.5 bg-[#5c3a6b] text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
             >
               Refresh Dispatches
             </button>
           </div>
           
           {/* Filtering Section */}
-          <div className="flex items-end gap-2 mb-6 mt-2">
-            <div className="w-1/4">
-              <input
-                type="date"
-                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
-                placeholder="Start Date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
+          <div className="mb-6 mt-2">
+            {/* Date fields row */}
+            <div className="flex gap-2 mb-2">
+              <div className="w-1/2">
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                  placeholder="Start Date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="w-1/2">
+                <input
+                  type="date"
+                  className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                  placeholder="End Date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="w-1/4">
-              <input
-                type="date"
-                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
-                placeholder="End Date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="flex-1">
+            {/* Search field row */}
+            <div className="w-full">
               <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
                 <input
                   type="text"

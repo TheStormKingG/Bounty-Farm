@@ -144,7 +144,22 @@ const Login: React.FC = () => {
 
   // Handle role selection
   const handleRoleSelect = (role: Role) => {
-    setSelectedRole(role);
+    // Toggle: if clicking the same role, close it; otherwise, select new role
+    if (selectedRole === role) {
+      setSelectedRole(null);
+    } else {
+      setSelectedRole(role);
+      // Auto-scroll to the form after a short delay to allow DOM update
+      setTimeout(() => {
+        const formElement = document.querySelector(`[data-role="${role}"]`);
+        if (formElement) {
+          formElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 100);
+    }
     setError(null);
     setNotice(null);
     
@@ -226,11 +241,11 @@ const Login: React.FC = () => {
           {/* Right Panel - Login Form */}
           <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-start overflow-y-auto">
             <div className="max-w-md mx-auto w-full">
-              <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
-                WELCOME TO BFLOS!
-                <br />
-                <span className="text-sm font-normal">(Bounty Farm Limited's Operational Software)</span>
-              </h2>
+                  <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
+                    WELCOME TO BFLOS!
+                    <br />
+                    <span className="text-sm font-normal whitespace-nowrap">(Bounty Farm Limited's Operational Software)</span>
+                  </h2>
               
               {/* Role Selection */}
               <div className="space-y-3 mb-4">
@@ -245,9 +260,9 @@ const Login: React.FC = () => {
                   >
                     Admin
                   </button>
-                  {/* Admin Login Form */}
-                  {selectedRole === Role.Admin && (
-                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      {/* Admin Login Form */}
+                      {selectedRole === Role.Admin && (
+                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="Admin">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
@@ -316,9 +331,9 @@ const Login: React.FC = () => {
                   >
                     Hatchery
                   </button>
-                  {/* Hatchery Login Form */}
-                  {selectedRole === Role.HatcheryClerk && (
-                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      {/* Hatchery Login Form */}
+                      {selectedRole === Role.HatcheryClerk && (
+                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="HatcheryClerk">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
@@ -387,9 +402,9 @@ const Login: React.FC = () => {
                   >
                     Sales
                   </button>
-                  {/* Sales Login Form */}
-                  {selectedRole === Role.SalesClerk && (
-                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                      {/* Sales Login Form */}
+                      {selectedRole === Role.SalesClerk && (
+                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="SalesClerk">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>

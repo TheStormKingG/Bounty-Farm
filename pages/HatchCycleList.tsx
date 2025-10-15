@@ -1338,30 +1338,36 @@ const HatchCycleList: React.FC = () => {
       ) : (
             <div className="bg-white rounded-2xl p-6 shadow-md">
                 {/* Filters */}
-                <div className="flex items-end gap-2 mb-6 mt-2">
-                        <div className="w-1/4">
-                  <input
-                    id="hatch-start"
-                    type="date"
-                    className="w-full px-3 py-2 rounded-2xl shadow-md"
-                    style={{ backgroundColor: '#fffae5' }}
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    title="Start"
-                  />
-                        </div>
-                        <div className="w-1/4">
-                  <input
-                    id="hatch-end"
-                    type="date"
-                    className="w-full px-3 py-2 rounded-2xl shadow-md"
-                    style={{ backgroundColor: '#fffae5' }}
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    title="End"
-                  />
-                        </div>
-                        <div className="flex-1">
+                <div className="mb-6 mt-2">
+                  {/* Date fields row */}
+                  <div className="flex gap-2 mb-2">
+                    <div className="w-1/2">
+                      <input
+                        id="hatch-start"
+                        type="date"
+                        className="w-full px-3 py-2 rounded-2xl shadow-md"
+                        style={{ backgroundColor: '#fffae5' }}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        title="Start Date"
+                        placeholder="Start Date"
+                      />
+                    </div>
+                    <div className="w-1/2">
+                      <input
+                        id="hatch-end"
+                        type="date"
+                        className="w-full px-3 py-2 rounded-2xl shadow-md"
+                        style={{ backgroundColor: '#fffae5' }}
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        title="End Date"
+                        placeholder="End Date"
+                      />
+                    </div>
+                  </div>
+                  {/* Search field row */}
+                  <div className="w-full">
                   <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
                     <input
                       type="text"
