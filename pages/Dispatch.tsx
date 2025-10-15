@@ -33,6 +33,7 @@ const Dispatch: React.FC = () => {
   const [currentDispatch, setCurrentDispatch] = useState<Dispatch | null>(null);
   const [dispatchInvoiceData, setDispatchInvoiceData] = useState<any>(null);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
+  const [tripDistribution, setTripDistribution] = useState<any[]>([]);
   
   // PDF download ref
   const dispatchRef = useRef<HTMLDivElement>(null);
@@ -116,6 +117,61 @@ const Dispatch: React.FC = () => {
     };
 
     html2pdf().set(opt).from(element).save();
+  };
+
+  // Function to calculate trip distribution and hatch allocation
+  const calculateTripDistribution = (totalQuantity: number, trucks: number, usedHatches: any[], dispatchNumber: string) => {
+    const chicksPerTruck = 56000;
+    const totalTrucksNeeded = Math.ceil(totalQuantity / chicksPerTruck);
+    const actualTrucks = Math.min(trucks, totalTrucksNeeded);
+    
+    // Calculate even distribution
+    const chicksPerTrip = Math.floor(totalQuantity / actualTrucks);
+    const remainder = totalQuantity % actualTrucks;
+    
+    const trips = [];
+    let remainingHatches = [...usedHatches];
+    let hatchIndex = 0;
+    
+    for (let i = 0; i < actualTrucks; i++) {
+      const tripQuantity = chicksPerTrip + (i < remainder ? 1 : 0);
+      const tripHatches = [];
+      let allocatedQuantity = 0;
+      
+      // Distribute hatches to this trip
+      while (allocatedQuantity < tripQuantity && hatchIndex < remainingHatches.length) {
+        const currentHatch = remainingHatches[hatchIndex];
+        const remainingInHatch = currentHatch.chicksUsed - (currentHatch.allocated || 0);
+        const neededForTrip = tripQuantity - allocatedQuantity;
+        
+        if (remainingInHatch <= neededForTrip) {
+          // Use entire hatch for this trip
+          tripHatches.push({
+            hatchNo: currentHatch.hatchNo,
+            quantity: remainingInHatch
+          });
+          allocatedQuantity += remainingInHatch;
+          currentHatch.allocated = (currentHatch.allocated || 0) + remainingInHatch;
+          hatchIndex++;
+        } else {
+          // Use partial hatch for this trip
+          tripHatches.push({
+            hatchNo: currentHatch.hatchNo,
+            quantity: neededForTrip
+          });
+          allocatedQuantity += neededForTrip;
+          currentHatch.allocated = (currentHatch.allocated || 0) + neededForTrip;
+        }
+      }
+      
+      trips.push({
+        tripId: `TRIP-${dispatchNumber}-${String(i + 1).padStart(2, '0')}`,
+        hatches: tripHatches,
+        totalQuantity: allocatedQuantity
+      });
+    }
+    
+    return trips;
   };
 
   // Function to get customer details
@@ -266,8 +322,17 @@ const Dispatch: React.FC = () => {
         // Fetch customer details
         const customerDetails = await getCustomerDetails(invoiceData.customer || '');
         
+        // Calculate trip distribution
+        const trips = calculateTripDistribution(
+          invoiceData.qty || 0,
+          dispatch.trucks || 1,
+          invoiceData.usedHatches || [],
+          dispatch.dispatch_number
+        );
+        
         setDispatchInvoiceData(invoiceData);
         setCustomerDetails(customerDetails);
+        setTripDistribution(trips);
         setIsReceiptModalVisible(true);
       }
     } catch (err) {
@@ -589,17 +654,15 @@ const Dispatch: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from({ length: currentDispatch.trucks || 1 }, (_, index) => (
+                    {tripDistribution.map((trip, index) => (
                       <tr key={index}>
-                        <td className="border border-black p-3">TRIP-{currentDispatch.dispatch_number}-{String(index + 1).padStart(2, '0')}</td>
+                        <td className="border border-black p-3">{trip.tripId}</td>
                         <td className="border border-black p-3">
-                          {dispatchInvoiceData.usedHatches?.map((hatch: any, hatchIndex: number) => (
+                          {trip.hatches.map((hatch: any, hatchIndex: number) => (
                             <div key={hatchIndex}>{hatch.hatchNo}</div>
-                          )) || 'N/A'}
+                          ))}
                         </td>
-                        <td className="border border-black p-3">
-                          {dispatchInvoiceData.qty ? Math.ceil(dispatchInvoiceData.qty / (currentDispatch.trucks || 1)) : 'N/A'}
-                        </td>
+                        <td className="border border-black p-3">{trip.totalQuantity.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
