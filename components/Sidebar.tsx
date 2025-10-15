@@ -12,7 +12,7 @@ const Sidebar: React.FC = () => {
   const hasRole = (roles: Role[]) => user && roles.includes(user.role);
 
   return (
-    <aside className="modern-sidebar w-64 flex-shrink-0 p-4 lg:p-6 flex flex-col h-full">
+    <aside className="modern-sidebar w-64 flex-shrink-0 p-4 lg:p-6 flex flex-col h-screen overflow-y-auto">
       <div className="text-center mb-6 lg:mb-8">
         <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-3 lg:mb-4 flex items-center justify-center">
           <span className="text-white font-bold text-lg lg:text-xl">BF</span>

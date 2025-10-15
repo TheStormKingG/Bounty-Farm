@@ -35,6 +35,22 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* Modern Card Component */
@@ -276,6 +292,8 @@ body {
   background: var(--color-white);
   border-right: 1px solid var(--color-beige-grey);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 10;
 }
 
 /* Modern Header Styles */
@@ -480,4 +498,30 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   }
+}
+
+/* Layout containment and bleeding prevention */
+.layout-container {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.main-content {
+  height: calc(100vh - 80px); /* Subtract header height */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Prevent content from bleeding outside containers */
+* {
+  box-sizing: border-box;
+}
+
+/* Ensure proper spacing at bottom */
+.main-content::after {
+  content: '';
+  display: block;
+  height: 2rem;
+  width: 100%;
 }
