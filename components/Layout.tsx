@@ -16,12 +16,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showSidebar = user?.role === Role.Admin;
 
   return (
-    <div className="flex h-screen">
-      {showSidebar && <Sidebar />}
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex h-screen bg-gray-50">
+      {showSidebar && (
+        <div className="hidden lg:block">
+          <Sidebar />
+        </div>
+      )}
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
-          <div className="container mx-auto">
+        <main className="flex-1 overflow-x-auto overflow-y-auto p-4 lg:p-6">
+          <div className="max-w-full">
             {children}
           </div>
         </main>
