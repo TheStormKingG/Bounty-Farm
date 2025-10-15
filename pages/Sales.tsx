@@ -977,8 +977,8 @@ const Sales: React.FC = () => {
                 </button>
         </div>
         {/* Filtering Section */}
-        <div className="flex items-end gap-2 mb-6 mt-2">
-          <div className="w-1/4">
+        <div className="flex flex-col sm:flex-row items-end gap-2 mb-6 mt-2">
+          <div className="w-full sm:w-1/4">
             <input
               type="date"
               value={startDate}
@@ -987,7 +987,7 @@ const Sales: React.FC = () => {
               placeholder="Start"
             />
           </div>
-          <div className="w-1/4">
+          <div className="w-full sm:w-1/4">
             <input
               type="date"
               value={endDate}
@@ -996,7 +996,7 @@ const Sales: React.FC = () => {
               placeholder="End"
             />
           </div>
-          <div className="flex-1">
+          <div className="w-full sm:flex-1">
             <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
               <input
                 type="text"
@@ -1168,22 +1168,22 @@ const Sales: React.FC = () => {
                         </div>
         
         {/* Filtering Section */}
-        <div className="flex items-end gap-2 mb-6 mt-2">
-          <div className="w-1/4">
+        <div className="flex flex-col sm:flex-row items-end gap-2 mb-6 mt-2">
+          <div className="w-full sm:w-1/4">
             <input
               type="date"
               className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
               placeholder="Start"
             />
           </div>
-          <div className="w-1/4">
+          <div className="w-full sm:w-1/4">
             <input
               type="date"
               className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
               placeholder="End"
             />
           </div>
-          <div className="flex-1">
+          <div className="w-full sm:flex-1">
             <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
               <input
                 type="text"

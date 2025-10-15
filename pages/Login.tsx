@@ -196,7 +196,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 overflow-y-auto">
       <div className="modern-card w-full max-w-4xl animate-fade-in-up">
         <div className="flex flex-col lg:flex-row h-auto lg:h-[600px] rounded-2xl overflow-hidden">
           {/* Left Panel - Welcome Section */}
@@ -224,7 +224,7 @@ const Login: React.FC = () => {
           </div>
 
           {/* Right Panel - Login Form */}
-          <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-center">
+          <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-center overflow-y-auto">
             <div className="max-w-md mx-auto w-full">
               <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
                 WELCOME TO BFLOS!

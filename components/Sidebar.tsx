@@ -6,21 +6,21 @@ import { Role } from '../types';
 const Sidebar: React.FC = () => {
   const { user } = useAuth();
 
-  const navLinkClasses = "flex items-center px-3 py-2 lg:px-4 lg:py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium text-sm lg:text-base";
+  const navLinkClasses = "flex items-center px-3 py-1.5 lg:px-4 lg:py-2 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium text-sm lg:text-base";
   const activeNavLinkClasses = "bg-[#FFE4D6] text-[#5C3A6B] font-semibold";
 
   const hasRole = (roles: Role[]) => user && roles.includes(user.role);
 
   return (
-    <aside className="modern-sidebar w-72 flex-shrink-0 p-4 lg:p-6 flex flex-col h-screen overflow-y-auto">
-      <div className="text-center mb-6 lg:mb-8">
-        <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-3 lg:mb-4 flex items-center justify-center">
+    <aside className="modern-sidebar w-72 flex-shrink-0 p-4 lg:p-6 flex flex-col h-screen">
+      <div className="text-center mb-4 lg:mb-6">
+        <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-2 lg:mb-3 flex items-center justify-center">
           <span className="text-white font-bold text-lg lg:text-xl">BF</span>
         </div>
         <h1 className="heading-tertiary text-[#333333] text-lg lg:text-xl">Company View</h1>
       </div>
       
-      <nav className="space-y-2 flex-1">
+      <nav className="space-y-1 flex-1">
         {hasRole([Role.Admin]) && (
             <NavLink to="/dashboard" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">📊</span>
@@ -87,7 +87,7 @@ const Sidebar: React.FC = () => {
               <span className="mr-3">🛡️</span>
               QHSE
             </NavLink>
-            <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
+            <div className="pt-2 mt-4 border-t border-[#F5F0EE]"></div>
             <NavLink to="/flock-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">🐔</span>
               Flocks

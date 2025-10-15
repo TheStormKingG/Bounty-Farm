@@ -70,7 +70,7 @@ const Header: React.FC = () => {
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && user?.role === Role.Admin && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={toggleMobileMenu}>
-          <div className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold text-[#333333]">Company View</h2>
