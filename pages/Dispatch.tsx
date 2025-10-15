@@ -119,8 +119,15 @@ const Dispatch: React.FC = () => {
     html2pdf().set(opt).from(element).save();
   };
 
-  // Function to calculate trip distribution and hatch allocation
-  const calculateTripDistribution = (totalQuantity: number, trucks: number, usedHatches: any[], dispatchNumber: string) => {
+  // Function to calculate trip/truck distribution and hatch allocation
+  const calculateTripDistribution = (totalQuantity: number, trucks: number, usedHatches: any[], dispatchNumber: string, dispatchType: string) => {
+    console.log('Calculating distribution with:', { totalQuantity, trucks, usedHatches, dispatchNumber, dispatchType });
+    
+    if (!totalQuantity || totalQuantity === 0) {
+      console.log('No quantity available, returning empty trips');
+      return [];
+    }
+    
     const chicksPerTruck = 56000;
     const totalTrucksNeeded = Math.ceil(totalQuantity / chicksPerTruck);
     const actualTrucks = Math.min(trucks, totalTrucksNeeded);
@@ -133,19 +140,22 @@ const Dispatch: React.FC = () => {
     let remainingHatches = [...usedHatches];
     let hatchIndex = 0;
     
+    // Use "truck" for Pick Up, "trip" for Delivery
+    const idPrefix = dispatchType === 'Pick Up' ? 'TRUCK' : 'TRIP';
+    
     for (let i = 0; i < actualTrucks; i++) {
       const tripQuantity = chicksPerTrip + (i < remainder ? 1 : 0);
       const tripHatches = [];
       let allocatedQuantity = 0;
       
-      // Distribute hatches to this trip
+      // Distribute hatches to this trip/truck
       while (allocatedQuantity < tripQuantity && hatchIndex < remainingHatches.length) {
         const currentHatch = remainingHatches[hatchIndex];
         const remainingInHatch = currentHatch.chicksUsed - (currentHatch.allocated || 0);
         const neededForTrip = tripQuantity - allocatedQuantity;
         
         if (remainingInHatch <= neededForTrip) {
-          // Use entire hatch for this trip
+          // Use entire hatch for this trip/truck
           tripHatches.push({
             hatchNo: currentHatch.hatchNo,
             quantity: remainingInHatch
@@ -154,7 +164,7 @@ const Dispatch: React.FC = () => {
           currentHatch.allocated = (currentHatch.allocated || 0) + remainingInHatch;
           hatchIndex++;
         } else {
-          // Use partial hatch for this trip
+          // Use partial hatch for this trip/truck
           tripHatches.push({
             hatchNo: currentHatch.hatchNo,
             quantity: neededForTrip
@@ -165,12 +175,13 @@ const Dispatch: React.FC = () => {
       }
       
       trips.push({
-        tripId: `TRIP-${dispatchNumber}-${String(i + 1).padStart(2, '0')}`,
+        tripId: `${idPrefix}-${dispatchNumber}-${String(i + 1).padStart(2, '0')}`,
         hatches: tripHatches,
         totalQuantity: allocatedQuantity
       });
     }
     
+    console.log('Calculated trips/trucks:', trips);
     return trips;
   };
 
@@ -376,23 +387,46 @@ const Dispatch: React.FC = () => {
         // Get customer name and determine customer type (same logic as invoice viewer)
         let customerName = invoiceData.customer;
         let customerType = invoiceData.customerType;
+        let quantity = invoiceData.qty;
+        let usedHatches = invoiceData.usedHatches;
         
         // If not in invoice, try to get from sales_dispatch
-        if (!customerName) {
-          console.log('Customer info not in invoice, fetching from sales_dispatch...');
+        if (!customerName || !quantity || !usedHatches) {
+          console.log('Missing data in invoice, fetching from sales_dispatch...');
           try {
             const { data: salesData, error: salesError } = await supabase
               .from('sales_dispatch')
-              .select('customer')
+              .select('customer, qty, hatch_date')
               .eq('po_number', invoiceData.po_number || invoiceData.invoice_number?.replace('INV', 'PO'))
               .single();
               
             if (!salesError && salesData) {
-              customerName = salesData.customer;
-              console.log('Found customer info from sales_dispatch:', customerName);
+              if (!customerName) customerName = salesData.customer;
+              if (!quantity) quantity = salesData.qty;
+              console.log('Found data from sales_dispatch:', { customerName, quantity, hatchDate: salesData.hatch_date });
+              
+              // If we have hatch_date but no usedHatches, we need to fetch hatch data
+              if (!usedHatches && salesData.hatch_date) {
+                console.log('Fetching hatch data for date:', salesData.hatch_date);
+                const { data: hatchData, error: hatchError } = await supabase
+                  .from('hatch_cycles')
+                  .select('hatch_no, chicks_hatched')
+                  .eq('hatch_date', salesData.hatch_date)
+                  .not('chicks_hatched', 'is', null)
+                  .gt('chicks_hatched', 0);
+                  
+                if (!hatchError && hatchData && hatchData.length > 0) {
+                  // Convert hatch data to usedHatches format
+                  usedHatches = hatchData.map(hatch => ({
+                    hatchNo: hatch.hatch_no,
+                    chicksUsed: hatch.chicks_hatched
+                  }));
+                  console.log('Generated usedHatches from hatch data:', usedHatches);
+                }
+              }
             }
           } catch (error) {
-            console.error('Error fetching customer from sales_dispatch:', error);
+            console.error('Error fetching data from sales_dispatch:', error);
           }
         }
         
@@ -432,18 +466,20 @@ const Dispatch: React.FC = () => {
         const customerDetails = await getCustomerDetails(customerName || '', customerType);
         
         // Calculate trip distribution
-        console.log('Invoice data for trip calculation:', {
-          qty: invoiceData.qty,
+        console.log('Data for trip calculation:', {
+          quantity,
           trucks: dispatch.trucks,
-          usedHatches: invoiceData.usedHatches,
-          dispatchNumber: dispatch.dispatch_number
+          usedHatches,
+          dispatchNumber: dispatch.dispatch_number,
+          dispatchType: dispatch.type
         });
         
         const trips = calculateTripDistribution(
-          invoiceData.qty || 0,
+          quantity || 0,
           dispatch.trucks || 1,
-          invoiceData.usedHatches || [],
-          dispatch.dispatch_number
+          usedHatches || [],
+          dispatch.dispatch_number,
+          dispatch.type || 'Delivery'
         );
         
         console.log('Calculated trips:', trips);
@@ -760,15 +796,21 @@ const Dispatch: React.FC = () => {
                 </div>
               </div>
 
-              {/* Trip Details Table */}
+              {/* Trip/Truck Details Table */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">Trip Details:</h3>
+                <h3 className="text-lg font-semibold mb-3">
+                  {currentDispatch.type === 'Pick Up' ? 'Truck Details:' : 'Trip Details:'}
+                </h3>
                 <table className="w-full border border-black text-sm">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-black p-3 text-left">Trip ID</th>
+                      <th className="border border-black p-3 text-left">
+                        {currentDispatch.type === 'Pick Up' ? 'Truck ID' : 'Trip ID'}
+                      </th>
                       <th className="border border-black p-3 text-left">Hatch NO's</th>
-                      <th className="border border-black p-3 text-left">Trip Quantity</th>
+                      <th className="border border-black p-3 text-left">
+                        {currentDispatch.type === 'Pick Up' ? 'Truck Quantity' : 'Trip Quantity'}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
