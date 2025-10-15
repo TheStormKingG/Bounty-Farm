@@ -25,7 +25,10 @@ const COLORS_PIE = ['#5C3A6B', '#F86F6F'];
 const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in-up">
-      <h1 className="heading-primary">Dashboard <span className="text-sm font-normal text-gray-500">(coming upon rollout of Grow-Out Module)</span></h1>
+      <div>
+        <h1 className="heading-primary">Dashboard</h1>
+        <p className="text-sm font-normal text-gray-500 mt-2">(coming upon rollout of Grow-Out Module)</p>
+      </div>
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
