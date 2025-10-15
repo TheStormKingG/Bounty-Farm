@@ -13,14 +13,24 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside className="modern-sidebar w-72 flex-shrink-0 p-4 lg:p-6 flex flex-col h-screen">
-      <div className="text-center mb-4 lg:mb-6">
-        <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-2 lg:mb-3 flex items-center justify-center">
-          <span className="text-white font-bold text-lg lg:text-xl">BF</span>
+      {/* Fixed header with logo and title */}
+      <div className="text-center mb-4 lg:mb-6 flex-shrink-0">
+        <div className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-2 lg:mb-3 flex items-center justify-center">
+          <img 
+            src="images/Bounty-Alt.jpg" 
+            alt="Bounty Farm Logo" 
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              console.error('Logo failed to load:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
         </div>
         <h1 className="heading-tertiary text-[#333333] text-lg lg:text-xl">Company View</h1>
       </div>
       
-      <nav className="space-y-1 flex-1">
+      {/* Scrollable navigation */}
+      <nav className="space-y-1 flex-1 overflow-y-auto">
         {hasRole([Role.Admin]) && (
             <NavLink to="/dashboard" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">📊</span>
