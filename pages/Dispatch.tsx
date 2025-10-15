@@ -174,47 +174,101 @@ const Dispatch: React.FC = () => {
     return trips;
   };
 
-  // Function to get customer details
-  const getCustomerDetails = async (customerName: string) => {
+  // Function to get customer details (same logic as invoice viewer)
+  const getCustomerDetails = async (customerName: string, customerType?: string) => {
+    console.log('Fetching customer details for:', customerName, 'Type:', customerType);
+    
     try {
-      // Try farm customers first
+      if (customerType === 'Farm') {
+        console.log('Searching in farm_customers table for farm_name:', customerName);
+        const { data: farmData, error } = await supabase
+          .from('farm_customers')
+          .select('farm_name, farm_address, contact_person, contact_number')
+          .eq('farm_name', customerName)
+          .single();
+          
+        console.log('Farm data result:', farmData, 'Error:', error);
+        
+        if (!error && farmData) {
+          return {
+            name: farmData.farm_name,
+            address: farmData.farm_address,
+            contactPerson: farmData.contact_person,
+            contactNumber: farmData.contact_number,
+            type: 'Farm'
+          };
+        }
+      } else if (customerType === 'Individual') {
+        console.log('Searching in individual_customers table for name:', customerName);
+        const { data: individualData, error } = await supabase
+          .from('individual_customers')
+          .select('name, address, phone_number')
+          .eq('name', customerName)
+          .single();
+          
+        console.log('Individual data result:', individualData, 'Error:', error);
+        
+        if (!error && individualData) {
+          return {
+            name: individualData.name,
+            address: individualData.address,
+            contactNumber: individualData.phone_number,
+            type: 'Individual'
+          };
+        }
+      }
+      
+      // If no specific type or not found, try both tables
+      console.log('Trying both tables as fallback...');
+      
+      // Try farm customers first (search by farm_name)
       const { data: farmData, error: farmError } = await supabase
         .from('farm_customers')
-        .select('*')
+        .select('farm_name, farm_address, contact_person, contact_number')
         .eq('farm_name', customerName)
         .single();
-
-      if (farmData && !farmError) {
+        
+      if (!farmError && farmData) {
+        console.log('Found in farm_customers:', farmData);
         return {
-          type: 'Farm',
           name: farmData.farm_name,
           address: farmData.farm_address,
           contactPerson: farmData.contact_person,
-          contactNumber: farmData.contact_number
+          contactNumber: farmData.contact_number,
+          type: 'Farm'
         };
       }
-
-      // Try individual customers
+      
+      // Try individual customers (search by name)
       const { data: individualData, error: individualError } = await supabase
         .from('individual_customers')
-        .select('*')
+        .select('name, address, phone_number')
         .eq('name', customerName)
         .single();
-
-      if (individualData && !individualError) {
+        
+      if (!individualError && individualData) {
+        console.log('Found in individual_customers:', individualData);
         return {
-          type: 'Individual',
           name: individualData.name,
           address: individualData.address,
-          contactNumber: individualData.phone_number
+          contactNumber: individualData.phone_number,
+          type: 'Individual'
         };
       }
-
-      return null;
+      
     } catch (error) {
       console.error('Error fetching customer details:', error);
-      return null;
     }
+    
+    // Fallback to default values
+    console.log('Using fallback values for customer:', customerName);
+    return {
+      name: customerName || 'EAT INS FARMS',
+      address: 'COWAN & HIGH STREET',
+      contactPerson: 'RECHANNA RAHAMAN',
+      contactNumber: '+5926335874',
+      type: customerType || 'Farm'
+    };
   };
 
   // Process and filter dispatches
@@ -319,16 +373,80 @@ const Dispatch: React.FC = () => {
         console.error('Error fetching invoice data:', invoiceError);
         setError('Failed to fetch invoice data: ' + invoiceError.message);
       } else {
+        // Get customer name and determine customer type (same logic as invoice viewer)
+        let customerName = invoiceData.customer;
+        let customerType = invoiceData.customerType;
+        
+        // If not in invoice, try to get from sales_dispatch
+        if (!customerName) {
+          console.log('Customer info not in invoice, fetching from sales_dispatch...');
+          try {
+            const { data: salesData, error: salesError } = await supabase
+              .from('sales_dispatch')
+              .select('customer')
+              .eq('po_number', invoiceData.po_number || invoiceData.invoice_number?.replace('INV', 'PO'))
+              .single();
+              
+            if (!salesError && salesData) {
+              customerName = salesData.customer;
+              console.log('Found customer info from sales_dispatch:', customerName);
+            }
+          } catch (error) {
+            console.error('Error fetching customer from sales_dispatch:', error);
+          }
+        }
+        
+        // Determine customer type by checking which table the customer exists in
+        if (customerName && !customerType) {
+          console.log('Determining customer type for:', customerName);
+          
+          // Try farm customers first
+          const { data: farmData, error: farmError } = await supabase
+            .from('farm_customers')
+            .select('farm_name')
+            .eq('farm_name', customerName)
+            .single();
+            
+          if (!farmError && farmData) {
+            customerType = 'Farm';
+            console.log('Customer found in farm_customers, type: Farm');
+          } else {
+            // Try individual customers
+            const { data: individualData, error: individualError } = await supabase
+              .from('individual_customers')
+              .select('name')
+              .eq('name', customerName)
+              .single();
+              
+            if (!individualError && individualData) {
+              customerType = 'Individual';
+              console.log('Customer found in individual_customers, type: Individual');
+            } else {
+              console.log('Customer not found in either table, defaulting to Farm');
+              customerType = 'Farm'; // Default fallback
+            }
+          }
+        }
+        
         // Fetch customer details
-        const customerDetails = await getCustomerDetails(invoiceData.customer || '');
+        const customerDetails = await getCustomerDetails(customerName || '', customerType);
         
         // Calculate trip distribution
+        console.log('Invoice data for trip calculation:', {
+          qty: invoiceData.qty,
+          trucks: dispatch.trucks,
+          usedHatches: invoiceData.usedHatches,
+          dispatchNumber: dispatch.dispatch_number
+        });
+        
         const trips = calculateTripDistribution(
           invoiceData.qty || 0,
           dispatch.trucks || 1,
           invoiceData.usedHatches || [],
           dispatch.dispatch_number
         );
+        
+        console.log('Calculated trips:', trips);
         
         setDispatchInvoiceData(invoiceData);
         setCustomerDetails(customerDetails);
@@ -654,17 +772,27 @@ const Dispatch: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {tripDistribution.map((trip, index) => (
-                      <tr key={index}>
-                        <td className="border border-black p-3">{trip.tripId}</td>
-                        <td className="border border-black p-3">
-                          {trip.hatches.map((hatch: any, hatchIndex: number) => (
-                            <div key={hatchIndex}>{hatch.hatchNo}</div>
-                          ))}
+                    {tripDistribution.length > 0 ? (
+                      tripDistribution.map((trip, index) => (
+                        <tr key={index}>
+                          <td className="border border-black p-3">{trip.tripId}</td>
+                          <td className="border border-black p-3">
+                            {trip.hatches.map((hatch: any, hatchIndex: number) => (
+                              <div key={hatchIndex}>{hatch.hatchNo}</div>
+                            ))}
+                          </td>
+                          <td className="border border-black p-3">{trip.totalQuantity.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="border border-black p-3" colSpan={3}>
+                          <div className="text-center text-gray-500">
+                            No trip details available. Check console for debugging information.
+                          </div>
                         </td>
-                        <td className="border border-black p-3">{trip.totalQuantity.toLocaleString()}</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
