@@ -7,11 +7,12 @@ FROM information_schema.columns
 WHERE table_name = 'dispatches'
 ORDER BY ordinal_position;
 
--- Drop the existing trigger if it exists (to avoid the trips column error)
+-- Drop all existing triggers that depend on the function (to avoid the trips column error)
 DROP TRIGGER IF EXISTS create_dispatch_on_invoice_paid_trigger ON invoices;
+DROP TRIGGER IF EXISTS auto_create_dispatch_on_invoice_paid ON invoices;
 
--- Drop the existing function if it exists
-DROP FUNCTION IF EXISTS create_dispatch_on_invoice_paid();
+-- Drop the existing function with CASCADE to handle dependencies
+DROP FUNCTION IF EXISTS create_dispatch_on_invoice_paid() CASCADE;
 
 -- Create a new function that doesn't reference the trips column
 CREATE OR REPLACE FUNCTION create_dispatch_on_invoice_paid()
