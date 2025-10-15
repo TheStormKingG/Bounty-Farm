@@ -587,14 +587,14 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'RECEIPT'
+                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'DISPATCH NOTE'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
                         'DATE': 'date_dispatched',
                         'TYPE': 'type',
                         'TRUCKS': 'trucks',
-                        'RECEIPT': 'receipt'
+                        'DISPATCH NOTE': 'receipt'
                       };
                       
                       return (

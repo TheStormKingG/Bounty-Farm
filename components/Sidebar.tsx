@@ -49,15 +49,44 @@ const Sidebar: React.FC = () => {
           </NavLink>
         )}
 
-        {hasRole([Role.Admin, Role.SalesClerk]) && (
-          <NavLink to="/delivery" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
-            <span className="mr-3">📦</span>
-            Delivery
-          </NavLink>
-        )}
-
         {hasRole([Role.Admin]) && (
           <>
+            <NavLink to="/farm" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🚜</span>
+              Farm
+            </NavLink>
+            <NavLink to="/grow-out" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🌱</span>
+              Grow-Out
+            </NavLink>
+            <NavLink to="/catching" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🎯</span>
+              Catching
+            </NavLink>
+            <NavLink to="/plant" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🏭</span>
+              Plant
+            </NavLink>
+            <NavLink to="/mill" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">⚙️</span>
+              Mill
+            </NavLink>
+            <NavLink to="/inventory" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">📦</span>
+              Inventory
+            </NavLink>
+            <NavLink to="/employees" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">👥</span>
+              Employees
+            </NavLink>
+            <NavLink to="/payroll" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">💰</span>
+              Payroll
+            </NavLink>
+            <NavLink to="/qhse" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
+              <span className="mr-3">🛡️</span>
+              QHSE
+            </NavLink>
             <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
             <NavLink to="/flock-management" className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : ''}`}>
               <span className="mr-3">🐔</span>
