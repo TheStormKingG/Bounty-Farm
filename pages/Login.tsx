@@ -196,8 +196,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 overflow-y-auto">
-      <div className="modern-card w-full max-w-4xl animate-fade-in-up">
+    <div className="min-h-screen flex items-start justify-center p-4 overflow-y-auto">
+      <div className="modern-card w-full max-w-4xl animate-fade-in-up my-8">
         <div className="flex flex-col lg:flex-row h-auto lg:h-[600px] rounded-2xl overflow-hidden">
           {/* Left Panel - Welcome Section */}
           <div className="w-full lg:w-2/5 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] relative flex items-center justify-center p-4 lg:p-8 min-h-[300px] lg:min-h-[600px]">
@@ -224,7 +224,7 @@ const Login: React.FC = () => {
           </div>
 
           {/* Right Panel - Login Form */}
-          <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-center overflow-y-auto">
+          <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-start overflow-y-auto">
             <div className="max-w-md mx-auto w-full">
               <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
                 WELCOME TO BFLOS!
@@ -233,7 +233,7 @@ const Login: React.FC = () => {
               </h2>
               
               {/* Role Selection */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-4">
                 <div>
                   <button
                     onClick={() => handleRoleSelect(Role.Admin)}
@@ -247,7 +247,7 @@ const Login: React.FC = () => {
                   </button>
                   {/* Admin Login Form */}
                   {selectedRole === Role.Admin && (
-                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
@@ -318,7 +318,7 @@ const Login: React.FC = () => {
                   </button>
                   {/* Hatchery Login Form */}
                   {selectedRole === Role.HatcheryClerk && (
-                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
@@ -389,7 +389,7 @@ const Login: React.FC = () => {
                   </button>
                   {/* Sales Login Form */}
                   {selectedRole === Role.SalesClerk && (
-                    <div className="mt-4 p-6 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
+                    <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm">
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
