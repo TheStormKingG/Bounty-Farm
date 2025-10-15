@@ -15,6 +15,15 @@ import BreedManagement from './pages/BreedManagement';
 import VaccineProfile from './pages/VaccineProfile';
 import Customers from './pages/Customers';
 import Delivery from './pages/Delivery';
+import Farm from './pages/Farm';
+import GrowOut from './pages/GrowOut';
+import Catching from './pages/Catching';
+import Plant from './pages/Plant';
+import Mill from './pages/Mill';
+import Inventory from './pages/Inventory';
+import Employees from './pages/Employees';
+import Payroll from './pages/Payroll';
+import QHSE from './pages/QHSE';
 
 const App: React.FC = () => {
   const { user, loading } = useAuth();
@@ -60,6 +69,15 @@ const App: React.FC = () => {
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/farm" element={<Farm />} />
+          <Route path="/grow-out" element={<GrowOut />} />
+          <Route path="/catching" element={<Catching />} />
+          <Route path="/plant" element={<Plant />} />
+          <Route path="/mill" element={<Mill />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/payroll" element={<Payroll />} />
+          <Route path="/qhse" element={<QHSE />} />
           <Route path="/flock-management" element={<FlockManagement />} />
           <Route path="/breed-management" element={<BreedManagement />} />
           <Route path="/vaccine-profile" element={<VaccineProfile />} />
