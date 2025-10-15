@@ -17,7 +17,7 @@ const Sidebar: React.FC = () => {
         <div className="w-16 h-16 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] rounded-2xl mx-auto mb-4 flex items-center justify-center">
           <span className="text-white font-bold text-xl">BF</span>
         </div>
-        <h1 className="heading-tertiary text-[#333333]">Hatchery MIS</h1>
+        <h1 className="heading-tertiary text-[#333333]">Company View</h1>
       </div>
       
       <nav className="space-y-2 flex-1">

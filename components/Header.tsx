@@ -12,7 +12,26 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="modern-header p-6 flex justify-end items-center">
+    <header className="modern-header p-6 flex justify-between items-center">
+      {/* Logo and BFLOS version */}
+      <div className="flex items-center space-x-4">
+        <div className="w-12 h-12">
+          <img 
+            src="images/BPF-Stefan-8.png" 
+            alt="Bounty Farm Logo" 
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              console.error('Logo failed to load:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-[#333333]">BFLOS 1.0</h1>
+        </div>
+      </div>
+      
+      {/* User info and logout */}
       <div className="flex items-center space-x-6">
         {user && (
           <div className="text-right">

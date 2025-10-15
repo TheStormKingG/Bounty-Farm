@@ -209,7 +209,7 @@ const Login: React.FC = () => {
             
             {/* Bounty Farm Logo */}
             <div className="text-center text-white z-10 flex flex-col items-center justify-center h-full">
-              <div className="w-96 h-96 mx-auto mb-8">
+              <div className="w-96 h-96 mx-auto">
                 <img 
                   src="images/BPF-Stefan-8.png" 
                   alt="Bounty Farm Logo" 
@@ -220,15 +220,17 @@ const Login: React.FC = () => {
                   }}
                 />
               </div>
-              <h1 className="text-4xl font-bold mb-4">WELCOME TO BFLOS!</h1>
-              <p className="text-xl opacity-90">To the zone of happiness.</p>
             </div>
           </div>
 
           {/* Right Panel - Login Form */}
           <div className="w-3/5 bg-[#F5F0EE] p-8 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
-              <h2 className="heading-secondary mb-8">Welcome to BFLOS <span className="text-sm">(Bounty Farm Limited's Operational Software)</span></h2>
+              <h2 className="heading-secondary mb-8">
+                WELCOME TO BFLOS!
+                <br />
+                <span className="text-sm font-normal">(Bounty Farm Limited's Operational Software)</span>
+              </h2>
               
               {/* Role Selection */}
               <div className="space-y-4 mb-6">
@@ -255,7 +257,7 @@ const Login: React.FC = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="modern-input w-full"
-                            placeholder="stefan.gravesande@gmail.com"
+                            placeholder="Enter your email"
                             required
                           />
                         </div>
