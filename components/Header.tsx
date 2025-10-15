@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink } from 'react-router-dom';
 import { Role } from '../types';
 
 const Header: React.FC = () => {
@@ -70,7 +70,7 @@ const Header: React.FC = () => {
       {/* Mobile menu overlay */}
       {isMobileMenuOpen && user?.role === Role.Admin && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={toggleMobileMenu}>
-          <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed left-0 top-0 h-full w-72 bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-semibold text-[#333333]">Company View</h2>
@@ -84,61 +84,61 @@ const Header: React.FC = () => {
                 </button>
               </div>
               <div className="space-y-2">
-                <a href="/dashboard" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                <NavLink to="/dashboard" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   📊 Dashboard
-                </a>
-                <a href="/hatch-cycles" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/hatch-cycles" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🥚 Hatches
-                </a>
-                <a href="/sales" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/sales" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🐣 Chicks
-                </a>
-                <a href="/dispatch" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/dispatch" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🚚 Dispatch
-                </a>
-                <a href="/farm" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/farm" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🚜 Farm
-                </a>
-                <a href="/grow-out" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/grow-out" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🌱 Grow-Out
-                </a>
-                <a href="/catching" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/catching" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🎯 Catching
-                </a>
-                <a href="/plant" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/plant" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🏭 Plant
-                </a>
-                <a href="/mill" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/mill" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   ⚙️ Mill
-                </a>
-                <a href="/inventory" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/inventory" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   📦 Inventory
-                </a>
-                <a href="/employees" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/employees" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   👥 Employees
-                </a>
-                <a href="/payroll" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/payroll" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   💰 Payroll
-                </a>
-                <a href="/qhse" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/qhse" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🛡️ QHSE
-                </a>
+                </NavLink>
                 <div className="pt-4 mt-6 border-t border-[#F5F0EE]"></div>
-                <a href="/flock-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                <NavLink to="/flock-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🐔 Flocks
-                </a>
-                <a href="/breed-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/breed-management" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   🧬 Breeds
-                </a>
-                <a href="/vaccine-profile" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/vaccine-profile" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   💉 Vaccines
-                </a>
-                <a href="/customers" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/customers" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   👥 Customers
-                </a>
-                <a href="/settings" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium">
+                </NavLink>
+                <NavLink to="/settings" className="block px-4 py-3 text-[#333333] hover:bg-[#FFE4D6] rounded-xl transition-all duration-300 font-medium" onClick={toggleMobileMenu}>
                   ⚙️ Settings
-                </a>
+                </NavLink>
               </div>
             </div>
           </div>

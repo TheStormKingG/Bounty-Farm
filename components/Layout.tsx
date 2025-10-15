@@ -24,7 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Header />
-        <main className="main-content p-4 lg:p-6">
+        <main className="main-content p-2 sm:p-4 lg:p-6">
           <div className="max-w-full min-h-0">
             {children}
           </div>

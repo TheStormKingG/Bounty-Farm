@@ -198,18 +198,18 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="modern-card w-full max-w-4xl animate-fade-in-up">
-        <div className="flex h-[600px] rounded-2xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row h-auto lg:h-[600px] rounded-2xl overflow-hidden">
           {/* Left Panel - Welcome Section */}
-          <div className="w-2/5 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] relative flex items-center justify-center p-8">
+          <div className="w-full lg:w-2/5 bg-gradient-to-br from-[#F86F6F] to-[#FFB0B0] relative flex items-center justify-center p-4 lg:p-8 min-h-[300px] lg:min-h-[600px]">
             {/* Decorative Spheres */}
-            <div className="decorative-sphere sphere-large top-8 left-8"></div>
-            <div className="decorative-sphere sphere-medium top-16 right-12"></div>
-            <div className="decorative-sphere sphere-small bottom-12 left-16"></div>
-            <div className="decorative-sphere sphere-small bottom-8 right-8"></div>
+            <div className="decorative-sphere sphere-large top-4 lg:top-8 left-4 lg:left-8"></div>
+            <div className="decorative-sphere sphere-medium top-8 lg:top-16 right-6 lg:right-12"></div>
+            <div className="decorative-sphere sphere-small bottom-6 lg:bottom-12 left-8 lg:left-16"></div>
+            <div className="decorative-sphere sphere-small bottom-4 lg:bottom-8 right-4 lg:right-8"></div>
             
             {/* Bounty Farm Logo */}
             <div className="text-center text-white z-10 flex flex-col items-center justify-center h-full">
-              <div className="w-96 h-96 mx-auto">
+              <div className="w-48 h-48 lg:w-96 lg:h-96 mx-auto">
                 <img 
                   src="images/BPF-Stefan-8.png" 
                   alt="Bounty Farm Logo" 
@@ -224,9 +224,9 @@ const Login: React.FC = () => {
           </div>
 
           {/* Right Panel - Login Form */}
-          <div className="w-3/5 bg-[#F5F0EE] p-8 flex flex-col justify-center">
+          <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
-              <h2 className="heading-secondary mb-8">
+              <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
                 WELCOME TO BFLOS!
                 <br />
                 <span className="text-sm font-normal">(Bounty Farm Limited's Operational Software)</span>

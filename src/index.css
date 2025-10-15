@@ -454,6 +454,21 @@ html {
   .modern-table td {
     padding: 8px 12px;
   }
+  
+  /* Mobile layout adjustments */
+  .layout-container {
+    padding: 0;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+  
+  /* Mobile form containers */
+  .modern-card {
+    margin: 0 8px;
+    padding: 16px;
+  }
 }
 
 /* Mobile-specific styles */
@@ -478,6 +493,32 @@ html {
   .modern-select {
     padding: 10px 12px;
     font-size: 14px;
+  }
+  
+  /* Prevent form elements from bleeding off screen */
+  .modern-card {
+    margin: 0 8px;
+    padding: 16px;
+  }
+  
+  /* Ensure buttons fit on mobile */
+  .btn-primary,
+  .btn-secondary,
+  .btn-coral {
+    min-width: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  /* Mobile form spacing */
+  .space-y-4 > * + * {
+    margin-top: 12px;
+  }
+  
+  /* Mobile table container */
+  .table-responsive {
+    margin: 0 -8px;
+    padding: 0 8px;
   }
 }
 
