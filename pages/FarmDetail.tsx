@@ -19,6 +19,30 @@ interface Flock {
   updatedAt?: string;
 }
 
+interface Dispatch {
+  id: string;
+  invoiceId: string;
+  customer: string;
+  customerType: string;
+  type: string;
+  qty: number;
+  hatchDate: string;
+  usedHatches: string;
+  createdAt: string;
+  invoiceData?: {
+    customer: string;
+    customerType: string;
+    qty: number;
+    hatch_date: string;
+  };
+}
+
+interface TripDetail {
+  tripId: string;
+  hatchNumbers: string[];
+  tripQuantity: number;
+}
+
 const FarmDetail: React.FC = () => {
   const { farmId } = useParams<{ farmId: string }>();
   const location = useLocation();
@@ -33,6 +57,7 @@ const FarmDetail: React.FC = () => {
   });
   
   const [flocks, setFlocks] = useState<Flock[]>([]);
+  const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -56,6 +81,86 @@ const FarmDetail: React.FC = () => {
       });
     }
   }, [location.state]);
+
+  // Calculate trip distribution for dispatches
+  const calculateTripDistribution = (dispatch: Dispatch): TripDetail[] => {
+    if (!dispatch.qty || !dispatch.usedHatches) {
+      return [];
+    }
+
+    const hatchNumbers = dispatch.usedHatches.split(',').map(h => h.trim()).filter(h => h);
+    const totalQuantity = dispatch.qty;
+    const numTrips = Math.max(1, Math.ceil(totalQuantity / 1000)); // Assume max 1000 per trip
+    
+    const tripDistribution: TripDetail[] = [];
+    const quantityPerTrip = Math.floor(totalQuantity / numTrips);
+    const remainingQuantity = totalQuantity % numTrips;
+    
+    for (let i = 0; i < numTrips; i++) {
+      const tripQuantity = quantityPerTrip + (i < remainingQuantity ? 1 : 0);
+      const hatchNumbersForTrip = hatchNumbers.slice(i, i + 1); // One hatch per trip
+      
+      tripDistribution.push({
+        tripId: `${dispatch.type === 'Delivery' ? 'Trip' : 'Truck'} ${i + 1}`,
+        hatchNumbers: hatchNumbersForTrip,
+        tripQuantity: tripQuantity
+      });
+    }
+    
+    return tripDistribution;
+  };
+
+  // Fetch dispatches for this farm
+  const fetchFarmDispatches = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('sales_dispatch')
+        .select(`
+          id,
+          invoice_id,
+          customer,
+          customer_type,
+          type,
+          qty,
+          hatch_date,
+          created_at,
+          invoices (
+            customer,
+            customer_type,
+            qty,
+            hatch_date
+          )
+        `)
+        .eq('customer', farmInfo.farmName)
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching dispatches:', error);
+        return;
+      }
+
+      const mappedDispatches: Dispatch[] = (data || []).map((record: any) => ({
+        id: record.id,
+        invoiceId: record.invoice_id,
+        customer: record.customer,
+        customerType: record.customer_type,
+        type: record.type,
+        qty: record.qty || record.invoices?.qty || 0,
+        hatchDate: record.hatch_date || record.invoices?.hatch_date || '',
+        usedHatches: record.used_hatches || '',
+        createdAt: record.created_at,
+        invoiceData: record.invoices
+      }));
+
+      setDispatches(mappedDispatches);
+    } catch (err) {
+      console.error('Error fetching farm dispatches:', err);
+    }
+  };
 
   // Fetch flocks for this farm
   useEffect(() => {
@@ -122,6 +227,13 @@ const FarmDetail: React.FC = () => {
       fetchFlocks();
     }
   }, [farmId, user?.email]);
+
+  // Fetch dispatches when farm info is available
+  useEffect(() => {
+    if (farmInfo.farmName) {
+      fetchFarmDispatches();
+    }
+  }, [farmInfo.farmName]);
 
   // Handle add new flock
   const handleAddFlock = async (e: React.FormEvent) => {
@@ -248,6 +360,80 @@ const FarmDetail: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Incoming Dispatches Today */}
+        {dispatches.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches Today</h2>
+            <div className="space-y-6">
+              {dispatches.map(dispatch => {
+                const tripDistribution = calculateTripDistribution(dispatch);
+                return (
+                  <div key={dispatch.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {dispatch.type} - {dispatch.customer}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Quantity: {dispatch.qty?.toLocaleString() || '0'} | 
+                          Hatch Date: {dispatch.hatchDate ? new Date(dispatch.hatchDate).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
+                        dispatch.type === 'Delivery' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {dispatch.type}
+                      </span>
+                    </div>
+                    
+                    {tripDistribution.length > 0 && (
+                      <div>
+                        <h4 className="text-md font-semibold text-gray-700 mb-3">Trip Details</h4>
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse border border-gray-300">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
+                                  {dispatch.type === 'Delivery' ? 'Trip ID' : 'Truck ID'}
+                                </th>
+                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
+                                  Hatch NO's
+                                </th>
+                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
+                                  {dispatch.type === 'Delivery' ? 'Trip Quantity' : 'Truck Quantity'}
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {tripDistribution.map((trip, index) => (
+                                <tr key={index} className="hover:bg-gray-50">
+                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
+                                    {trip.tripId}
+                                  </td>
+                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
+                                    {trip.hatchNumbers.map((hatch, hatchIndex) => (
+                                      <div key={hatchIndex}>{hatch}</div>
+                                    ))}
+                                  </td>
+                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
+                                    {trip.tripQuantity.toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Flock Management */}
         <div className="bg-white rounded-lg shadow-md">
