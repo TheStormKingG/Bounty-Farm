@@ -778,6 +778,10 @@ const Sales: React.FC = () => {
     try {
       setError(null);
       
+      // Check if customer is a farm customer
+      const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === newRecordData.customer);
+      console.log('Customer type check:', { customer: newRecordData.customer, isFarmCustomer });
+      
       // Calculate batches required based on hatch date and quantity
       const batchesRequired = await calculateBatchesRequired(
         newRecordData.hatchDate || '', 
@@ -826,12 +830,83 @@ const Sales: React.FC = () => {
 
       setSalesDispatch(prev => [newRecord, ...prev]);
       
+      // For farm customers, create complete workflow automatically
+      if (isFarmCustomer) {
+        console.log('Farm customer detected, creating complete workflow...');
+        
+        // Wait for invoice to be created by trigger, then create dispatch and dispatch note
+        setTimeout(async () => {
+          try {
+            // Get the created invoice
+            const { data: invoiceData, error: invoiceError } = await supabase
+              .from('invoices')
+              .select('*')
+              .eq('po_number', newRecordData.poNumber)
+              .single();
+              
+            if (invoiceError || !invoiceData) {
+              console.error('Error fetching created invoice:', invoiceError);
+              return;
+            }
+            
+            console.log('Found created invoice:', invoiceData);
+            
+            // Create dispatch record
+            const dispatchNumber = `BFLOS-${String(invoiceData.id).padStart(3, '0')}-DISP`;
+            const { data: dispatchData, error: dispatchError } = await supabase
+              .from('dispatches')
+              .insert([{
+                invoice_id: invoiceData.id,
+                customer: newRecordData.customer,
+                customer_type: 'Farm',
+                type: 'Delivery', // Fixed to Delivery for farm customers
+                qty: newRecordData.qty,
+                trucks: trucksRequired,
+                dispatch_number: dispatchNumber,
+                hatch_date: newRecordData.hatchDate,
+                created_by: user?.name || 'admin',
+                updated_by: user?.name || 'admin',
+              }])
+              .select()
+              .single();
+              
+            if (dispatchError) {
+              console.error('Error creating dispatch:', dispatchError);
+              return;
+            }
+            
+            console.log('Created dispatch:', dispatchData);
+            
+            // Update invoice payment status to 'paid' for farm customers
+            const { error: updateError } = await supabase
+              .from('invoices')
+              .update({ payment_status: 'paid' })
+              .eq('id', invoiceData.id);
+              
+            if (updateError) {
+              console.error('Error updating invoice payment status:', updateError);
+            } else {
+              console.log('Updated invoice payment status to paid');
+            }
+            
+            alert(`Farm customer workflow completed! PO "${newRecord.poNumber}" created with invoice, dispatch, and dispatch note. Status: Postpaid.`);
+            
+          } catch (err) {
+            console.error('Error in farm customer workflow:', err);
+          }
+        }, 2000); // Wait 2 seconds for invoice trigger to complete
+        
+      } else {
+        // Regular workflow for non-farm customers
+        alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
+      }
+      
       // Refresh invoices to show the newly created invoice (from database trigger)
       await fetchInvoices();
       
       setIsAddModalVisible(false);
       setNewRecordData({});
-      alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
+      
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('An unexpected error occurred while adding sales dispatch record');

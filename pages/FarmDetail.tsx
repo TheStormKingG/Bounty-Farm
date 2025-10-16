@@ -568,8 +568,8 @@ const FarmDetail: React.FC = () => {
                           </span>
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            Pending
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            Postpaid
                           </span>
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
