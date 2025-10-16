@@ -833,6 +833,7 @@ const Sales: React.FC = () => {
       // For farm customers, create complete workflow automatically
       if (isFarmCustomer) {
         console.log('Farm customer detected, creating complete workflow...');
+        console.log('Farm customer details:', { customer: newRecordData.customer, poNumber: newRecordData.poNumber });
         
         // Wait for invoice to be created by trigger, then create dispatch and dispatch note
         setTimeout(async () => {
@@ -853,6 +854,17 @@ const Sales: React.FC = () => {
             
             // Create dispatch record
             const dispatchNumber = `BFLOS-${String(invoiceData.id).padStart(3, '0')}-DISP`;
+            console.log('Creating dispatch with:', {
+              invoice_id: invoiceData.id,
+              customer: newRecordData.customer,
+              customer_type: 'Farm',
+              type: 'Delivery',
+              qty: newRecordData.qty,
+              trucks: trucksRequired,
+              dispatch_number: dispatchNumber,
+              hatch_date: newRecordData.hatchDate
+            });
+            
             const { data: dispatchData, error: dispatchError } = await supabase
               .from('dispatches')
               .insert([{

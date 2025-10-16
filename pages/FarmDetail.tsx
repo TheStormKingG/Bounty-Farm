@@ -164,6 +164,13 @@ const FarmDetail: React.FC = () => {
         // Check if dispatch customer matches farm name
         const customerMatch = dispatch.customer === farmInfo.farmName;
         console.log('Checking dispatch customer:', dispatch.customer, 'vs farm name:', farmInfo.farmName, 'match:', customerMatch);
+        
+        // Also check if customer is null/undefined and try to get from invoice
+        if (!customerMatch && (!dispatch.customer || dispatch.customer === 'undefined')) {
+          console.log('Dispatch customer is undefined/null, will check invoice data later');
+          return true; // Include it for now, we'll check invoice data in mapping
+        }
+        
         return customerMatch;
       });
 
@@ -189,6 +196,23 @@ const FarmDetail: React.FC = () => {
           let customerType = invoiceData?.customerType || dispatch.customerType;
           let quantity = invoiceData?.qty || dispatch.qty;
           let usedHatches = invoiceData?.usedHatches || dispatch.usedHatches;
+          
+          console.log('Processing dispatch:', {
+            dispatchId: dispatch.id,
+            dispatchCustomer: dispatch.customer,
+            invoiceCustomer: invoiceData?.customer,
+            finalCustomerName: customerName,
+            farmName: farmInfo.farmName
+          });
+          
+          // Check if this dispatch belongs to the current farm
+          const belongsToFarm = customerName === farmInfo.farmName;
+          console.log('Dispatch belongs to farm:', belongsToFarm);
+          
+          if (!belongsToFarm) {
+            console.log('Skipping dispatch - does not belong to current farm');
+            return null; // Skip this dispatch
+          }
           
           // If not in invoice, try to get from sales_dispatch
           if (!customerName || !quantity) {
@@ -251,11 +275,14 @@ const FarmDetail: React.FC = () => {
         })
       );
 
-      console.log('Final mapped dispatches:', mappedDispatches);
-      setDispatches(mappedDispatches);
+      // Filter out null values (dispatches that don't belong to this farm)
+      const validDispatches = mappedDispatches.filter(dispatch => dispatch !== null);
+
+      console.log('Final mapped dispatches:', validDispatches);
+      setDispatches(validDispatches);
       
       // If no dispatches found, let's try a broader search for testing
-      if (mappedDispatches.length === 0) {
+      if (validDispatches.length === 0) {
         console.log('No dispatches found for today, trying broader search...');
         const { data: allDispatches, error: allError } = await supabase
           .from('dispatches')
