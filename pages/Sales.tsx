@@ -1061,7 +1061,7 @@ const Sales: React.FC = () => {
     };
 
     return (
-    <div className="space-y-8 animate-fade-in-up">
+      <div className="space-y-8 animate-fade-in-up">
 
       {/* Error Message */}
       {error && (
@@ -1711,7 +1711,7 @@ const Sales: React.FC = () => {
                   >
                     &times;
                   </button>
-                </div>
+                                </div>
                         </div>
                         
               {/* Invoice Content */}
@@ -1897,6 +1897,6 @@ const Sales: React.FC = () => {
             )}
         </div>
     );
-};
+  };
 
 export default Sales;
