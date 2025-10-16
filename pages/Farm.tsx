@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface FarmCustomer {
   id: string;
@@ -16,17 +17,10 @@ interface FarmCustomer {
 
 const Farm: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [farmCustomers, setFarmCustomers] = useState<FarmCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Modal states
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [currentFarm, setCurrentFarm] = useState<FarmCustomer | null>(null);
-  const [editFarmName, setEditFarmName] = useState('');
-  const [editFarmAddress, setEditFarmAddress] = useState('');
-  const [editContactPerson, setEditContactPerson] = useState('');
-  const [editContactNumber, setEditContactNumber] = useState('');
 
   // Fetch farm customers from database
   useEffect(() => {
@@ -70,89 +64,16 @@ const Farm: React.FC = () => {
     fetchFarmCustomers();
   }, []);
 
-  // Handle edit farm
-  const handleEditFarm = (farm: FarmCustomer) => {
-    setCurrentFarm(farm);
-    setEditFarmName(farm.farmName);
-    setEditFarmAddress(farm.farmAddress);
-    setEditContactPerson(farm.contactPerson);
-    setEditContactNumber(farm.contactNumber);
-    setIsEditModalVisible(true);
-  };
-
-  // Handle update farm
-  const handleUpdateFarm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentFarm) return;
-
-    try {
-      const { error } = await supabase
-        .from('farm_customers')
-        .update({
-          farm_name: editFarmName,
-          farm_address: editFarmAddress,
-          contact_person: editContactPerson,
-          contact_number: editContactNumber,
-          updated_by: user?.email || 'Unknown',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentFarm.id);
-
-      if (error) {
-        console.error('Error updating farm:', error);
-        setError('Failed to update farm: ' + error.message);
-        return;
+  // Handle farm click - navigate to individual farm page
+  const handleFarmClick = (farm: FarmCustomer) => {
+    navigate(`/farm/${farm.id}`, { 
+      state: { 
+        farmName: farm.farmName,
+        farmAddress: farm.farmAddress,
+        contactPerson: farm.contactPerson,
+        contactNumber: farm.contactNumber
       }
-
-      // Update local state
-      setFarmCustomers(prev => 
-        prev.map(farm => 
-          farm.id === currentFarm.id 
-            ? {
-                ...farm,
-                farmName: editFarmName,
-                farmAddress: editFarmAddress,
-                contactPerson: editContactPerson,
-                contactNumber: editContactNumber,
-                updatedBy: user?.email || 'Unknown',
-                updatedAt: new Date().toISOString(),
-              }
-            : farm
-        )
-      );
-
-      setIsEditModalVisible(false);
-      setCurrentFarm(null);
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred.');
-    }
-  };
-
-  // Handle delete farm
-  const handleDeleteFarm = async (farmId: string, farmName: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${farmName}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('farm_customers')
-        .delete()
-        .eq('id', farmId);
-
-      if (error) {
-        console.error('Error deleting farm:', error);
-        setError('Failed to delete farm: ' + error.message);
-        return;
-      }
-
-      // Update local state
-      setFarmCustomers(prev => prev.filter(farm => farm.id !== farmId));
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred.');
-    }
+    });
   };
 
   if (loading) {
@@ -216,34 +137,16 @@ const Farm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {farmCustomers.map(farm => (
               <div key={farm.id} className="bg-[#fffae5] rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
-                {/* Header */}
-                <div className="bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center">
+                {/* Clickable Header */}
+                <button 
+                  onClick={() => handleFarmClick(farm)}
+                  className="w-full bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#e67e22] cursor-pointer"
+                >
                   <span className="font-bold text-black">{farm.farmName}</span>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => handleEditFarm(farm)}
-                      className="text-white hover:text-gray-200 transition-colors"
-                      title="Edit Farm"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteFarm(farm.id, farm.farmName)}
-                      className="text-white hover:text-gray-200 transition-colors"
-                      title="Delete Farm"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3,6 5,6 21,6"/>
-                        <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
 
                 {/* Farm Details */}
                 <div className="space-y-3 mb-4">
@@ -272,84 +175,6 @@ const Farm: React.FC = () => {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* Edit Modal */}
-        {isEditModalVisible && currentFarm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Edit Farm</h2>
-                <form onSubmit={handleUpdateFarm}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Farm Name
-                      </label>
-                      <input
-                        type="text"
-                        value={editFarmName}
-                        onChange={(e) => setEditFarmName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Farm Address
-                      </label>
-                      <input
-                        type="text"
-                        value={editFarmAddress}
-                        onChange={(e) => setEditFarmAddress(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Contact Person
-                      </label>
-                      <input
-                        type="text"
-                        value={editContactPerson}
-                        onChange={(e) => setEditContactPerson(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Contact Number
-                      </label>
-                      <input
-                        type="text"
-                        value={editContactNumber}
-                        onChange={(e) => setEditContactNumber(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditModalVisible(false)}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Update Farm
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
           </div>
         )}
       </div>
