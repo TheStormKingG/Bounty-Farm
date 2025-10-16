@@ -17,6 +17,7 @@ import Customers from './pages/Customers';
 import Delivery from './pages/Delivery';
 import Farm from './pages/Farm';
 import FarmDetail from './pages/FarmDetail';
+import FlockDetail from './pages/FlockDetail';
 import GrowOut from './pages/GrowOut';
 import Catching from './pages/Catching';
 import Plant from './pages/Plant';
@@ -72,6 +73,7 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/farm" element={<Farm />} />
           <Route path="/farm/:farmId" element={<FarmDetail />} />
+          <Route path="/farm/:farmId/flock/:flockId" element={<FlockDetail />} />
           <Route path="/grow-out" element={<GrowOut />} />
           <Route path="/catching" element={<Catching />} />
           <Route path="/plant" element={<Plant />} />
