@@ -179,9 +179,14 @@ const Sales: React.FC = () => {
       }
     };
 
-    fetchSalesDispatch();
-    fetchInvoices();
-    fetchCustomers();
+  useEffect(() => {
+    const initializeData = async () => {
+      await fetchCustomers(); // Fetch customers first
+      await fetchSalesDispatch();
+      await fetchInvoices(); // Then fetch invoices
+    };
+    
+    initializeData();
   }, []);
 
   const fetchInvoices = async () => {
@@ -207,6 +212,12 @@ const Sales: React.FC = () => {
         
         // Check if this is a farm customer
         const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
+        console.log('Invoice customer check:', {
+          invoiceNumber: invoice.invoice_number,
+          customer: invoice.customer,
+          farmCustomers: farmCustomers.map(f => f.farm_name),
+          isFarmCustomer: isFarmCustomer
+        });
         
         if (isFarmCustomer) {
           // For farm customers, always show postpaid
@@ -1378,6 +1389,14 @@ const Sales: React.FC = () => {
                         // Check if this is a farm customer
                         const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
                         const currentStatus = paymentStatuses[invoice.invoice_number] || 'pending';
+                        
+                        console.log('Payment status button check:', {
+                          invoiceNumber: invoice.invoice_number,
+                          customer: invoice.customer,
+                          currentStatus: currentStatus,
+                          isFarmCustomer: isFarmCustomer,
+                          farmCustomers: farmCustomers.map(f => f.farm_name)
+                        });
                         
                         if (isFarmCustomer) {
                           // For farm customers, show postpaid and make it non-clickable
