@@ -27,8 +27,10 @@ interface Dispatch {
   type: string;
   qty: number;
   hatchDate: string;
-  usedHatches: string;
+  usedHatches: any[];
   createdAt: string;
+  trucks?: number;
+  dispatch_number?: string;
   invoiceData?: {
     customer: string;
     customerType: string;
@@ -82,32 +84,57 @@ const FarmDetail: React.FC = () => {
     }
   }, [location.state]);
 
-  // Calculate trip distribution for dispatches
-  const calculateTripDistribution = (dispatch: Dispatch): TripDetail[] => {
-    if (!dispatch.qty || !dispatch.usedHatches) {
+  // Calculate trip distribution for dispatches (copied from Dispatch.tsx)
+  const calculateTripDistribution = (totalQuantity: number, trucks: number, usedHatches: any[], dispatchNumber: string, dispatchType: string) => {
+    console.log('Calculating distribution with:', { totalQuantity, trucks, usedHatches, dispatchNumber, dispatchType });
+    
+    if (!totalQuantity || totalQuantity === 0) {
+      console.log('No quantity available, returning empty trips');
       return [];
     }
-
-    const hatchNumbers = dispatch.usedHatches.split(',').map(h => h.trim()).filter(h => h);
-    const totalQuantity = dispatch.qty;
-    const numTrips = Math.max(1, Math.ceil(totalQuantity / 1000)); // Assume max 1000 per trip
     
-    const tripDistribution: TripDetail[] = [];
-    const quantityPerTrip = Math.floor(totalQuantity / numTrips);
-    const remainingQuantity = totalQuantity % numTrips;
+    const chicksPerTruck = 56000;
+    const totalTrucksNeeded = Math.ceil(totalQuantity / chicksPerTruck);
+    const actualTrucks = Math.min(trucks, totalTrucksNeeded);
     
-    for (let i = 0; i < numTrips; i++) {
-      const tripQuantity = quantityPerTrip + (i < remainingQuantity ? 1 : 0);
-      const hatchNumbersForTrip = hatchNumbers.slice(i, i + 1); // One hatch per trip
+    // Calculate even distribution
+    const chicksPerTrip = Math.floor(totalQuantity / actualTrucks);
+    const remainder = totalQuantity % actualTrucks;
+    
+    const trips = [];
+    let remainingHatches = [...usedHatches];
+    let hatchIndex = 0;
+    
+    // Use "truck" for Pick Up, "trip" for Delivery
+    const idPrefix = dispatchType === 'Pick Up' ? 'TRUCK' : 'TRIP';
+    
+    for (let i = 0; i < actualTrucks; i++) {
+      const tripQuantity = chicksPerTrip + (i < remainder ? 1 : 0);
       
-      tripDistribution.push({
-        tripId: `${dispatch.type === 'Delivery' ? 'Trip' : 'Truck'} ${i + 1}`,
-        hatchNumbers: hatchNumbersForTrip,
+      // Allocate hatches to this trip
+      const hatchesForTrip = [];
+      const hatchesPerTrip = Math.ceil(remainingHatches.length / (actualTrucks - i));
+      
+      for (let j = 0; j < hatchesPerTrip && remainingHatches.length > 0; j++) {
+        const hatch = remainingHatches.shift();
+        if (hatch) {
+          if (typeof hatch === 'string') {
+            hatchesForTrip.push(hatch);
+          } else if (hatch.hatchNo) {
+            hatchesForTrip.push(hatch.hatchNo);
+          }
+        }
+      }
+      
+      trips.push({
+        tripId: `${idPrefix}-${dispatchNumber}-${String(i + 1).padStart(2, '0')}`,
+        hatchNumbers: hatchesForTrip,
         tripQuantity: tripQuantity
       });
     }
     
-    return tripDistribution;
+    console.log('Calculated trips/trucks:', trips);
+    return trips;
   };
 
   // Fetch dispatches for this farm
@@ -132,10 +159,13 @@ const FarmDetail: React.FC = () => {
       console.log('All dispatches for today:', dispatchData);
       console.log('Number of dispatches found:', dispatchData?.length || 0);
 
-      // Filter dispatches for this farm customer
-      const farmDispatches = (dispatchData || []).filter(dispatch => 
-        dispatch.customer === farmInfo.farmName
-      );
+      // Filter dispatches for this farm customer (check both customer field and invoice data)
+      const farmDispatches = (dispatchData || []).filter(dispatch => {
+        // Check if dispatch customer matches farm name
+        const customerMatch = dispatch.customer === farmInfo.farmName;
+        console.log('Checking dispatch customer:', dispatch.customer, 'vs farm name:', farmInfo.farmName, 'match:', customerMatch);
+        return customerMatch;
+      });
 
       console.log('Farm dispatches after filtering:', farmDispatches);
       console.log('Number of farm dispatches:', farmDispatches.length);
@@ -186,13 +216,18 @@ const FarmDetail: React.FC = () => {
             try {
               const { data: hatchData, error: hatchError } = await supabase
                 .from('hatch_cycles')
-                .select('hatch_number')
+                .select('hatch_no, chicks_hatched')
                 .eq('hatch_date', invoiceData.hatch_date)
-                .order('hatch_number', { ascending: true });
+                .not('chicks_hatched', 'is', null)
+                .gt('chicks_hatched', 0);
                 
               if (!hatchError && hatchData && hatchData.length > 0) {
-                usedHatches = hatchData.map(h => h.hatch_number).join(', ');
-                console.log('Generated usedHatches from hatch data:', hatchData);
+                // Convert hatch data to usedHatches format (same as Dispatch.tsx)
+                usedHatches = hatchData.map(hatch => ({
+                  hatchNo: hatch.hatch_no,
+                  chicksUsed: hatch.chicks_hatched
+                }));
+                console.log('Generated usedHatches from hatch data:', usedHatches);
               }
             } catch (error) {
               console.error('Error fetching hatch data:', error);
@@ -209,6 +244,8 @@ const FarmDetail: React.FC = () => {
             hatchDate: invoiceData?.hatch_date || dispatch.hatch_date,
             usedHatches: usedHatches,
             createdAt: dispatch.created_at,
+            trucks: dispatch.trucks,
+            dispatch_number: dispatch.dispatch_number,
             invoiceData: invoiceData
           };
         })
@@ -465,7 +502,13 @@ const FarmDetail: React.FC = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches Today</h2>
             <div className="space-y-6">
               {dispatches.map(dispatch => {
-                const tripDistribution = calculateTripDistribution(dispatch);
+                const tripDistribution = calculateTripDistribution(
+                  dispatch.qty || 0,
+                  dispatch.trucks || 1,
+                  dispatch.usedHatches || [],
+                  dispatch.dispatch_number || 'UNKNOWN',
+                  dispatch.type || 'Delivery'
+                );
                 return (
                   <div key={dispatch.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-4">
