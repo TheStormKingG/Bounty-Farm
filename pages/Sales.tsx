@@ -204,7 +204,17 @@ const Sales: React.FC = () => {
       
       data?.forEach(invoice => {
         dates[invoice.invoice_number] = invoice.date_sent || '';
-        statuses[invoice.invoice_number] = invoice.payment_status || 'pending';
+        
+        // Check if this is a farm customer
+        const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
+        
+        if (isFarmCustomer) {
+          // For farm customers, always show postpaid
+          statuses[invoice.invoice_number] = 'postpaid';
+        } else {
+          // For non-farm customers, use the database status or default to pending
+          statuses[invoice.invoice_number] = invoice.payment_status || 'pending';
+        }
       });
       
       setInvoiceDates(dates);
@@ -899,6 +909,12 @@ const Sales: React.FC = () => {
               console.error('Error updating invoice payment status:', updateError);
             } else {
               console.log('Updated invoice payment status to paid');
+              
+              // Update local payment status state to 'postpaid' for farm customers
+              setPaymentStatuses(prev => ({
+                ...prev,
+                [invoiceData.invoice_number]: 'postpaid'
+              }));
             }
             
             alert(`Farm customer workflow completed! PO "${newRecord.poNumber}" created with invoice, dispatch, and dispatch note. Status: Postpaid.`);
@@ -1358,16 +1374,34 @@ const Sales: React.FC = () => {
                       />
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <button 
-                        onClick={() => handlePaymentStatusToggle(invoice.id, invoice.invoice_number)}
-                        className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                          paymentStatuses[invoice.invoice_number] === 'pending' 
-                            ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                            : 'bg-green-100 text-green-800 hover:bg-green-200'
-                        }`}
-                      >
-                        {paymentStatuses[invoice.invoice_number] || 'pending'}
-                      </button>
+                      {(() => {
+                        // Check if this is a farm customer
+                        const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
+                        const currentStatus = paymentStatuses[invoice.invoice_number] || 'pending';
+                        
+                        if (isFarmCustomer) {
+                          // For farm customers, show postpaid and make it non-clickable
+                          return (
+                            <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 cursor-default">
+                              postpaid
+                            </span>
+                          );
+                        } else {
+                          // For non-farm customers, keep the clickable button
+                          return (
+                            <button 
+                              onClick={() => handlePaymentStatusToggle(invoice.id, invoice.invoice_number)}
+                              className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                                currentStatus === 'pending' 
+                                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                                  : 'bg-green-100 text-green-800 hover:bg-green-200'
+                              }`}
+                            >
+                              {currentStatus}
+                            </button>
+                          );
+                        }
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button 
