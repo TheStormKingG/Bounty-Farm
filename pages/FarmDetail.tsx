@@ -115,46 +115,97 @@ const FarmDetail: React.FC = () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      const { data, error } = await supabase
-        .from('sales_dispatch')
-        .select(`
-          id,
-          invoice_id,
-          customer,
-          customer_type,
-          type,
-          qty,
-          hatch_date,
-          created_at,
-          invoices (
-            customer,
-            customer_type,
-            qty,
-            hatch_date
-          )
-        `)
-        .eq('customer', farmInfo.farmName)
+      // First fetch from dispatches table (like the Dispatch page does)
+      const { data: dispatchData, error: dispatchError } = await supabase
+        .from('dispatches')
+        .select('*')
         .gte('created_at', `${today}T00:00:00`)
         .lte('created_at', `${today}T23:59:59`)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching dispatches:', error);
+      if (dispatchError) {
+        console.error('Error fetching dispatches:', dispatchError);
         return;
       }
 
-      const mappedDispatches: Dispatch[] = (data || []).map((record: any) => ({
-        id: record.id,
-        invoiceId: record.invoice_id,
-        customer: record.customer,
-        customerType: record.customer_type,
-        type: record.type,
-        qty: record.qty || record.invoices?.qty || 0,
-        hatchDate: record.hatch_date || record.invoices?.hatch_date || '',
-        usedHatches: record.used_hatches || '',
-        createdAt: record.created_at,
-        invoiceData: record.invoices
-      }));
+      // Filter dispatches for this farm customer
+      const farmDispatches = (dispatchData || []).filter(dispatch => 
+        dispatch.customer === farmInfo.farmName
+      );
+
+      // For each dispatch, fetch the invoice data to get complete information
+      const mappedDispatches: Dispatch[] = await Promise.all(
+        farmDispatches.map(async (dispatch) => {
+          // Fetch invoice data for this dispatch
+          const { data: invoiceData, error: invoiceError } = await supabase
+            .from('invoices')
+            .select('*')
+            .eq('id', dispatch.invoice_id)
+            .single();
+
+          if (invoiceError) {
+            console.error('Error fetching invoice data:', invoiceError);
+          }
+
+          // Get customer name and determine customer type (same logic as dispatch viewer)
+          let customerName = invoiceData?.customer || dispatch.customer;
+          let customerType = invoiceData?.customerType || dispatch.customerType;
+          let quantity = invoiceData?.qty || dispatch.qty;
+          let usedHatches = invoiceData?.usedHatches || dispatch.usedHatches;
+          
+          // If not in invoice, try to get from sales_dispatch
+          if (!customerName || !quantity) {
+            console.log('Missing data in invoice, fetching from sales_dispatch...');
+            try {
+              const { data: salesData, error: salesError } = await supabase
+                .from('sales_dispatch')
+                .select('customer, qty, hatch_date')
+                .eq('invoice_id', dispatch.invoice_id)
+                .single();
+                
+              if (!salesError && salesData) {
+                customerName = customerName || salesData.customer;
+                quantity = quantity || salesData.qty;
+                console.log('Found data from sales_dispatch:', { customerName, quantity, hatchDate: salesData.hatch_date });
+              }
+            } catch (error) {
+              console.error('Error fetching from sales_dispatch:', error);
+            }
+          }
+
+          // Fetch hatch data to get usedHatches if not available
+          if (!usedHatches && invoiceData?.hatch_date) {
+            console.log('Fetching hatch data for date:', invoiceData.hatch_date);
+            try {
+              const { data: hatchData, error: hatchError } = await supabase
+                .from('hatch_cycles')
+                .select('hatch_number')
+                .eq('hatch_date', invoiceData.hatch_date)
+                .order('hatch_number', { ascending: true });
+                
+              if (!hatchError && hatchData && hatchData.length > 0) {
+                usedHatches = hatchData.map(h => h.hatch_number).join(', ');
+                console.log('Generated usedHatches from hatch data:', hatchData);
+              }
+            } catch (error) {
+              console.error('Error fetching hatch data:', error);
+            }
+          }
+
+          return {
+            id: dispatch.id,
+            invoiceId: dispatch.invoice_id,
+            customer: customerName,
+            customerType: customerType,
+            type: dispatch.type,
+            qty: quantity,
+            hatchDate: invoiceData?.hatch_date || dispatch.hatch_date,
+            usedHatches: usedHatches,
+            createdAt: dispatch.created_at,
+            invoiceData: invoiceData
+          };
+        })
+      );
 
       setDispatches(mappedDispatches);
     } catch (err) {
