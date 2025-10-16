@@ -12,8 +12,8 @@ interface FarmInfo {
   operationalScope: string;
   title: string;
   dcn: string;
-  growOutNumber: number;
-  totalChickensStarted: number;
+  growOutNumber?: number;
+  totalChickensStarted?: number;
   // Feed Usage
   starterUsedDelivered: string;
   growerUsedDelivered: string;
@@ -24,25 +24,25 @@ interface FarmInfo {
   batchNumber: string;
   dateStarted: string;
   dateCompleted: string;
-  remainingOnFarm: number;
-  totalSlaughterWeight: number;
-  onFarmAvgWeight: number;
-  estimatedProcessedWeight: number;
-  flockAge: number;
+  remainingOnFarm?: number;
+  totalSlaughterWeight?: number;
+  onFarmAvgWeight?: number;
+  estimatedProcessedWeight?: number;
+  flockAge?: number;
   // Approval & Revision
   approvalDate: string;
-  versionNumber: number;
+  versionNumber?: number;
   currentRevisionDate: string;
   scheduledRevisionDate: string;
   // Performance Metrics
-  avgSlaughterWeight: number;
-  slaughterAge: number;
-  dailyGain: number;
-  viability: number;
-  fcrToDate: number;
-  fcrAtSlaughter: number;
-  fcrAt1500g: number;
-  pef: number;
+  avgSlaughterWeight?: number;
+  slaughterAge?: number;
+  dailyGain?: number;
+  viability?: number;
+  fcrToDate?: number;
+  fcrAtSlaughter?: number;
+  fcrAt1500g?: number;
+  pef?: number;
 }
 
 interface GrowOutRecord {
@@ -305,11 +305,11 @@ const FarmDetail: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-blue-700 font-medium">GROW-OUT #:</span>
-                  <p className="text-blue-800 font-semibold">{farmInfo.growOutNumber}</p>
+                  <p className="text-blue-800 font-semibold">{farmInfo.growOutNumber || '0'}</p>
                 </div>
                 <div>
                   <span className="text-blue-700 font-medium">TOTAL CHICKENS STARTED:</span>
-                  <p className="text-blue-800 font-semibold">{farmInfo.totalChickensStarted.toLocaleString()}</p>
+                  <p className="text-blue-800 font-semibold">{farmInfo.totalChickensStarted?.toLocaleString() || '0'}</p>
                 </div>
               </div>
             </div>
@@ -359,23 +359,23 @@ const FarmDetail: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-yellow-700 font-medium">REMAINING ON FARM:</span>
-                  <p className="text-yellow-800 font-semibold">{farmInfo.remainingOnFarm.toLocaleString()}</p>
+                  <p className="text-yellow-800 font-semibold">{farmInfo.remainingOnFarm?.toLocaleString() || '0'}</p>
                 </div>
                 <div>
                   <span className="text-yellow-700 font-medium">TOTAL SLAUGHTER WEIGHT:</span>
-                  <p className="text-yellow-800 font-semibold">{farmInfo.totalSlaughterWeight.toLocaleString()}g</p>
+                  <p className="text-yellow-800 font-semibold">{farmInfo.totalSlaughterWeight?.toLocaleString() || '0'}g</p>
                 </div>
                 <div>
                   <span className="text-yellow-700 font-medium">ON FARM AVG WEIGHT:</span>
-                  <p className="text-yellow-800 font-semibold">{farmInfo.onFarmAvgWeight}g</p>
+                  <p className="text-yellow-800 font-semibold">{farmInfo.onFarmAvgWeight || '0'}g</p>
                 </div>
                 <div>
                   <span className="text-yellow-700 font-medium">ESTIMATED PROCESSED WEIGHT:</span>
-                  <p className="text-yellow-800 font-semibold">{farmInfo.estimatedProcessedWeight.toLocaleString()}g</p>
+                  <p className="text-yellow-800 font-semibold">{farmInfo.estimatedProcessedWeight?.toLocaleString() || '0'}g</p>
                 </div>
                 <div>
                   <span className="text-yellow-700 font-medium">FLOCK AGE:</span>
-                  <p className="text-yellow-800 font-bold text-lg">{farmInfo.flockAge} days</p>
+                  <p className="text-yellow-800 font-bold text-lg">{farmInfo.flockAge || '0'} days</p>
                 </div>
               </div>
             </div>
@@ -386,35 +386,35 @@ const FarmDetail: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <span className="text-purple-700 font-medium">↓AVG SLAUGHTER WEIGHT (g)↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.avgSlaughterWeight}g</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.avgSlaughterWeight || '0'}g</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓SLAUGHTER AGE (d)↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.slaughterAge} days</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.slaughterAge || '0'} days</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓DAILY GAIN (g)↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.dailyGain.toFixed(4)}g</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.dailyGain?.toFixed(4) || '0.0000'}g</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓VIABILITY (%)↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.viability}%</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.viability || '0'}%</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓FCR TO-DATE↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.fcrToDate.toFixed(2)}</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.fcrToDate?.toFixed(2) || '0.00'}</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓FCR AT SLAUGHTER↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.fcrAtSlaughter.toFixed(2)}</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.fcrAtSlaughter?.toFixed(2) || '0.00'}</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓FCR AT 1500g↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.fcrAt1500g.toFixed(2)}</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.fcrAt1500g?.toFixed(2) || '0.00'}</p>
                 </div>
                 <div>
                   <span className="text-purple-700 font-medium">↓PEF↓:</span>
-                  <p className="text-purple-800 font-semibold">{farmInfo.pef.toFixed(2)}</p>
+                  <p className="text-purple-800 font-semibold">{farmInfo.pef?.toFixed(2) || '0.00'}</p>
                 </div>
               </div>
             </div>
@@ -429,7 +429,7 @@ const FarmDetail: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-gray-700 font-medium">VERSION NUMBER:</span>
-                  <p className="text-gray-800 font-semibold">{farmInfo.versionNumber}</p>
+                  <p className="text-gray-800 font-semibold">{farmInfo.versionNumber || '0'}</p>
                 </div>
                 <div>
                   <span className="text-gray-700 font-medium">CURRENT REVISION DATE:</span>
