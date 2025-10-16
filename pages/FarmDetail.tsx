@@ -495,86 +495,94 @@ const FarmDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Incoming Dispatches Today */}
-        {console.log('Rendering dispatches:', dispatches, 'Length:', dispatches.length)}
-        {dispatches.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches Today</h2>
-            <div className="space-y-6">
-              {dispatches.map(dispatch => {
-                const tripDistribution = calculateTripDistribution(
-                  dispatch.qty || 0,
-                  dispatch.trucks || 1,
-                  dispatch.usedHatches || [],
-                  dispatch.dispatch_number || 'UNKNOWN',
-                  dispatch.type || 'Delivery'
-                );
-                return (
-                  <div key={dispatch.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {dispatch.type} - {dispatch.customer}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Quantity: {dispatch.qty?.toLocaleString() || '0'} | 
-                          Hatch Date: {dispatch.hatchDate ? new Date(dispatch.hatchDate).toLocaleDateString() : 'N/A'}
-                        </p>
-                      </div>
-                      <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
-                        dispatch.type === 'Delivery' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {dispatch.type}
-                      </span>
-                    </div>
-                    
-                    {tripDistribution.length > 0 && (
-                      <div>
-                        <h4 className="text-md font-semibold text-gray-700 mb-3">Trip Details</h4>
-                        <div className="overflow-x-auto">
-                          <table className="w-full border-collapse border border-gray-300">
-                            <thead>
-                              <tr className="bg-gray-50">
-                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
-                                  {dispatch.type === 'Delivery' ? 'Trip ID' : 'Truck ID'}
-                                </th>
-                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
-                                  Hatch NO's
-                                </th>
-                                <th className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700">
-                                  {dispatch.type === 'Delivery' ? 'Trip Quantity' : 'Truck Quantity'}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {tripDistribution.map((trip, index) => (
-                                <tr key={index} className="hover:bg-gray-50">
-                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
-                                    {trip.tripId}
-                                  </td>
-                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
-                                    {trip.hatchNumbers.map((hatch, hatchIndex) => (
-                                      <div key={hatchIndex}>{hatch}</div>
-                                    ))}
-                                  </td>
-                                  <td className="border border-gray-300 px-3 py-2 text-sm text-gray-800">
-                                    {trip.tripQuantity.toLocaleString()}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+        {/* Incoming Dispatches Table */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Trip ID
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Hatch No.
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Quantity
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Dispatch Type
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Created Date
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {dispatches.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                          <span className="text-gray-400 text-2xl">🚚</span>
                         </div>
+                        <p className="text-lg font-medium mb-2">No Incoming Dispatches</p>
+                        <p className="text-sm">Dispatches will appear here when invoices are paid for this farm.</p>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    </td>
+                  </tr>
+                ) : (
+                  dispatches.map(dispatch => {
+                    const tripDistribution = calculateTripDistribution(
+                      dispatch.qty || 0,
+                      dispatch.trucks || 1,
+                      dispatch.usedHatches || [],
+                      dispatch.dispatch_number || 'UNKNOWN',
+                      dispatch.type || 'Delivery'
+                    );
+                    
+                    return tripDistribution.map((trip, tripIndex) => (
+                      <tr key={`${dispatch.id}-${tripIndex}`} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {trip.tripId}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {trip.hatchNumbers.map((hatch, hatchIndex) => (
+                            <div key={hatchIndex}>{hatch}</div>
+                          ))}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {trip.tripQuantity.toLocaleString()}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            dispatch.type === 'Delivery' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {dispatch.type}
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {new Date(dispatch.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ));
+                  }).flat()
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
 
         {/* Flock Management */}
         <div className="bg-white rounded-lg shadow-md">
