@@ -1,5 +1,6 @@
 -- Create atomic farm PO workflow function
 -- This replaces the fragile setTimeout + lookup pattern with a single transaction
+-- Minimal version that only creates sales_dispatch (invoices and dispatches created by triggers)
 
 create or replace function public.create_farm_po_workflow(
   p_po_number text,
@@ -18,28 +19,34 @@ create or replace function public.create_farm_po_workflow(
   dispatch_number text
 ) language plpgsql as $$
 declare
+  v_sales_dispatch_id uuid;
   v_invoice_id uuid;
   v_invoice_number text;
   v_dispatch_id uuid;
   v_dispatch_number text;
 begin
-  -- 1) sales_dispatch
+  -- 1) sales_dispatch (this will trigger invoice creation)
   insert into sales_dispatch (
     po_number, date_ordered, customer, qty, hatch_date,
     batches_required, trucks_required, created_by, updated_by
   ) values (
     p_po_number, p_date_ordered, p_customer, p_qty, p_hatch_date,
     p_batches_required, p_trucks_required, p_actor, p_actor
-  ) returning id into sales_dispatch_id;
+  ) returning id into v_sales_dispatch_id;
 
-  -- 2) invoice (paid now; customer_type = 'Farm')
-  insert into invoices (
-    customer, customerType, qty, hatch_date, payment_status, created_by, updated_by
-  ) values (
-    p_customer, 'Farm', p_qty, p_hatch_date, 'paid', p_actor, p_actor
-  ) returning id, invoice_number into v_invoice_id, v_invoice_number;
+  -- 2) Get the created invoice (created by trigger)
+  select id, invoice_number into v_invoice_id, v_invoice_number
+  from invoices 
+  where po_number = p_po_number 
+  order by created_at desc 
+  limit 1;
 
-  -- 3) dispatch (Delivery, locked)
+  -- 3) Update invoice to paid status for farm customers
+  update invoices 
+  set payment_status = 'paid', updated_by = p_actor, updated_at = now()
+  where id = v_invoice_id;
+
+  -- 4) Create dispatch (Delivery, locked)
   v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
 
   insert into dispatches (
@@ -50,12 +57,8 @@ begin
     v_dispatch_number, p_hatch_date, p_actor, p_actor, true
   ) returning id into v_dispatch_id;
 
-  -- 4) dispatch_note (optional: store rendered HTML later)
-  -- Note: dispatch_notes table may not exist, so we'll skip this for now
-  -- insert into dispatch_notes (dispatch_id, created_by) values (v_dispatch_id, p_actor);
-
   -- Return all identifiers
-  sales_dispatch_id := sales_dispatch_id;
+  sales_dispatch_id := v_sales_dispatch_id;
   invoice_id        := v_invoice_id;
   invoice_number    := v_invoice_number;
   dispatch_id       := v_dispatch_id;
