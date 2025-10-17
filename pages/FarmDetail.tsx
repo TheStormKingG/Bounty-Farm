@@ -41,8 +41,11 @@ interface Dispatch {
 
 interface TripDetail {
   tripId: string;
-  hatchNumbers: string[];
-  tripQuantity: number;
+  hatches: Array<{
+    hatchNo: string;
+    quantity: number;
+  }>;
+  totalQuantity: number;
 }
 
 const FarmDetail: React.FC = () => {
@@ -84,7 +87,7 @@ const FarmDetail: React.FC = () => {
     }
   }, [location.state]);
 
-  // Calculate trip distribution for dispatches (copied from Dispatch.tsx)
+  // Calculate trip distribution for dispatches (exact copy from Dispatch.tsx)
   const calculateTripDistribution = (totalQuantity: number, trucks: number, usedHatches: any[], dispatchNumber: string, dispatchType: string) => {
     console.log('Calculating distribution with:', { totalQuantity, trucks, usedHatches, dispatchNumber, dispatchType });
     
@@ -110,26 +113,39 @@ const FarmDetail: React.FC = () => {
     
     for (let i = 0; i < actualTrucks; i++) {
       const tripQuantity = chicksPerTrip + (i < remainder ? 1 : 0);
+      const tripHatches = [];
+      let allocatedQuantity = 0;
       
-      // Allocate hatches to this trip
-      const hatchesForTrip = [];
-      const hatchesPerTrip = Math.ceil(remainingHatches.length / (actualTrucks - i));
-      
-      for (let j = 0; j < hatchesPerTrip && remainingHatches.length > 0; j++) {
-        const hatch = remainingHatches.shift();
-        if (hatch) {
-          if (typeof hatch === 'string') {
-            hatchesForTrip.push(hatch);
-          } else if (hatch.hatchNo) {
-            hatchesForTrip.push(hatch.hatchNo);
-          }
+      // Distribute hatches to this trip/truck
+      while (allocatedQuantity < tripQuantity && hatchIndex < remainingHatches.length) {
+        const currentHatch = remainingHatches[hatchIndex];
+        const remainingInHatch = currentHatch.chicksUsed - (currentHatch.allocated || 0);
+        const neededForTrip = tripQuantity - allocatedQuantity;
+        
+        if (remainingInHatch <= neededForTrip) {
+          // Use entire hatch for this trip/truck
+          tripHatches.push({
+            hatchNo: currentHatch.hatchNo,
+            quantity: remainingInHatch
+          });
+          allocatedQuantity += remainingInHatch;
+          currentHatch.allocated = (currentHatch.allocated || 0) + remainingInHatch;
+          hatchIndex++;
+        } else {
+          // Use partial hatch for this trip/truck
+          tripHatches.push({
+            hatchNo: currentHatch.hatchNo,
+            quantity: neededForTrip
+          });
+          allocatedQuantity += neededForTrip;
+          currentHatch.allocated = (currentHatch.allocated || 0) + neededForTrip;
         }
       }
       
       trips.push({
         tripId: `${idPrefix}-${dispatchNumber}-${String(i + 1).padStart(2, '0')}`,
-        hatchNumbers: hatchesForTrip,
-        tripQuantity: tripQuantity
+        hatches: tripHatches,
+        totalQuantity: allocatedQuantity
       });
     }
     
@@ -578,8 +594,10 @@ const FarmDetail: React.FC = () => {
                           {trip.tripId}
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {trip.hatchNumbers.map((hatch, hatchIndex) => (
-                            <div key={hatchIndex}>{hatch}</div>
+                          {trip.hatches.map((hatch: any, hatchIndex: number) => (
+                            <div key={hatchIndex} className="text-xs">
+                              {hatch.hatchNo}
+                            </div>
                           ))}
                         </td>
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
