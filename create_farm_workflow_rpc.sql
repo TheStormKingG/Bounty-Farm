@@ -66,7 +66,17 @@ end $$;
 alter table dispatches add column if not exists type_locked boolean default false;
 
 -- Add unique constraint to prevent duplicate dispatches for same invoice
-alter table dispatches add constraint if not exists unique_dispatch_per_invoice unique (invoice_id);
+-- Note: IF NOT EXISTS not supported for constraints in older PostgreSQL versions
+-- Run this only if the constraint doesn't already exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'unique_dispatch_per_invoice'
+    ) THEN
+        ALTER TABLE dispatches ADD CONSTRAINT unique_dispatch_per_invoice UNIQUE (invoice_id);
+    END IF;
+END $$;
 
 -- Grant execute permission to authenticated users
 grant execute on function public.create_farm_po_workflow to authenticated;
