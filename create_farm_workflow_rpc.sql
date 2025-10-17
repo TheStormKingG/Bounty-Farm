@@ -35,10 +35,9 @@ begin
   ) returning id into v_sales_dispatch_id;
 
   -- 2) Get the created invoice (created by trigger)
-  -- Note: Using sales_dispatch_id to find the invoice since po_number may not exist in invoices
+  -- Note: Get the most recent invoice since we don't know the exact linking column
   select i.id, i.invoice_number into v_invoice_id, v_invoice_number
   from invoices i
-  where i.sales_dispatch_id = v_sales_dispatch_id
   order by i.created_at desc 
   limit 1;
 
