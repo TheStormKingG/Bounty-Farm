@@ -35,10 +35,10 @@ begin
   ) returning id into v_sales_dispatch_id;
 
   -- 2) Get the created invoice (created by trigger)
-  select id, invoice_number into v_invoice_id, v_invoice_number
-  from invoices 
-  where po_number = p_po_number 
-  order by created_at desc 
+  select i.id, i.invoice_number into v_invoice_id, v_invoice_number
+  from invoices i
+  where i.po_number = p_po_number 
+  order by i.created_at desc 
   limit 1;
 
   -- 3) Update invoice to paid status for farm customers
