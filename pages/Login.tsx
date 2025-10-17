@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Role, UserProfile } from '../types';
+import { Role } from '../types';
 import { supabase } from '../src/supabase';
 
 const getHomeRouteForRole = (role: Role) => {
@@ -12,6 +12,8 @@ const getHomeRouteForRole = (role: Role) => {
       return '/hatch-cycles';
     case Role.SalesClerk:
       return '/sales';
+    case Role.Farmer:
+      return '/farm'; // Farmers go to farm page
     case Role.User:
       return '/';
     default:
@@ -19,70 +21,43 @@ const getHomeRouteForRole = (role: Role) => {
   }
 };
 
-// NEW: build correct redirect URLs whether the app runs at "/" or "/Bounty-Farm/"
-const BASE = (import.meta as any).env?.BASE_URL ?? '/';
-const basePath = BASE.endsWith('/') ? BASE.slice(0, -1) : BASE;
-const withBase = (p: string) =>
-  `${window.location.origin}${basePath}${p.startsWith('/') ? p : `/${p}`}`;
-
 const Login: React.FC = () => {
-  const { login } = useAuth(); // mock login (dev only)
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Supabase auth form state
+  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSendingReset, setIsSendingReset] = useState(false);
-  const [isSendingMagic, setIsSendingMagic] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-
-  const routeByProfile = async (userId: string) => {
-    const { data: profile, error: profErr } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .single();
-
-    if (profErr) {
-      // If profile not yet created by trigger, land on home
-      navigate('/');
-      return;
-    }
-    const role = (profile?.role as Role) ?? Role.User;
-    navigate(getHomeRouteForRole(role));
-  };
 
   // Email/password sign-in
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     setIsLoading(true);
     
     try {
       const success = await login(email, password);
       
       if (success) {
-        // Get user role to determine redirect and validate role
+        // Get user role to determine redirect
         const { data: staffData } = await supabase
           .from('staff_table')
-          .select('role')
+          .select('role, name')
           .eq('email', email)
           .single();
         
         const userRole = (staffData?.role as Role) || Role.User;
         
-        // Validate that the user's role matches the selected login type
-        if (selectedRole && userRole !== selectedRole) {
-          setError(`This account is for ${userRole} role, but you selected ${selectedRole} login.`);
-          setIsLoading(false);
-          return;
+        // For farmers, redirect to their specific farm page
+        if (userRole === Role.Farmer) {
+          // Extract farm name from user name and navigate to farm detail
+          const farmName = staffData?.name || '';
+          navigate(`/farm/${encodeURIComponent(farmName)}`);
+        } else {
+          navigate(getHomeRouteForRole(userRole));
         }
-        
-        navigate(getHomeRouteForRole(userRole));
       } else {
         setError('Invalid email or password');
       }
@@ -90,123 +65,6 @@ const Login: React.FC = () => {
       setError(err?.message ?? 'Unexpected error during login.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Forgot password → sends recovery email
-  const handleReset = async () => {
-    setError(null);
-    setNotice(null);
-    if (!email) {
-      setError('Enter your email first.');
-      return;
-    }
-    setIsSendingReset(true);
-    try {
-      const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email, {
-        // CHANGED: include base path so hash token isn't lost by a redirect
-        redirectTo: withBase('/auth/callback?type=recovery'),
-      });
-      if (resetErr) setError(resetErr.message);
-      else setNotice('Password reset email sent. Check your inbox.');
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to send reset email.');
-    } finally {
-      setIsSendingReset(false);
-    }
-  };
-
-  // Magic link (passwordless) sign-in
-  const handleMagicLink = async () => {
-    setError(null);
-    setNotice(null);
-    if (!email) {
-      setError('Enter your email first.');
-      return;
-    }
-    setIsSendingMagic(true);
-    try {
-      const { error: otpErr } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          // CHANGED: include base path
-          emailRedirectTo: withBase('/auth/callback'),
-        },
-      });
-      if (otpErr) setError(otpErr.message);
-      else setNotice('Magic link sent. Check your email.');
-    } catch (err: any) {
-      setError(err?.message ?? 'Failed to send magic link.');
-    } finally {
-      setIsSendingMagic(false);
-    }
-  };
-
-  // Handle role selection
-  const handleRoleSelect = (role: Role) => {
-    // Toggle: if clicking the same role, close it; otherwise, select new role
-    if (selectedRole === role) {
-      setSelectedRole(null);
-    } else {
-      setSelectedRole(role);
-      // Auto-scroll to the form after a short delay to allow DOM update
-      setTimeout(() => {
-        const formElement = document.querySelector(`[data-role="${role}"]`);
-        if (formElement) {
-          formElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center' 
-          });
-        }
-      }, 100);
-    }
-    setError(null);
-    setNotice(null);
-    
-    // Clear email and password fields
-    setEmail('');
-    setPassword('');
-  };
-
-  // Dev-only mock role buttons (keep for local testing)
-  const handleMockLogin = async (role: Role) => {
-    // For Hatchery and Sales roles, we need to find a user with that role from Supabase
-    if (role === Role.HatcheryClerk || role === Role.SalesClerk) {
-      try {
-        const { data: staffData, error } = await supabase
-          .from('staff_table')
-          .select('*')
-          .eq('role', role)
-          .limit(1)
-          .single();
-
-        if (error || !staffData) {
-          setError(`No ${role} users found in database. Please add a user with ${role} role.`);
-          return;
-        }
-
-        // Use the first user found with this role
-        const success = await login(staffData.email, staffData.password);
-        
-        if (success) {
-          navigate(getHomeRouteForRole(role));
-        } else {
-          setError('Login failed');
-        }
-      } catch (err) {
-        console.error('Error finding user:', err);
-        setError('Error finding user for this role');
-      }
-    } else {
-      // For Admin role, use Stefan's credentials
-      const email = 'stefan.gravesande@gmail.com';
-      const success = await login(email, '1234');
-      
-      if (success) {
-        navigate(getHomeRouteForRole(role));
-      } else {
-        setError('Admin login failed');
-      }
     }
   };
 
@@ -241,226 +99,52 @@ const Login: React.FC = () => {
           {/* Right Panel - Login Form */}
           <div className="w-full lg:w-3/5 bg-[#F5F0EE] p-4 lg:p-8 flex flex-col justify-start overflow-y-auto">
             <div className="max-w-md mx-auto w-full">
-                  <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
-                    WELCOME TO BFLOS!
-                    <br />
-                    <span className="text-sm font-normal whitespace-nowrap">(Bounty Farm Limited's Operational Software)</span>
-                  </h2>
+              <h2 className="heading-secondary mb-6 lg:mb-8 text-center lg:text-left">
+                WELCOME TO BFLOS!
+                <br />
+                <span className="text-sm font-normal whitespace-nowrap">(Bounty Farm Limited's Operational Software)</span>
+              </h2>
               
-              {/* Role Selection */}
-              <div className="space-y-3 mb-4">
-                <div>
-                  <button
-                    onClick={() => handleRoleSelect(Role.Admin)}
-                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
-                      selectedRole === Role.Admin 
-                        ? 'btn-primary' 
-                        : 'btn-secondary'
-                    }`}
-                  >
-                    Admin
-                  </button>
-                      {/* Admin Login Form */}
-                      {selectedRole === Role.Admin && (
-                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="Admin">
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
-                          <input
-                            type="email"
-                            autoComplete="username"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your email"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
-                          <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your password"
-                            required
-                          />
-                        </div>
-                        {error && (
-                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                            {error}
-                          </div>
-                        )}
-                        {notice && (
-                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
-                            {notice}
-                          </div>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full btn-primary py-3 disabled:opacity-50"
-                        >
-                          {isLoading ? 'Signing in…' : 'Sign In'}
-                        </button>
-                        <div className="text-center">
-                          <button
-                            type="button"
-                            onClick={handleReset}
-                            className="text-sm text-[#5C3A6B] hover:underline font-medium"
-                            disabled={isSendingReset}
-                          >
-                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                          </button>
-                        </div>
-                      </form>
+              {/* Login Form */}
+              <div className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
+                    <input
+                      type="email"
+                      autoComplete="username"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="modern-input w-full"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="modern-input w-full"
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                      {error}
                     </div>
                   )}
-                </div>
-
-                <div>
                   <button
-                    onClick={() => handleRoleSelect(Role.HatcheryClerk)}
-                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
-                      selectedRole === Role.HatcheryClerk 
-                        ? 'btn-coral' 
-                        : 'btn-secondary'
-                    }`}
+                    type="submit"
+                    disabled={isLoading}
+                    className="btn-primary w-full py-3 font-semibold"
                   >
-                    Hatchery
+                    {isLoading ? 'Signing in...' : 'Sign In'}
                   </button>
-                      {/* Hatchery Login Form */}
-                      {selectedRole === Role.HatcheryClerk && (
-                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="HatcheryClerk">
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
-                          <input
-                            type="email"
-                            autoComplete="username"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your email"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
-                          <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your password"
-                            required
-                          />
-                        </div>
-                        {error && (
-                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                            {error}
-                          </div>
-                        )}
-                        {notice && (
-                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
-                            {notice}
-                          </div>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full btn-coral py-3 disabled:opacity-50"
-                        >
-                          {isLoading ? 'Signing in…' : 'Sign In'}
-                        </button>
-                        <div className="text-center">
-                          <button
-                            type="button"
-                            onClick={handleReset}
-                            className="text-sm text-[#F86F6F] hover:underline font-medium"
-                            disabled={isSendingReset}
-                          >
-                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <button
-                    onClick={() => handleRoleSelect(Role.SalesClerk)}
-                    className={`w-full py-4 px-6 rounded-2xl font-semibold transition-all duration-300 ${
-                      selectedRole === Role.SalesClerk 
-                        ? 'btn-primary' 
-                        : 'btn-secondary'
-                    }`}
-                  >
-                    Sales
-                  </button>
-                      {/* Sales Login Form */}
-                      {selectedRole === Role.SalesClerk && (
-                        <div className="mt-3 p-4 bg-white rounded-xl border border-[#F5F0EE] shadow-sm" data-role="SalesClerk">
-                      <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
-                          <input
-                            type="email"
-                            autoComplete="username"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your email"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Password</label>
-                          <input
-                            type="password"
-                            autoComplete="current-password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="modern-input w-full"
-                            placeholder="Enter your password"
-                            required
-                          />
-                        </div>
-                        {error && (
-                          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                            {error}
-                          </div>
-                        )}
-                        {notice && (
-                          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm">
-                            {notice}
-                          </div>
-                        )}
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full btn-primary py-3 disabled:opacity-50"
-                        >
-                          {isLoading ? 'Signing in…' : 'Sign In'}
-                        </button>
-                        <div className="text-center">
-                          <button
-                            type="button"
-                            onClick={handleReset}
-                            className="text-sm text-[#5C3A6B] hover:underline font-medium"
-                            disabled={isSendingReset}
-                          >
-                            {isSendingReset ? 'Sending…' : 'Forgot password?'}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-                </div>
+                </form>
               </div>
             </div>
           </div>

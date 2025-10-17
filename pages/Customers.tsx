@@ -50,6 +50,10 @@ const Customers: React.FC = () => {
   // Modal states
   const [isFarmModalVisible, setIsFarmModalVisible] = useState(false);
   const [isIndividualModalVisible, setIsIndividualModalVisible] = useState(false);
+  const [isEditFarmModalVisible, setIsEditFarmModalVisible] = useState(false);
+  const [isEditIndividualModalVisible, setIsEditIndividualModalVisible] = useState(false);
+  const [editingFarmCustomer, setEditingFarmCustomer] = useState<FarmCustomer | null>(null);
+  const [editingIndividualCustomer, setEditingIndividualCustomer] = useState<IndividualCustomer | null>(null);
   const [newFarmData, setNewFarmData] = useState<Partial<FarmCustomer>>({});
   const [newIndividualData, setNewIndividualData] = useState<Partial<IndividualCustomer>>({});
 
@@ -297,6 +301,134 @@ const Customers: React.FC = () => {
     return filtered;
   }, [individualCustomers, individualStartDate, individualEndDate, individualSearchTerm, individualSortColumn, individualSortDirection]);
 
+  // Edit farm customer
+  const handleEditFarmCustomer = (customer: FarmCustomer) => {
+    setEditingFarmCustomer(customer);
+    setIsEditFarmModalVisible(true);
+  };
+
+  // Update farm customer
+  const handleUpdateFarmCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFarmCustomer) return;
+
+    try {
+      const { error } = await supabase
+        .from('farm_customers')
+        .update({
+          farm_name: editingFarmCustomer.farmName,
+          farm_address: editingFarmCustomer.farmAddress,
+          contact_person: editingFarmCustomer.contactPerson,
+          contact_number: editingFarmCustomer.contactNumber,
+          updated_by: user?.email || 'admin',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingFarmCustomer.id);
+
+      if (error) {
+        console.error('Error updating farm customer:', error);
+        setError('Failed to update farm customer: ' + error.message);
+      } else {
+        setIsEditFarmModalVisible(false);
+        setEditingFarmCustomer(null);
+        fetchFarmCustomers(); // Refresh the table
+        alert(`Farm customer "${editingFarmCustomer.farmName}" updated successfully!`);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Delete farm customer
+  const handleDeleteFarmCustomer = async (customer: FarmCustomer) => {
+    if (!confirm(`Are you sure you want to delete "${customer.farmName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('farm_customers')
+        .delete()
+        .eq('id', customer.id);
+
+      if (error) {
+        console.error('Error deleting farm customer:', error);
+        setError('Failed to delete farm customer: ' + error.message);
+      } else {
+        fetchFarmCustomers(); // Refresh the table
+        alert(`Farm customer "${customer.farmName}" deleted successfully!`);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Edit individual customer
+  const handleEditIndividualCustomer = (customer: IndividualCustomer) => {
+    setEditingIndividualCustomer(customer);
+    setIsEditIndividualModalVisible(true);
+  };
+
+  // Update individual customer
+  const handleUpdateIndividualCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingIndividualCustomer) return;
+
+    try {
+      const { error } = await supabase
+        .from('individual_customers')
+        .update({
+          name: editingIndividualCustomer.name,
+          address: editingIndividualCustomer.address,
+          phone: editingIndividualCustomer.phone,
+          email: editingIndividualCustomer.email,
+          updated_by: user?.email || 'admin',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingIndividualCustomer.id);
+
+      if (error) {
+        console.error('Error updating individual customer:', error);
+        setError('Failed to update individual customer: ' + error.message);
+      } else {
+        setIsEditIndividualModalVisible(false);
+        setEditingIndividualCustomer(null);
+        fetchIndividualCustomers(); // Refresh the table
+        alert(`Individual customer "${editingIndividualCustomer.name}" updated successfully!`);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Delete individual customer
+  const handleDeleteIndividualCustomer = async (customer: IndividualCustomer) => {
+    if (!confirm(`Are you sure you want to delete "${customer.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('individual_customers')
+        .delete()
+        .eq('id', customer.id);
+
+      if (error) {
+        console.error('Error deleting individual customer:', error);
+        setError('Failed to delete individual customer: ' + error.message);
+      } else {
+        fetchIndividualCustomers(); // Refresh the table
+        alert(`Individual customer "${customer.name}" deleted successfully!`);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
   const handleSort = (column: string, type: 'farm' | 'individual') => {
     if (type === 'farm') {
       if (farmSortColumn === column) {
@@ -406,7 +538,7 @@ const Customers: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'Farm Name', 'Farm Address', 'Contact Person', 'Contact Number', 'Created By', 'Created At'
+                      'Farm Name', 'Farm Address', 'Contact Person', 'Contact Number', 'Created By', 'Created At', 'Actions'
                     ].map((header, index) => {
                       const fieldName = header.toLowerCase().replace(/\s+/g, '').replace('name', 'Name').replace('address', 'Address').replace('person', 'Person').replace('number', 'Number').replace('created', 'Created').replace('at', 'At');
                       const isCurrentSort = farmSortColumn === fieldName;
@@ -463,6 +595,24 @@ const Customers: React.FC = () => {
                       <td className="px-4 py-3 text-sm">{customer.contactNumber}</td>
                       <td className="px-4 py-3 text-sm">{customer.createdBy}</td>
                       <td className="px-4 py-3 text-sm">{new Date(customer.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditFarmCustomer(customer)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            title="Edit"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFarmCustomer(customer)}
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -551,7 +701,7 @@ const Customers: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'Name', 'Address', 'Phone Number', 'Created By', 'Created At'
+                      'Name', 'Address', 'Phone Number', 'Created By', 'Created At', 'Actions'
                     ].map((header, index) => {
                       const fieldName = header.toLowerCase().replace(/\s+/g, '').replace('name', 'Name').replace('address', 'Address').replace('number', 'Number').replace('created', 'Created').replace('at', 'At');
                       const isCurrentSort = individualSortColumn === fieldName;
@@ -607,6 +757,24 @@ const Customers: React.FC = () => {
                       <td className="px-4 py-3 text-sm">{customer.phoneNumber}</td>
                       <td className="px-4 py-3 text-sm">{customer.createdBy}</td>
                       <td className="px-4 py-3 text-sm">{new Date(customer.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditIndividualCustomer(customer)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            title="Edit"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteIndividualCustomer(customer)}
+                            className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            title="Delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -761,6 +929,151 @@ const Customers: React.FC = () => {
                   className="btn-primary px-4 py-2"
                 >
                   Add Individual
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Farm Modal */}
+      {isEditFarmModalVisible && editingFarmCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Edit Farm Customer</h3>
+              <button 
+                onClick={() => setIsEditFarmModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateFarmCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Farm Name</label>
+                <input
+                  type="text"
+                  value={editingFarmCustomer.farmName}
+                  onChange={(e) => setEditingFarmCustomer({...editingFarmCustomer, farmName: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter farm name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Farm Address</label>
+                <input
+                  type="text"
+                  value={editingFarmCustomer.farmAddress}
+                  onChange={(e) => setEditingFarmCustomer({...editingFarmCustomer, farmAddress: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter farm address"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contact Person</label>
+                <input
+                  type="text"
+                  value={editingFarmCustomer.contactPerson}
+                  onChange={(e) => setEditingFarmCustomer({...editingFarmCustomer, contactPerson: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter contact person"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Contact Number</label>
+                <input
+                  type="text"
+                  value={editingFarmCustomer.contactNumber}
+                  onChange={(e) => setEditingFarmCustomer({...editingFarmCustomer, contactNumber: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter contact number"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditFarmModalVisible(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-4 py-2"
+                >
+                  Update Farm
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Individual Modal */}
+      {isEditIndividualModalVisible && editingIndividualCustomer && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-xl font-semibold text-gray-800">Edit Individual Customer</h3>
+              <button 
+                onClick={() => setIsEditIndividualModalVisible(false)} 
+                className="text-gray-500 hover:text-gray-800 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleUpdateIndividualCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={editingIndividualCustomer.name}
+                  onChange={(e) => setEditingIndividualCustomer({...editingIndividualCustomer, name: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Address</label>
+                <input
+                  type="text"
+                  value={editingIndividualCustomer.address}
+                  onChange={(e) => setEditingIndividualCustomer({...editingIndividualCustomer, address: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter address"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                <input
+                  type="text"
+                  value={editingIndividualCustomer.phoneNumber}
+                  onChange={(e) => setEditingIndividualCustomer({...editingIndividualCustomer, phoneNumber: e.target.value})}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter phone number"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditIndividualModalVisible(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary px-4 py-2"
+                >
+                  Update Individual
                 </button>
               </div>
             </form>
