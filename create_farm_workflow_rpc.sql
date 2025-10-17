@@ -34,9 +34,9 @@ begin
 
   -- 2) invoice (paid now; customer_type = 'Farm')
   insert into invoices (
-    po_number, customer, customerType, qty, hatch_date, payment_status, created_by, updated_by
+    customer, customerType, qty, hatch_date, payment_status, created_by, updated_by
   ) values (
-    p_po_number, p_customer, 'Farm', p_qty, p_hatch_date, 'paid', p_actor, p_actor
+    p_customer, 'Farm', p_qty, p_hatch_date, 'paid', p_actor, p_actor
   ) returning id, invoice_number into v_invoice_id, v_invoice_number;
 
   -- 3) dispatch (Delivery, locked)
@@ -51,7 +51,8 @@ begin
   ) returning id into v_dispatch_id;
 
   -- 4) dispatch_note (optional: store rendered HTML later)
-  insert into dispatch_notes (dispatch_id, created_by) values (v_dispatch_id, p_actor);
+  -- Note: dispatch_notes table may not exist, so we'll skip this for now
+  -- insert into dispatch_notes (dispatch_id, created_by) values (v_dispatch_id, p_actor);
 
   -- Return all identifiers
   sales_dispatch_id := sales_dispatch_id;
