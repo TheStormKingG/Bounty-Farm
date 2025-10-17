@@ -10,6 +10,7 @@ interface Dispatch {
   date_dispatched: string;
   type: string;
   trucks: number;
+  payment_status: string;
   created_by: string;
   created_at: string;
   updated_by: string;
@@ -47,11 +48,12 @@ const Dispatch: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Attempting to fetch dispatches from Supabase...');
+      console.log('Attempting to fetch Pick Up dispatches from Supabase...');
       
       const { data, error } = await supabase
         .from('dispatches')
         .select('*')
+        .eq('type', 'Pick Up')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -61,14 +63,48 @@ const Dispatch: React.FC = () => {
         return;
       }
 
-      console.log('Fetched dispatches:', data); // Debug log
-      console.log('Number of dispatches found:', data?.length || 0);
+      console.log('Fetched Pick Up dispatches:', data); // Debug log
+      console.log('Number of Pick Up dispatches found:', data?.length || 0);
       setDispatches(data || []);
     } catch (err) {
       console.error('Unexpected error fetching dispatches:', err);
       setError('An unexpected error occurred while fetching dispatches');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle payment status toggle
+  const handlePaymentStatusToggle = async (dispatchId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
+      
+      const { error } = await supabase
+        .from('dispatches')
+        .update({ 
+          payment_status: newStatus,
+          updated_at: new Date().toISOString(),
+          updated_by: 'admin'
+        })
+        .eq('id', dispatchId);
+
+      if (error) {
+        console.error('Error updating payment status:', error);
+        alert('Failed to update payment status: ' + error.message);
+        return;
+      }
+
+      // Update local state
+      setDispatches(prev => prev.map(dispatch => 
+        dispatch.id === dispatchId 
+          ? { ...dispatch, payment_status: newStatus }
+          : dispatch
+      ));
+
+      console.log(`Payment status updated to ${newStatus} for dispatch ${dispatchId}`);
+    } catch (err) {
+      console.error('Unexpected error updating payment status:', err);
+      alert('An unexpected error occurred while updating payment status');
     }
   };
 
@@ -601,13 +637,14 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'DISPATCH NOTE'
+                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'PAYMENT STATUS', 'DISPATCH NOTE'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
                         'DATE': 'date_dispatched',
                         'TYPE': 'type',
                         'TRUCKS': 'trucks',
+                        'PAYMENT STATUS': 'payment_status',
                         'DISPATCH NOTE': 'receipt'
                       };
                       
@@ -669,6 +706,18 @@ const Dispatch: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <button 
+                          onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.payment_status || 'pending')}
+                          className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
+                            (dispatch.payment_status || 'pending') === 'pending' 
+                              ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
+                              : 'bg-green-100 text-green-800 hover:bg-green-200'
+                          }`}
+                        >
+                          {dispatch.payment_status || 'pending'}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <button
                           onClick={() => handleViewReceipt(dispatch)}

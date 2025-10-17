@@ -91,7 +91,6 @@ const Sales: React.FC = () => {
   // Invoice table state
   const [invoices, setInvoices] = useState<any[]>([]);
   const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({});
-  const [paymentStatuses, setPaymentStatuses] = useState<{[key: string]: string}>({});
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -332,52 +331,11 @@ const Sales: React.FC = () => {
 
   const handleDateChange = (invoiceNumber: string, date: string) => {
     setInvoiceDates(prev => ({
-      ...prev,
-      [invoiceNumber]: date
-    }));
-  };
-
-  const handlePaymentStatusToggle = async (invoiceId: string, invoiceNumber: string) => {
-    try {
-      const currentStatus = paymentStatuses[invoiceNumber] || 'pending';
-      const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
-      
-      // Update the database using invoice ID
-      const { error } = await supabase
-        .from('invoices')
-        .update({ 
-          payment_status: newStatus,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.name || 'admin'
-        })
-        .eq('id', invoiceId);
-
-      if (error) {
-        console.error('Error updating payment status:', error);
-        alert('Failed to update payment status: ' + error.message);
-        return;
-      }
-
-      // Update local state
-      setPaymentStatuses(prev => ({
             ...prev,
-        [invoiceNumber]: newStatus
-      }));
+      [invoiceNumber]: date
+        }));
+    };
 
-      // If status changed to 'paid' or 'pending', refresh dispatches
-      if (newStatus === 'paid' || currentStatus === 'paid') {
-        console.log('Invoice payment status changed, triggering dispatch refresh event');
-        // Trigger dispatch refresh by calling a global refresh function
-        // We'll implement this using a custom event
-        window.dispatchEvent(new CustomEvent('refreshDispatches'));
-        console.log('Dispatch refresh event dispatched');
-      }
-
-    } catch (err) {
-      console.error('Unexpected error updating payment status:', err);
-      alert('An unexpected error occurred while updating payment status');
-    }
-  };
 
   // Function to download invoice as PDF
   const downloadInvoicePDF = () => {
@@ -851,42 +809,9 @@ const Sales: React.FC = () => {
 
       setSalesDispatch(prev => [newRecord, ...prev]);
       
-      // For farm customers, use atomic RPC workflow
-      if (isFarmCustomer) {
-        console.log('Farm customer detected, calling atomic workflow RPC...');
-        
-        const { data: wf, error: wfError } = await supabase.rpc('create_farm_po_workflow', {
-          p_po_number: newRecordData.poNumber,
-          p_date_ordered: newRecordData.dateOrdered,
-          p_customer: newRecordData.customer,
-          p_qty: newRecordData.qty,
-          p_hatch_date: newRecordData.hatchDate,
-          p_batches_required: batchesRequired,
-          p_trucks_required: trucksRequired,
-          p_actor: user?.name || 'admin'
-        });
-
-        if (wfError) {
-          console.error('Farm workflow failed:', wfError);
-          alert('Failed to complete farm workflow: ' + wfError.message);
-          return;
-        }
-
-        console.log('Farm workflow completed:', wf);
-
-        // UI state: invoices table shows 'postpaid' for this invoice regardless of DB
-        setPaymentStatuses(prev => ({ ...prev, [wf.invoice_number]: 'postpaid' }));
-        
-        // Refresh dependent views
-        await fetchInvoices();
-        window.dispatchEvent(new CustomEvent('refreshDispatches'));
-        
-        alert(`Farm PO created with Invoice ${wf.invoice_number} (postpaid), Dispatch ${wf.dispatch_number}, and Dispatch Note.`);
-        
-      } else {
-        // Regular workflow for non-farm customers
-        alert(`Sales dispatch record "${newRecord.poNumber}" added successfully!`);
-      }
+      // Database trigger will automatically create invoice and dispatch
+      // No need for RPC or manual payment status handling
+      alert(`Sales dispatch record "${newRecord.poNumber}" added successfully! Invoice and dispatch created automatically.`);
       
       // Refresh invoices to show the newly created invoice (from database trigger)
       await fetchInvoices();
@@ -1284,7 +1209,7 @@ const Sales: React.FC = () => {
               }}>
                 <tr>
                   {[
-                    'Invoice Number', 'Date Sent', 'Payment Status', 'FILE'
+                    'Invoice Number', 'Date Sent', 'FILE'
                   ].map((header, index) => (
                     <th
                       key={header}
@@ -1331,44 +1256,6 @@ const Sales: React.FC = () => {
                         onChange={(e) => handleDateChange(invoice.invoice_number, e.target.value)}
                         className="px-2 py-1 border border-gray-300 rounded text-sm w-full"
                       />
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {(() => {
-                        // Check if this is a farm customer
-                        const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
-                        const currentStatus = paymentStatuses[invoice.invoice_number] || 'pending';
-                        
-                        console.log('Payment status button check:', {
-                          invoiceNumber: invoice.invoice_number,
-                          customer: invoice.customer,
-                          currentStatus: currentStatus,
-                          isFarmCustomer: isFarmCustomer,
-                          farmCustomers: farmCustomers.map(f => f.farm_name)
-                        });
-                        
-                        if (isFarmCustomer) {
-                          // For farm customers, show postpaid and make it non-clickable
-                          return (
-                            <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 cursor-default">
-                              postpaid
-                            </span>
-                          );
-                        } else {
-                          // For non-farm customers, keep the clickable button
-                          return (
-                            <button 
-                              onClick={() => handlePaymentStatusToggle(invoice.id, invoice.invoice_number)}
-                              className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                                currentStatus === 'pending' 
-                                  ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                                  : 'bg-green-100 text-green-800 hover:bg-green-200'
-                              }`}
-                            >
-                              {currentStatus}
-                            </button>
-                          );
-                        }
-                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button 
