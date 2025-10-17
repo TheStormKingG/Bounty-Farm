@@ -127,6 +127,93 @@ const Settings: React.FC = () => {
         }
     };
 
+    // Helper functions for farm customer user creation
+    const generateFarmEmail = (farmName: string): string => {
+        const words = farmName.trim().split(/\s+/);
+        if (words.length < 2) {
+            // If only one word, use first 2 characters
+            const firstWord = words[0].toLowerCase();
+            return `${firstWord.substring(0, 2)}@bflos.com`;
+        }
+        
+        const firstWord = words[0].toLowerCase();
+        const secondWord = words[1].toLowerCase();
+        const secondChar = secondWord.charAt(0);
+        
+        return `${firstWord}_${secondChar}@bflos.com`;
+    };
+
+    const generateFarmPassword = (farmName: string): string => {
+        const words = farmName.trim().split(/\s+/);
+        if (words.length < 2) {
+            // If only one word, use first 2 characters + 321
+            const firstWord = words[0];
+            return `${firstWord.charAt(0).toUpperCase()}${firstWord.charAt(1).toLowerCase()}321`;
+        }
+        
+        const firstWord = words[0];
+        const secondWord = words[1];
+        const firstChar = firstWord.charAt(0).toUpperCase();
+        const secondChar = secondWord.charAt(0).toLowerCase();
+        
+        return `${firstChar}${secondChar}321`;
+    };
+
+    const createFarmCustomerUser = async (farmName: string) => {
+        try {
+            const email = generateFarmEmail(farmName);
+            const password = generateFarmPassword(farmName);
+            
+            // Check if user already exists
+            const { data: existingUser, error: checkError } = await supabase
+                .from('staff_table')
+                .select('id')
+                .eq('email', email)
+                .single();
+                
+            if (existingUser) {
+                console.log(`User with email ${email} already exists`);
+                return { success: false, message: `User with email ${email} already exists` };
+            }
+            
+            // Create staff record
+            const { data: staffData, error: staffError } = await supabase
+                .from('staff_table')
+                .insert([{
+                    name: farmName,
+                    email: email,
+                    password: password,
+                    role: Role.Farmer,
+                }])
+                .select()
+                .single();
+
+            if (staffError) {
+                console.error('Error creating farm customer user:', staffError);
+                return { success: false, message: `Failed to create user: ${staffError.message}` };
+            }
+
+            // Update local state
+            const newUser: UserProfile = {
+                id: staffData.id,
+                name: staffData.name,
+                email: staffData.email,
+                role: staffData.role as Role,
+            };
+
+            setUsers(prev => [...prev, newUser]);
+            
+            return { 
+                success: true, 
+                message: `Farm customer user created successfully! Email: ${email}, Password: ${password}`,
+                user: newUser
+            };
+        } catch (err) {
+            console.error('Unexpected error creating farm customer user:', err);
+            return { success: false, message: 'An unexpected error occurred while creating farm customer user' };
+        }
+    };
+
     const handleEditUser = (userToEdit: UserProfile) => {
         setCurrentUser(userToEdit);
         setIsEditUserModalVisible(true);
@@ -275,6 +362,8 @@ const Settings: React.FC = () => {
                                         <span className={`px-2 py-1 text-xs rounded-full ${
                                             u.role === Role.Admin ? 'bg-[#FFE4D6] text-[#5C3A6B]' :
                                             u.role === Role.HatcheryClerk ? 'bg-[#FFE4D6] text-[#F86F6F]' :
+                                            u.role === Role.SalesClerk ? 'bg-[#FFE4D6] text-[#FFB366]' :
+                                            u.role === Role.Farmer ? 'bg-[#E8F5E8] text-[#2D5A2D]' :
                                             'bg-[#FFE4D6] text-[#FFB366]'
                                         }`}>
                                             {u.role}
@@ -363,6 +452,7 @@ const Settings: React.FC = () => {
                                 >
                                     <option value={Role.HatcheryClerk}>Hatchery Clerk</option>
                                     <option value={Role.SalesClerk}>Sales Clerk</option>
+                                    <option value={Role.Farmer}>Farmer</option>
                                     <option value={Role.Admin}>Admin</option>
                                 </select>
                             </div>
@@ -448,6 +538,7 @@ const Settings: React.FC = () => {
                                 >
                                     <option value={Role.HatcheryClerk}>Hatchery Clerk</option>
                                     <option value={Role.SalesClerk}>Sales Clerk</option>
+                                    <option value={Role.Farmer}>Farmer</option>
                                     <option value={Role.Admin}>Admin</option>
                                 </select>
                             </div>
@@ -468,7 +559,7 @@ const Settings: React.FC = () => {
                             </div>
                         </form>
                     </div>
-                </div>
+            </div>
             )}
         </div>
     );

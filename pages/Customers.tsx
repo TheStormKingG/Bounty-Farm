@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/supabase';
 import { useAuth } from '../context/AuthContext';
+import { createFarmCustomerUser } from '../utils/farmUserCreation';
 
 interface FarmCustomer {
   id: string;
@@ -81,6 +82,17 @@ const Customers: React.FC = () => {
         console.error('Error adding farm customer:', error);
         setError('Failed to add farm customer: ' + error.message);
       } else {
+        // Automatically create user for the farm customer
+        const userResult = await createFarmCustomerUser(newFarmData.farmName);
+        
+        if (userResult.success) {
+          console.log('Farm customer user created:', userResult.message);
+          alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nUser account created:\nEmail: ${userResult.email}\nPassword: ${userResult.password}`);
+        } else {
+          console.log('Farm customer user creation failed:', userResult.message);
+          alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nNote: User account creation failed - ${userResult.message}`);
+        }
+        
         setIsFarmModalVisible(false);
         setNewFarmData({});
         fetchFarmCustomers(); // Refresh the table

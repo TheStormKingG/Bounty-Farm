@@ -5,6 +5,7 @@ export enum Role {
   Admin = 'Admin',
   HatcheryClerk = 'HatcheryClerk',
   SalesClerk = 'SalesClerk',
+  Farmer = 'Farmer',
   User = 'User',
 }
 
