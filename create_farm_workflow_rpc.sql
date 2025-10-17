@@ -1,5 +1,5 @@
 -- Create atomic farm PO workflow function
--- Manual approach: creates all records without relying on triggers
+-- Schema-compliant approach based on actual database structure
 
 create or replace function public.create_farm_po_workflow(
   p_po_number text,
@@ -24,7 +24,7 @@ declare
   v_dispatch_id uuid;
   v_dispatch_number text;
 begin
-  -- 1) Create sales_dispatch record
+  -- 1) Create sales_dispatch record (standalone PO record)
   insert into sales_dispatch (
     po_number, date_ordered, customer, qty, hatch_date,
     batches_required, trucks_required, created_by, updated_by
@@ -33,7 +33,7 @@ begin
     p_batches_required, p_trucks_required, p_actor, p_actor
   ) returning id into v_sales_dispatch_id;
 
-  -- 2) Create invoice manually (avoiding trigger issues)
+  -- 2) Create invoice record (separate from sales_dispatch)
   v_invoice_number := replace(p_po_number, 'PO', 'INV');
   
   insert into invoices (
@@ -42,13 +42,15 @@ begin
     v_invoice_number, p_date_ordered, 'paid', p_actor, p_actor
   ) returning id into v_invoice_id;
 
-  -- 3) Create dispatch manually (using only columns that exist)
+  -- 3) Create dispatch record (linked to invoice via invoice_id FK)
   v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
 
   insert into dispatches (
-    invoice_id, type, trucks, dispatch_number, date_dispatched, created_by, updated_by, type_locked
+    dispatch_number, invoice_id, date_dispatched, type, trucks, 
+    created_by, updated_by, type_locked
   ) values (
-    v_invoice_id, 'Delivery', p_trucks_required, v_dispatch_number, p_date_ordered, p_actor, p_actor, true
+    v_dispatch_number, v_invoice_id, p_date_ordered, 'Delivery', p_trucks_required,
+    p_actor, p_actor, true
   ) returning id into v_dispatch_id;
 
   -- Return all identifiers
