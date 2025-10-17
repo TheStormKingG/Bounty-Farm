@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
+import html2pdf from 'html2pdf.js';
 
 interface Flock {
   id: string;
@@ -65,6 +66,14 @@ const FarmDetail: React.FC = () => {
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Dispatch note modal state
+  const [isDispatchModalVisible, setIsDispatchModalVisible] = useState(false);
+  const [currentDispatch, setCurrentDispatch] = useState<Dispatch | null>(null);
+  const [dispatchInvoiceData, setDispatchInvoiceData] = useState<any>(null);
+  const [customerDetails, setCustomerDetails] = useState<any>(null);
+  const [tripDistribution, setTripDistribution] = useState<any[]>([]);
+  const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -154,9 +163,160 @@ const FarmDetail: React.FC = () => {
   };
 
   // Handle viewing dispatch note
-  const handleViewDispatch = (dispatch: Dispatch) => {
-    // For now, just show an alert. Later we can implement a modal like in Dispatch.tsx
-    alert(`Viewing dispatch note for ${dispatch.dispatch_number}`);
+  const handleViewDispatch = async (dispatch: Dispatch) => {
+    try {
+      setCurrentDispatch(dispatch);
+      
+      // Fetch invoice data for this dispatch
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', dispatch.invoiceId)
+        .single();
+
+      if (invoiceError) {
+        console.error('Error fetching invoice data:', invoiceError);
+        setError('Failed to fetch invoice data: ' + invoiceError.message);
+      } else {
+        // Get customer name and determine customer type
+        let customerName = farmInfo.farmName; // Use farm name
+        let customerType = 'Farm';
+        let quantity = dispatch.qty || 0;
+        let usedHatches = dispatch.usedHatches || [];
+        
+        // If not available, try to get from sales_dispatch
+        if (!quantity || !usedHatches.length) {
+          console.log('Missing data, fetching from sales_dispatch...');
+          try {
+            const { data: salesData, error: salesError } = await supabase
+              .from('sales_dispatch')
+              .select('customer, qty, hatch_date')
+              .eq('customer', farmInfo.farmName)
+              .eq('po_number', dispatch.dispatch_number?.replace('DISP', 'PO'))
+              .single();
+              
+            if (!salesError && salesData) {
+              if (!quantity) quantity = parseInt(salesData.qty || '0') || 0;
+              console.log('Found data from sales_dispatch:', { customerName, quantity, hatchDate: salesData.hatch_date });
+              
+              // If we have hatch_date but no usedHatches, fetch hatch data
+              if (!usedHatches.length && salesData.hatch_date) {
+                console.log('Fetching hatch data for date:', salesData.hatch_date);
+                const { data: hatchData, error: hatchError } = await supabase
+                  .from('hatch_cycles')
+                  .select('hatch_no, chicks_hatched')
+                  .eq('hatch_date', salesData.hatch_date)
+                  .not('chicks_hatched', 'is', null)
+                  .gt('chicks_hatched', 0);
+                  
+                if (!hatchError && hatchData && hatchData.length > 0) {
+                  usedHatches = hatchData.map(hatch => ({
+                    hatchNo: hatch.hatch_no,
+                    chicksUsed: hatch.chicks_hatched
+                  }));
+                  console.log('Generated usedHatches from hatch data:', usedHatches);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching data from sales_dispatch:', error);
+          }
+        }
+        
+        // Fetch customer details
+        const customerDetails = await getCustomerDetails(customerName, customerType);
+        
+        // Calculate trip distribution
+        console.log('Data for trip calculation:', {
+          quantity,
+          trucks: dispatch.trucks,
+          usedHatches,
+          dispatchNumber: dispatch.dispatch_number,
+          dispatchType: dispatch.type
+        });
+        
+        const trips = calculateTripDistribution(
+          quantity || 0,
+          dispatch.trucks || 1,
+          usedHatches || [],
+          dispatch.dispatch_number,
+          dispatch.type || 'Delivery'
+        );
+        
+        console.log('Calculated trips:', trips);
+        
+        setDispatchInvoiceData(invoiceData);
+        setCustomerDetails(customerDetails);
+        setTripDistribution(trips);
+        setIsDispatchModalVisible(true);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
+    }
+  };
+
+  // Get customer details function
+  const getCustomerDetails = async (customerName: string, customerType: string) => {
+    try {
+      if (customerType === 'Farm') {
+        const { data, error } = await supabase
+          .from('farm_customers')
+          .select('*')
+          .eq('farm_name', customerName)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching farm customer details:', error);
+          return null;
+        }
+        
+        return {
+          name: data.farm_name,
+          address: data.address,
+          phone: data.phone,
+          email: data.email,
+          contactPerson: data.contact_person
+        };
+      } else {
+        const { data, error } = await supabase
+          .from('individual_customers')
+          .select('*')
+          .eq('name', customerName)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching individual customer details:', error);
+          return null;
+        }
+        
+        return {
+          name: data.name,
+          address: data.address,
+          phone: data.phone,
+          email: data.email
+        };
+      }
+    } catch (error) {
+      console.error('Error in getCustomerDetails:', error);
+      return null;
+    }
+  };
+
+  // Download dispatch PDF function
+  const downloadDispatchPDF = () => {
+    if (!dispatchRef.current) return;
+    
+    const element = dispatchRef.current;
+    const opt = {
+      margin: 0.3,
+      filename: `dispatch-note-${currentDispatch?.dispatch_number}.pdf`,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const }
+    };
+    
+    html2pdf().set(opt).from(element).save();
   };
 
   // Fetch dispatches for this farm
@@ -724,6 +884,155 @@ const FarmDetail: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Dispatch Note Modal */}
+      {isDispatchModalVisible && currentDispatch && dispatchInvoiceData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Dispatch Note - {currentDispatch.dispatch_number}</h3>
+              <div className="flex items-center space-x-3">
+                {/* Download PDF Button */}
+                <button 
+                  onClick={downloadDispatchPDF}
+                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                  title="Download PDF"
+                >
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  <span className="text-sm">Download PDF</span>
+                </button>
+                
+                {/* Close Button */}
+                <button 
+                  onClick={() => setIsDispatchModalVisible(false)} 
+                  className="text-gray-500 hover:text-gray-800 text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+            
+            {/* Dispatch Note Content */}
+            <div ref={dispatchRef} className="p-6 text-sm max-w-4xl mx-auto" style={{ minHeight: 'calc(100vh - 2rem)', display: 'flex', flexDirection: 'column' }}>
+              {/* Dispatch Header */}
+              <div className="flex justify-between items-start mb-6">
+                {/* Company Info */}
+                <div className="flex items-start space-x-4">
+                  {/* Company Logo */}
+                  <div className="w-24 h-24">
+                    <img 
+                      src="images/BPF-Stefan-8.png" 
+                      alt="Bounty Farm Logo" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iNDgiIGZpbGw9IiNGRkY0QzQiLz4KPHN2ZyB4PSIyNCIgeT0iMjQiIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNFNjcxMDAiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIi8+Cjwvc3ZnPgo8L3N2Zz4K';
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Company Details */}
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">BOUNTY FARM LIMITED</h1>
+                    <div className="text-gray-600 space-y-1">
+                      <p>14 Barima Ave., Bel Air Park, Georgetown, Guyana</p>
+                      <p>Tel No. 225-9311-4 | Fax No.2271032</p>
+                      <p>office@bountyfarmgy.com</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Dispatch Note Header */}
+                <div className="text-right">
+                  <h2 className="text-3xl font-bold text-gray-800 mb-4">DISPATCH NOTE</h2>
+                  <div className="bg-gray-100 p-4 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Tin #010067340</p>
+                    <p className="text-sm text-gray-600 mb-1">Date: {dispatchInvoiceData?.date_sent ? new Date(dispatchInvoiceData.date_sent).toLocaleDateString() : new Date().toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600">Dispatch #: {currentDispatch.dispatch_number}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Customer Details */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  {currentDispatch.type === 'Delivery' ? 'Deliver to:' : 'Dispatch to:'}
+                </h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  {customerDetails ? (
+                    <div className="space-y-1">
+                      <p className="font-medium text-gray-800">Customer Name: {customerDetails.name}</p>
+                      <p className="text-gray-600">Address: {customerDetails.address}</p>
+                      <p className="text-gray-600">Phone: {customerDetails.phone}</p>
+                      {customerDetails.email && <p className="text-gray-600">Email: {customerDetails.email}</p>}
+                      {customerDetails.contactPerson && <p className="text-gray-600">Contact Person: {customerDetails.contactPerson}</p>}
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">Customer details not available</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Trip Details */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Trip Details:</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr className="bg-gray-50">
+                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip ID</th>
+                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Hatch NO's</th>
+                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip Quantity</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tripDistribution.map((trip, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            {trip.tripId}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            {trip.hatches.map((hatch: any, hatchIndex: number) => (
+                              <div key={hatchIndex} className="text-xs">
+                                {hatch.hatchNo}
+                              </div>
+                            ))}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            {trip.totalQuantity.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-auto pt-6 border-t border-gray-200">
+                <p className="text-gray-600 text-sm mb-2">
+                  Dispatch completed successfully. All chicks dispatched in good condition.
+                </p>
+                <p className="text-gray-600 text-sm">
+                  Dispatched by: {currentDispatch.created_by || 'Admin'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
