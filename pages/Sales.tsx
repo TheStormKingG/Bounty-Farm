@@ -1061,14 +1061,14 @@ const Sales: React.FC = () => {
     };
 
     return (
-      <div className="space-y-8 animate-fade-in-up">
-
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
-          {error}
-        </div>
-      )}
+      <>
+        <div className="space-y-8 animate-fade-in-up">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
+            {error}
+          </div>
+        )}
 
       {/* Combined Filtering and Table Section */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
@@ -1896,7 +1896,9 @@ const Sales: React.FC = () => {
                 </div>
             )}
         </div>
+      </>
     );
 };
+}
 
 export default Sales;
