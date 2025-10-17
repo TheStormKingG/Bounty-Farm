@@ -50,12 +50,21 @@ const Login: React.FC = () => {
         
         const userRole = (staffData?.role as Role) || Role.User;
         
+        console.log('Login debug:', {
+          email,
+          userRole,
+          staffData,
+          farmName: staffData?.name
+        });
+        
         // For farmers, redirect to their specific farm page
         if (userRole === Role.Farmer) {
           // Extract farm name from user name and navigate to farm detail
           const farmName = staffData?.name || '';
-          navigate(`/farm/${encodeURIComponent(farmName)}`);
+          console.log('Farmer login - navigating to:', `/farmer/${encodeURIComponent(farmName)}`);
+          navigate(`/farmer/${encodeURIComponent(farmName)}`);
         } else {
+          console.log('Non-farmer login - navigating to:', getHomeRouteForRole(userRole));
           navigate(getHomeRouteForRole(userRole));
         }
       } else {

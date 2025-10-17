@@ -102,7 +102,8 @@ const App: React.FC = () => {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Farmer]} />}>
-          <Route path="/farm/:farmName" element={<FarmDetail />} />
+          <Route path="/farmer/:farmName" element={<FarmDetail />} />
+          <Route path="/farmer/:farmName/flock/:flockId" element={<FlockDetail />} />
         </Route>
 
         <Route path="/login" element={<Navigate to={getHomeRouteForRole(user.role)} />} />

@@ -28,7 +28,7 @@ const Farm: React.FC = () => {
     if (user?.role === Role.Farmer) {
       // For farmers, redirect to their specific farm detail page
       const farmName = user.name || '';
-      navigate(`/farm/${encodeURIComponent(farmName)}`);
+      navigate(`/farmer/${encodeURIComponent(farmName)}`);
       return;
     }
   }, [user, navigate]);

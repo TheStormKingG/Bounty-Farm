@@ -431,6 +431,12 @@ const FarmDetail: React.FC = () => {
 
   // Set farm info based on parameters
   useEffect(() => {
+    console.log('FarmDetail debug:', {
+      farmId,
+      farmName,
+      decodedFarmName: farmName ? decodeURIComponent(farmName) : null
+    });
+    
     if (farmName) {
       // If farmName is provided (for farmers), set it directly
       setFarmInfo(prev => ({
@@ -585,7 +591,8 @@ const FarmDetail: React.FC = () => {
 
   // Handle flock click - navigate to flock detail
   const handleFlockClick = (flock: Flock) => {
-    navigate(`/farm/${farmId || farmName}/flock/${flock.id}`, { 
+    const baseRoute = farmId ? `/farm/${farmId}` : `/farmer/${farmName}`;
+    navigate(`${baseRoute}/flock/${flock.id}`, { 
       state: { 
         flockName: flock.flockName,
         breed: flock.breed,
