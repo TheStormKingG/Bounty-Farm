@@ -50,11 +50,9 @@ begin
   v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
 
   insert into dispatches (
-    invoice_id, type, qty, trucks,
-    dispatch_number, hatch_date, created_by, updated_by, type_locked
+    invoice_id, type, trucks, dispatch_number, date_dispatched, created_by, updated_by, type_locked
   ) values (
-    v_invoice_id, 'Delivery', p_qty, p_trucks_required,
-    v_dispatch_number, p_hatch_date, p_actor, p_actor, true
+    v_invoice_id, 'Delivery', p_trucks_required, v_dispatch_number, p_date_ordered, p_actor, p_actor, true
   ) returning id into v_dispatch_id;
 
   -- Return all identifiers
