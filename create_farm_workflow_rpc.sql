@@ -1,6 +1,5 @@
 -- Create atomic farm PO workflow function
--- This replaces the fragile setTimeout + lookup pattern with a single transaction
--- Minimal version that only creates sales_dispatch (invoices and dispatches created by triggers)
+-- Ultra-minimal version that only creates sales_dispatch and lets triggers handle the rest
 
 create or replace function public.create_farm_po_workflow(
   p_po_number text,
@@ -25,7 +24,7 @@ declare
   v_dispatch_id uuid;
   v_dispatch_number text;
 begin
-  -- 1) sales_dispatch (this will trigger invoice creation)
+  -- 1) Create sales_dispatch record (triggers will handle invoice and dispatch creation)
   insert into sales_dispatch (
     po_number, date_ordered, customer, qty, hatch_date,
     batches_required, trucks_required, created_by, updated_by
@@ -34,8 +33,7 @@ begin
     p_batches_required, p_trucks_required, p_actor, p_actor
   ) returning id into v_sales_dispatch_id;
 
-  -- 2) Get the created invoice (created by trigger)
-  -- Note: Get the most recent invoice since we don't know the exact linking column
+  -- 2) Get the most recent invoice (created by trigger)
   select i.id, i.invoice_number into v_invoice_id, v_invoice_number
   from invoices i
   order by i.created_at desc 
@@ -46,14 +44,14 @@ begin
   set payment_status = 'paid', updated_by = p_actor, updated_at = now()
   where id = v_invoice_id;
 
-  -- 4) Create dispatch (Delivery, locked)
-  v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
+  -- 4) Get the most recent dispatch (created by trigger)
+  select d.id into v_dispatch_id
+  from dispatches d
+  order by d.created_at desc 
+  limit 1;
 
-  insert into dispatches (
-    invoice_id, type, trucks, dispatch_number, date_dispatched, created_by, updated_by, type_locked
-  ) values (
-    v_invoice_id, 'Delivery', p_trucks_required, v_dispatch_number, p_date_ordered, p_actor, p_actor, true
-  ) returning id into v_dispatch_id;
+  -- Generate dispatch number for return
+  v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
 
   -- Return all identifiers
   sales_dispatch_id := v_sales_dispatch_id;
