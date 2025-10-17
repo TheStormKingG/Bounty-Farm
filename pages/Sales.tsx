@@ -851,89 +851,37 @@ const Sales: React.FC = () => {
 
       setSalesDispatch(prev => [newRecord, ...prev]);
       
-      // For farm customers, create complete workflow automatically
+      // For farm customers, use atomic RPC workflow
       if (isFarmCustomer) {
-        console.log('Farm customer detected, creating complete workflow...');
-        console.log('Farm customer details:', { customer: newRecordData.customer, poNumber: newRecordData.poNumber });
+        console.log('Farm customer detected, calling atomic workflow RPC...');
         
-        // Wait for invoice to be created by trigger, then create dispatch and dispatch note
-        setTimeout(async () => {
-          try {
-            // Get the created invoice
-            const { data: invoiceData, error: invoiceError } = await supabase
-              .from('invoices')
-              .select('*')
-              .eq('po_number', newRecordData.poNumber)
-              .single();
-              
-            if (invoiceError || !invoiceData) {
-              console.error('Error fetching created invoice:', invoiceError);
-              return;
-            }
-            
-            console.log('Found created invoice:', invoiceData);
-            
-            // Create dispatch record
-            const dispatchNumber = `BFLOS-${String(invoiceData.id).padStart(3, '0')}-DISP`;
-            console.log('Creating dispatch with:', {
-              invoice_id: invoiceData.id,
-              customer: newRecordData.customer,
-              customer_type: 'Farm',
-              type: 'Delivery',
-              qty: newRecordData.qty,
-              trucks: trucksRequired,
-              dispatch_number: dispatchNumber,
-              hatch_date: newRecordData.hatchDate
-            });
-            
-            const { data: dispatchData, error: dispatchError } = await supabase
-              .from('dispatches')
-              .insert([{
-                invoice_id: invoiceData.id,
-                customer: newRecordData.customer,
-                customer_type: 'Farm',
-                type: 'Delivery', // Fixed to Delivery for farm customers
-                qty: newRecordData.qty,
-                trucks: trucksRequired,
-                dispatch_number: dispatchNumber,
-                hatch_date: newRecordData.hatchDate,
-                created_by: user?.name || 'admin',
-                updated_by: user?.name || 'admin',
-              }])
-              .select()
-              .single();
-              
-            if (dispatchError) {
-              console.error('Error creating dispatch:', dispatchError);
-              return;
-            }
-            
-            console.log('Created dispatch:', dispatchData);
-            
-            // Update invoice payment status to 'paid' for farm customers
-            const { error: updateError } = await supabase
-              .from('invoices')
-              .update({ payment_status: 'paid' })
-              .eq('id', invoiceData.id);
-              
-            if (updateError) {
-              console.error('Error updating invoice payment status:', updateError);
-            } else {
-              console.log('Updated invoice payment status to paid');
-              
-              // Update local payment status state to 'postpaid' for farm customers
-              setPaymentStatuses(prev => ({
-                ...prev,
-                [invoiceData.invoice_number]: 'postpaid'
-              }));
-            }
-            
-            alert(`Farm customer workflow completed! PO "${newRecord.poNumber}" created with invoice, dispatch, and dispatch note. Status: Postpaid.`);
-            
-          } catch (err) {
-            console.error('Error in farm customer workflow:', err);
-          }
-        }, 2000); // Wait 2 seconds for invoice trigger to complete
+        const { data: wf, error: wfError } = await supabase.rpc('create_farm_po_workflow', {
+          p_po_number: newRecordData.poNumber,
+          p_date_ordered: newRecordData.dateOrdered,
+          p_customer: newRecordData.customer,
+          p_qty: newRecordData.qty,
+          p_hatch_date: newRecordData.hatchDate,
+          p_batches_required: batchesRequired,
+          p_trucks_required: trucksRequired,
+          p_actor: user?.name || 'admin'
+        });
+
+        if (wfError) {
+          console.error('Farm workflow failed:', wfError);
+          alert('Failed to complete farm workflow: ' + wfError.message);
+          return;
+        }
+
+        console.log('Farm workflow completed:', wf);
+
+        // UI state: invoices table shows 'postpaid' for this invoice regardless of DB
+        setPaymentStatuses(prev => ({ ...prev, [wf.invoice_number]: 'postpaid' }));
+        
+        // Refresh dependent views
+        await fetchInvoices();
+        window.dispatchEvent(new CustomEvent('refreshDispatches'));
+        
+        alert(`Farm PO created with Invoice ${wf.invoice_number} (postpaid), Dispatch ${wf.dispatch_number}, and Dispatch Note.`);
         
       } else {
         // Regular workflow for non-farm customers
