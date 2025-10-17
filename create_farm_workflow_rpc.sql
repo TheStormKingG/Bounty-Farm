@@ -43,7 +43,8 @@ begin
   ) returning id into v_invoice_id;
 
   -- 3) Create dispatch record (linked to invoice via invoice_id FK)
-  v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
+  -- Generate unique dispatch number using invoice ID to ensure uniqueness
+  v_dispatch_number := 'BFLOS-' || substring(v_invoice_id::text, 1, 8) || '-DISP';
 
   insert into dispatches (
     dispatch_number, invoice_id, date_dispatched, type, trucks, 
