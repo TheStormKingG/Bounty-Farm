@@ -55,6 +55,13 @@ const FarmDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  console.log('FarmDetail component rendered:', {
+    farmId,
+    farmName,
+    pathname: location.pathname,
+    user: user?.role
+  });
+  
   const [farmInfo, setFarmInfo] = useState({
     farmName: '',
     farmAddress: '',

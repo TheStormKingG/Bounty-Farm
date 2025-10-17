@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Role } from '../types';
 
 interface FarmCustomer {
@@ -19,19 +19,21 @@ interface FarmCustomer {
 const Farm: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [farmCustomers, setFarmCustomers] = useState<FarmCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect farmers to their specific farm detail page
+  // Redirect farmers to their specific farm detail page (only if on /farm route)
   useEffect(() => {
-    if (user?.role === Role.Farmer) {
+    if (user?.role === Role.Farmer && location.pathname === '/farm') {
       // For farmers, redirect to their specific farm detail page
       const farmName = user.name || '';
+      console.log('Farm.tsx redirecting farmer to:', `/farmer/${encodeURIComponent(farmName)}`);
       navigate(`/farmer/${encodeURIComponent(farmName)}`);
       return;
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   // Fetch farm customers from database
   useEffect(() => {
