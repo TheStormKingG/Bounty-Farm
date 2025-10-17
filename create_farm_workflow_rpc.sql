@@ -1,5 +1,5 @@
 -- Create atomic farm PO workflow function
--- Ultra-minimal version that only creates sales_dispatch and lets triggers handle the rest
+-- Manual approach: creates all records without relying on triggers
 
 create or replace function public.create_farm_po_workflow(
   p_po_number text,
@@ -24,7 +24,7 @@ declare
   v_dispatch_id uuid;
   v_dispatch_number text;
 begin
-  -- 1) Create sales_dispatch record (triggers will handle invoice and dispatch creation)
+  -- 1) Create sales_dispatch record
   insert into sales_dispatch (
     po_number, date_ordered, customer, qty, hatch_date,
     batches_required, trucks_required, created_by, updated_by
@@ -33,25 +33,23 @@ begin
     p_batches_required, p_trucks_required, p_actor, p_actor
   ) returning id into v_sales_dispatch_id;
 
-  -- 2) Get the most recent invoice (created by trigger)
-  select i.id, i.invoice_number into v_invoice_id, v_invoice_number
-  from invoices i
-  order by i.created_at desc 
-  limit 1;
+  -- 2) Create invoice manually (avoiding trigger issues)
+  v_invoice_number := replace(p_po_number, 'PO', 'INV');
+  
+  insert into invoices (
+    invoice_number, date_sent, payment_status, created_by, updated_by
+  ) values (
+    v_invoice_number, p_date_ordered, 'paid', p_actor, p_actor
+  ) returning id into v_invoice_id;
 
-  -- 3) Update invoice to paid status for farm customers
-  update invoices 
-  set payment_status = 'paid', updated_by = p_actor, updated_at = now()
-  where id = v_invoice_id;
-
-  -- 4) Get the most recent dispatch (created by trigger)
-  select d.id into v_dispatch_id
-  from dispatches d
-  order by d.created_at desc 
-  limit 1;
-
-  -- Generate dispatch number for return
+  -- 3) Create dispatch manually (using only columns that exist)
   v_dispatch_number := 'BFLOS-' || lpad(extract(epoch from now())::bigint::text, 3, '0') || '-DISP';
+
+  insert into dispatches (
+    invoice_id, type, trucks, dispatch_number, date_dispatched, created_by, updated_by, type_locked
+  ) values (
+    v_invoice_id, 'Delivery', p_trucks_required, v_dispatch_number, p_date_ordered, p_actor, p_actor, true
+  ) returning id into v_dispatch_id;
 
   -- Return all identifiers
   sales_dispatch_id := v_sales_dispatch_id;
