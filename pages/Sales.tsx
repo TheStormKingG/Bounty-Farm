@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import Card from '../components/Card';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
 import html2pdf from 'html2pdf.js';
@@ -56,6 +55,9 @@ if (typeof document !== 'undefined') {
   document.head.appendChild(styleSheet);
 }
 
+type CustomerType = 'Farm' | 'Individual';
+type NewRecordData = Partial<SalesDispatch> & { customerType?: CustomerType };
+
 interface SalesDispatch {
   id: string;
   poNumber: string;
@@ -97,7 +99,7 @@ const Sales: React.FC = () => {
   const [isInvoiceModalVisible, setIsInvoiceModalVisible] = useState(false);
   const [currentRecord, setCurrentRecord] = useState<SalesDispatch | null>(null);
   const [currentInvoice, setCurrentInvoice] = useState<any>(null);
-  const [newRecordData, setNewRecordData] = useState<Partial<SalesDispatch>>({});
+  const [newRecordData, setNewRecordData] = useState<NewRecordData>({});
   
   // Customer data state
   const [farmCustomers, setFarmCustomers] = useState<any[]>([]);
@@ -137,13 +139,12 @@ const Sales: React.FC = () => {
     }
   };
 
-  // Fetch sales dispatch records from database
   useEffect(() => {
     const fetchSalesDispatch = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const { data, error } = await supabase
           .from('sales_dispatch')
           .select('*')
@@ -179,15 +180,14 @@ const Sales: React.FC = () => {
       }
     };
 
-  useEffect(() => {
     const initializeData = async () => {
-      await fetchCustomers(); // Fetch customers first
+      await fetchCustomers();
       await fetchSalesDispatch();
-      await fetchInvoices(); // Then fetch invoices
+      await fetchInvoices();
     };
-    
+
     initializeData();
-  }, []);
+  }, []); // ✅ this closes the effect properly
 
   const fetchInvoices = async () => {
     try {
@@ -1899,6 +1899,5 @@ const Sales: React.FC = () => {
       </>
     );
 };
-}
 
 export default Sales;
