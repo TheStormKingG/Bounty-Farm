@@ -194,7 +194,7 @@ const FarmDetail: React.FC = () => {
       // We'll fetch the sales_dispatch records to match by customer name
       const { data: salesDispatchData, error: salesError } = await supabase
         .from('sales_dispatch')
-        .select('po_number, customer, hatch_date')
+        .select('po_number, customer, hatch_date, qty')
         .eq('customer', farmInfo.farmName)
         .gte('created_at', `${today}T00:00:00`)
         .lte('created_at', `${today}T23:59:59`);
@@ -250,127 +250,22 @@ const FarmDetail: React.FC = () => {
           customer_type: 'Farm',
           type_locked: dispatch.type_locked,
           // Additional data for trip calculation
-          qty: matchingSalesDispatch ? parseInt(matchingSalesDispatch.qty) || 0 : 0,
+          qty: matchingSalesDispatch ? parseInt(matchingSalesDispatch.qty || '0') || 0 : 0,
           hatch_date: matchingSalesDispatch?.hatch_date,
-          usedHatches: [] // Will be calculated if needed
+          usedHatches: [], // Will be calculated if needed
+          // Required Dispatch interface properties
+          invoiceId: dispatch.invoice_id,
+          customerType: 'Farm',
+          hatchDate: matchingSalesDispatch?.hatch_date || '',
+          createdAt: dispatch.created_at
         };
       });
 
       console.log('Mapped dispatches:', mappedDispatches);
-          const belongsToFarm = customerName === farmInfo.farmName;
-          console.log('Dispatch belongs to farm:', belongsToFarm);
-          
-          if (!belongsToFarm) {
-            console.log('Skipping dispatch - does not belong to current farm');
-            return null; // Skip this dispatch
-          }
-          
-          // If not in invoice, try to get from sales_dispatch
-          if (!customerName || !quantity) {
-            console.log('Missing data in invoice, fetching from sales_dispatch...');
-            try {
-              const { data: salesData, error: salesError } = await supabase
-                .from('sales_dispatch')
-                .select('customer, qty, hatch_date')
-                .eq('invoice_id', dispatch.invoice_id)
-                .single();
-                
-              if (!salesError && salesData) {
-                customerName = customerName || salesData.customer;
-                quantity = quantity || salesData.qty;
-                console.log('Found data from sales_dispatch:', { customerName, quantity, hatchDate: salesData.hatch_date });
-              }
-            } catch (error) {
-              console.error('Error fetching from sales_dispatch:', error);
-            }
-          }
 
-          // Fetch hatch data to get usedHatches if not available
-          if (!usedHatches && invoiceData?.hatch_date) {
-            console.log('Fetching hatch data for date:', invoiceData.hatch_date);
-            try {
-              const { data: hatchData, error: hatchError } = await supabase
-                .from('hatch_cycles')
-                .select('hatch_no, chicks_hatched')
-                .eq('hatch_date', invoiceData.hatch_date)
-                .not('chicks_hatched', 'is', null)
-                .gt('chicks_hatched', 0);
-                
-              if (!hatchError && hatchData && hatchData.length > 0) {
-                // Convert hatch data to usedHatches format (same as Dispatch.tsx)
-                usedHatches = hatchData.map(hatch => ({
-                  hatchNo: hatch.hatch_no,
-                  chicksUsed: hatch.chicks_hatched
-                }));
-                console.log('Generated usedHatches from hatch data:', usedHatches);
-              }
-            } catch (error) {
-              console.error('Error fetching hatch data:', error);
-            }
-          }
-
-          return {
-            id: dispatch.id,
-            invoiceId: dispatch.invoice_id,
-            customer: customerName,
-            customerType: customerType,
-            type: dispatch.type,
-            qty: quantity,
-            hatchDate: invoiceData?.hatch_date || dispatch.hatch_date,
-            usedHatches: usedHatches,
-            createdAt: dispatch.created_at,
-            trucks: dispatch.trucks,
-            dispatch_number: dispatch.dispatch_number,
-            invoiceData: invoiceData
-          };
-        })
-      );
-
-      // Filter out null values (dispatches that don't belong to this farm)
-      const validDispatches = mappedDispatches.filter(dispatch => dispatch !== null);
-
-      console.log('Final mapped dispatches:', validDispatches);
-      setDispatches(validDispatches);
-      
-      // If no dispatches found, let's try a broader search for testing
-      if (validDispatches.length === 0) {
-        console.log('No dispatches found for today, trying broader search...');
-        const { data: allDispatches, error: allError } = await supabase
-          .from('dispatches')
-          .select('*')
-          .eq('customer', farmInfo.farmName)
-          .order('created_at', { ascending: false })
-          .limit(5);
-          
-        if (!allError && allDispatches && allDispatches.length > 0) {
-          console.log('Found dispatches for this farm (not today):', allDispatches);
-          // For testing, let's show the most recent dispatch
-          const recentDispatch = allDispatches[0];
-          const { data: invoiceData } = await supabase
-            .from('invoices')
-            .select('*')
-            .eq('id', recentDispatch.invoice_id)
-            .single();
-            
-          const mockDispatch: Dispatch = {
-            id: recentDispatch.id,
-            invoiceId: recentDispatch.invoice_id,
-            customer: recentDispatch.customer,
-            customerType: recentDispatch.customerType,
-            type: recentDispatch.type,
-            qty: invoiceData?.qty || recentDispatch.qty || 1000,
-            hatchDate: invoiceData?.hatch_date || recentDispatch.hatch_date || new Date().toISOString().split('T')[0],
-            usedHatches: invoiceData?.usedHatches || recentDispatch.usedHatches || '2025-071-BFL',
-            createdAt: recentDispatch.created_at,
-            invoiceData: invoiceData
-          };
-          
-          console.log('Setting mock dispatch for testing:', mockDispatch);
-          setDispatches([mockDispatch]);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching farm dispatches:', err);
+      setDispatches(mappedDispatches);
+    } catch (error) {
+      console.error('Error fetching farm dispatches:', error);
     }
   };
 
