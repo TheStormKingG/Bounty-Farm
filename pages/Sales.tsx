@@ -202,33 +202,14 @@ const Sales: React.FC = () => {
 
       setInvoices(data || []);
       
-      // Initialize invoice dates and payment statuses
+      // Initialize invoice dates only (no payment status handling)
       const dates: {[key: string]: string} = {};
-      const statuses: {[key: string]: string} = {};
       
       data?.forEach(invoice => {
         dates[invoice.invoice_number] = invoice.date_sent || '';
-        
-        // Check if this is a farm customer
-        const isFarmCustomer = farmCustomers.some(farm => farm.farm_name === invoice.customer);
-        console.log('Invoice customer check:', {
-          invoiceNumber: invoice.invoice_number,
-          customer: invoice.customer,
-          farmCustomers: farmCustomers.map(f => f.farm_name),
-          isFarmCustomer: isFarmCustomer
-        });
-        
-        if (isFarmCustomer) {
-          // For farm customers, always show postpaid
-          statuses[invoice.invoice_number] = 'postpaid';
-        } else {
-          // For non-farm customers, use the database status or default to pending
-          statuses[invoice.invoice_number] = invoice.payment_status || 'pending';
-        }
       });
       
       setInvoiceDates(dates);
-      setPaymentStatuses(statuses);
     } catch (err) {
       console.error('Unexpected error fetching invoices:', err);
     }
