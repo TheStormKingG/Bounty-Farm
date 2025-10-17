@@ -153,18 +153,33 @@ const FarmDetail: React.FC = () => {
     return trips;
   };
 
+  // Handle viewing dispatch note
+  const handleViewDispatch = (dispatch: Dispatch) => {
+    // For now, just show an alert. Later we can implement a modal like in Dispatch.tsx
+    alert(`Viewing dispatch note for ${dispatch.dispatch_number}`);
+  };
+
   // Fetch dispatches for this farm
   const fetchFarmDispatches = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
       console.log('Fetching dispatches for farm:', farmInfo.farmName, 'on date:', today);
       
-      // First fetch from dispatches table (like the Dispatch page does)
+      // Fetch dispatches with their invoice data using a join
       const { data: dispatchData, error: dispatchError } = await supabase
         .from('dispatches')
-        .select('*')
+        .select(`
+          *,
+          invoices!inner(
+            id,
+            invoice_number,
+            date_sent,
+            created_at
+          )
+        `)
         .gte('created_at', `${today}T00:00:00`)
         .lte('created_at', `${today}T23:59:59`)
+        .eq('type', 'Delivery') // Only get Delivery dispatches for farm customers
         .order('created_at', { ascending: false });
 
       if (dispatchError) {
@@ -172,56 +187,76 @@ const FarmDetail: React.FC = () => {
         return;
       }
 
-      console.log('All dispatches for today:', dispatchData);
+      console.log('All Delivery dispatches for today:', dispatchData);
       console.log('Number of dispatches found:', dispatchData?.length || 0);
 
-      // Filter dispatches for this farm customer (check both customer field and invoice data)
+      // Now we need to check which invoices belong to this farm customer
+      // We'll fetch the sales_dispatch records to match by customer name
+      const { data: salesDispatchData, error: salesError } = await supabase
+        .from('sales_dispatch')
+        .select('po_number, customer, hatch_date')
+        .eq('customer', farmInfo.farmName)
+        .gte('created_at', `${today}T00:00:00`)
+        .lte('created_at', `${today}T23:59:59`);
+
+      if (salesError) {
+        console.error('Error fetching sales dispatch data:', salesError);
+        return;
+      }
+
+      console.log('Sales dispatch data for farm:', salesDispatchData);
+
+      // Filter dispatches that belong to this farm customer
       const farmDispatches = (dispatchData || []).filter(dispatch => {
-        // Check if dispatch customer matches farm name
-        const customerMatch = dispatch.customer === farmInfo.farmName;
-        console.log('Checking dispatch customer:', dispatch.customer, 'vs farm name:', farmInfo.farmName, 'match:', customerMatch);
+        // Check if the dispatch's invoice corresponds to a PO for this farm customer
+        const matchingSalesDispatch = salesDispatchData?.find(sales => {
+          const invoiceNumber = dispatch.invoices?.invoice_number;
+          const expectedInvoiceNumber = sales.po_number?.replace('PO', 'INV');
+          return invoiceNumber === expectedInvoiceNumber;
+        });
         
-        // Also check if customer is null/undefined and try to get from invoice
-        if (!customerMatch && (!dispatch.customer || dispatch.customer === 'undefined')) {
-          console.log('Dispatch customer is undefined/null, will check invoice data later');
-          return true; // Include it for now, we'll check invoice data in mapping
-        }
-        
-        return customerMatch;
+        console.log('Checking dispatch:', dispatch.dispatch_number, 'invoice:', dispatch.invoices?.invoice_number, 'matches farm:', !!matchingSalesDispatch);
+        return !!matchingSalesDispatch;
       });
 
       console.log('Farm dispatches after filtering:', farmDispatches);
       console.log('Number of farm dispatches:', farmDispatches.length);
 
-      // For each dispatch, fetch the invoice data to get complete information
-      const mappedDispatches: Dispatch[] = await Promise.all(
-        farmDispatches.map(async (dispatch) => {
-          // Fetch invoice data for this dispatch
-          const { data: invoiceData, error: invoiceError } = await supabase
-            .from('invoices')
-            .select('*')
-            .eq('id', dispatch.invoice_id)
-            .single();
+      // Map the dispatches to our Dispatch interface
+      const mappedDispatches: Dispatch[] = farmDispatches.map(dispatch => {
+        // Get the matching sales dispatch data for additional info
+        const matchingSalesDispatch = salesDispatchData?.find(sales => {
+          const invoiceNumber = dispatch.invoices?.invoice_number;
+          const expectedInvoiceNumber = sales.po_number?.replace('PO', 'INV');
+          return invoiceNumber === expectedInvoiceNumber;
+        });
 
-          if (invoiceError) {
-            console.error('Error fetching invoice data:', invoiceError);
-          }
+        console.log('Mapping dispatch:', dispatch.dispatch_number, 'with sales data:', matchingSalesDispatch);
+        
+        return {
+          id: dispatch.id,
+          dispatch_number: dispatch.dispatch_number,
+          invoice_id: dispatch.invoice_id,
+          sales_dispatch_id: '', // Not needed for this view
+          date_dispatched: dispatch.date_dispatched,
+          type: dispatch.type,
+          trucks: dispatch.trucks,
+          payment_status: dispatch.payment_status || 'pending',
+          created_by: dispatch.created_by,
+          created_at: dispatch.created_at,
+          updated_by: dispatch.updated_by,
+          updated_at: dispatch.updated_at,
+          customer: farmInfo.farmName, // Use the farm name
+          customer_type: 'Farm',
+          type_locked: dispatch.type_locked,
+          // Additional data for trip calculation
+          qty: matchingSalesDispatch ? parseInt(matchingSalesDispatch.qty) || 0 : 0,
+          hatch_date: matchingSalesDispatch?.hatch_date,
+          usedHatches: [] // Will be calculated if needed
+        };
+      });
 
-          // Get customer name and determine customer type (same logic as dispatch viewer)
-          let customerName = invoiceData?.customer || dispatch.customer;
-          let customerType = invoiceData?.customerType || dispatch.customerType;
-          let quantity = invoiceData?.qty || dispatch.qty;
-          let usedHatches = invoiceData?.usedHatches || dispatch.usedHatches;
-          
-          console.log('Processing dispatch:', {
-            dispatchId: dispatch.id,
-            dispatchCustomer: dispatch.customer,
-            invoiceCustomer: invoiceData?.customer,
-            finalCustomerName: customerName,
-            farmName: farmInfo.farmName
-          });
-          
-          // Check if this dispatch belongs to the current farm
+      console.log('Mapped dispatches:', mappedDispatches);
           const belongsToFarm = customerName === farmInfo.farmName;
           console.log('Dispatch belongs to farm:', belongsToFarm);
           
@@ -546,29 +581,23 @@ const FarmDetail: React.FC = () => {
               <thead>
                 <tr className="bg-gray-50">
                   <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Trip ID
+                    Dispatch Number
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Hatch No.
+                    Date
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Quantity
+                    Trips
                   </th>
                   <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Dispatch Type
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Status
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Created Date
+                    Dispatch Note
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {dispatches.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                    <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                       <div className="flex flex-col items-center">
                         <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                           <span className="text-gray-400 text-2xl">🚚</span>
@@ -579,50 +608,27 @@ const FarmDetail: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  dispatches.map(dispatch => {
-                    const tripDistribution = calculateTripDistribution(
-                      dispatch.qty || 0,
-                      dispatch.trucks || 1,
-                      dispatch.usedHatches || [],
-                      dispatch.dispatch_number || 'UNKNOWN',
-                      dispatch.type || 'Delivery'
-                    );
-                    
-                    return tripDistribution.map((trip, tripIndex) => (
-                      <tr key={`${dispatch.id}-${tripIndex}`} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {trip.tripId}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {trip.hatches.map((hatch: any, hatchIndex: number) => (
-                            <div key={hatchIndex} className="text-xs">
-                              {hatch.hatchNo}
-                            </div>
-                          ))}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {trip.tripQuantity.toLocaleString()}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            dispatch.type === 'Delivery' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                            {dispatch.type}
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                            Postpaid
-                          </span>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                          {new Date(dispatch.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ));
-                  }).flat()
+                  dispatches.map(dispatch => (
+                    <tr key={dispatch.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        {dispatch.dispatch_number}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        {dispatch.date_dispatched ? new Date(dispatch.date_dispatched).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        {dispatch.trucks || 1}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <button
+                          onClick={() => handleViewDispatch(dispatch)}
+                          className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
