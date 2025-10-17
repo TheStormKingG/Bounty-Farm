@@ -277,12 +277,38 @@ const Settings: React.FC = () => {
             return;
         }
 
-        if (!window.confirm('Are you sure you want to delete this user?')) {
+        // Find the user to check if they're a farmer
+        const userToDelete = users.find(u => u.id === userId);
+        if (!userToDelete) {
+            alert('User not found');
+            return;
+        }
+
+        const confirmMessage = userToDelete.role === Role.Farmer 
+            ? `Are you sure you want to delete "${userToDelete.name}"? This will also delete the corresponding farm customer record. This action cannot be undone.`
+            : 'Are you sure you want to delete this user?';
+
+        if (!window.confirm(confirmMessage)) {
             return;
         }
 
         try {
             setError(null);
+            
+            // If it's a farmer, delete the corresponding farm customer first
+            if (userToDelete.role === Role.Farmer) {
+                const { error: farmError } = await supabase
+                    .from('farm_customers')
+                    .delete()
+                    .eq('farm_name', userToDelete.name);
+
+                if (farmError) {
+                    console.error('Error deleting farm customer:', farmError);
+                    setError('Failed to delete farm customer: ' + farmError.message);
+                    return;
+                }
+                console.log('Deleted farm customer:', userToDelete.name);
+            }
             
             // Delete from staff_table
             const { error } = await supabase

@@ -56,6 +56,8 @@ const App: React.FC = () => {
         return '/hatch-cycles';
       case Role.SalesClerk:
         return '/sales';
+      case Role.Farmer:
+        return '/farm'; // Default farm page, will redirect to specific farm
       case Role.User:
         return '/';
       default:
@@ -97,6 +99,10 @@ const App: React.FC = () => {
           <Route path="/dispatch" element={<Dispatch />} />
           <Route path="/delivery" element={<Delivery />} />
           <Route path="/customers" element={<Customers />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={[Role.Farmer]} />}>
+          <Route path="/farm/:farmName" element={<FarmDetail />} />
         </Route>
 
         <Route path="/login" element={<Navigate to={getHomeRouteForRole(user.role)} />} />

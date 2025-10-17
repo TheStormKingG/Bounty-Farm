@@ -50,7 +50,7 @@ interface TripDetail {
 }
 
 const FarmDetail: React.FC = () => {
-  const { farmId } = useParams<{ farmId: string }>();
+  const { farmId, farmName } = useParams<{ farmId?: string; farmName?: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -429,6 +429,48 @@ const FarmDetail: React.FC = () => {
     }
   };
 
+  // Set farm info based on parameters
+  useEffect(() => {
+    if (farmName) {
+      // If farmName is provided (for farmers), set it directly
+      setFarmInfo(prev => ({
+        ...prev,
+        farmName: decodeURIComponent(farmName)
+      }));
+    } else if (farmId) {
+      // If farmId is provided (for admins), fetch farm info from database
+      const fetchFarmInfo = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('farm_customers')
+            .select('farm_name, farm_address, contact_person, contact_number')
+            .eq('id', farmId)
+            .single();
+
+          if (error) {
+            console.error('Error fetching farm info:', error);
+            setError('Failed to fetch farm information');
+            return;
+          }
+
+          if (data) {
+            setFarmInfo({
+              farmName: data.farm_name,
+              farmAddress: data.farm_address,
+              contactPerson: data.contact_person,
+              contactNumber: data.contact_number
+            });
+          }
+        } catch (err) {
+          console.error('Unexpected error fetching farm info:', err);
+          setError('An unexpected error occurred while fetching farm information');
+        }
+      };
+
+      fetchFarmInfo();
+    }
+  }, [farmId, farmName]);
+
   // Fetch flocks for this farm
   useEffect(() => {
     const fetchFlocks = async () => {
@@ -490,10 +532,10 @@ const FarmDetail: React.FC = () => {
       }
     };
 
-    if (farmId) {
+    if (farmId || farmName) {
       fetchFlocks();
     }
-  }, [farmId, user?.email]);
+  }, [farmId, farmName, user?.email]);
 
   // Fetch dispatches when farm info is available
   useEffect(() => {
@@ -506,14 +548,14 @@ const FarmDetail: React.FC = () => {
   const handleAddFlock = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!farmId) return;
+    if (!farmId && !farmName) return;
 
     try {
       // For now, we'll just add to local state
       // In the future, this would insert into the flocks table
       const newFlock: Flock = {
         id: Date.now().toString(),
-        farmId,
+        farmId: farmId || farmName || '',
         flockNumber: flocks.length + 1,
         flockName: newFlockName,
         breed: newBreed,
@@ -543,7 +585,7 @@ const FarmDetail: React.FC = () => {
 
   // Handle flock click - navigate to flock detail
   const handleFlockClick = (flock: Flock) => {
-    navigate(`/farm/${farmId}/flock/${flock.id}`, { 
+    navigate(`/farm/${farmId || farmName}/flock/${flock.id}`, { 
       state: { 
         flockName: flock.flockName,
         breed: flock.breed,

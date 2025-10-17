@@ -342,11 +342,34 @@ const Customers: React.FC = () => {
 
   // Delete farm customer
   const handleDeleteFarmCustomer = async (customer: FarmCustomer) => {
-    if (!confirm(`Are you sure you want to delete "${customer.farmName}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete "${customer.farmName}"? This will also delete the corresponding user account. This action cannot be undone.`)) {
       return;
     }
 
     try {
+      // First, find and delete the corresponding user
+      const { data: userData, error: userError } = await supabase
+        .from('staff_table')
+        .select('id, email')
+        .eq('name', customer.farmName)
+        .eq('role', 'Farmer')
+        .single();
+
+      if (userData) {
+        const { error: deleteUserError } = await supabase
+          .from('staff_table')
+          .delete()
+          .eq('id', userData.id);
+
+        if (deleteUserError) {
+          console.error('Error deleting user:', deleteUserError);
+          setError('Failed to delete user account: ' + deleteUserError.message);
+          return;
+        }
+        console.log('Deleted user account:', userData.email);
+      }
+
+      // Then delete the farm customer
       const { error } = await supabase
         .from('farm_customers')
         .delete()
@@ -357,7 +380,7 @@ const Customers: React.FC = () => {
         setError('Failed to delete farm customer: ' + error.message);
       } else {
         fetchFarmCustomers(); // Refresh the table
-        alert(`Farm customer "${customer.farmName}" deleted successfully!`);
+        alert(`Farm customer "${customer.farmName}" and corresponding user account deleted successfully!`);
       }
     } catch (err) {
       console.error('Unexpected error:', err);

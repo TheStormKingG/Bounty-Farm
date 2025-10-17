@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
 import { useNavigate } from 'react-router-dom';
+import { Role } from '../types';
 
 interface FarmCustomer {
   id: string;
@@ -21,6 +22,16 @@ const Farm: React.FC = () => {
   const [farmCustomers, setFarmCustomers] = useState<FarmCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect farmers to their specific farm detail page
+  useEffect(() => {
+    if (user?.role === Role.Farmer) {
+      // For farmers, redirect to their specific farm detail page
+      const farmName = user.name || '';
+      navigate(`/farm/${encodeURIComponent(farmName)}`);
+      return;
+    }
+  }, [user, navigate]);
 
   // Fetch farm customers from database
   useEffect(() => {
