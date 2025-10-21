@@ -48,6 +48,16 @@ interface TripDetail {
     quantity: number;
   }>;
   totalQuantity: number;
+  status?: 'pending' | 'received';
+  difference?: number;
+  reason?: 'DOA' | 'N/A';
+}
+
+interface Placement {
+  id: string;
+  tripId: string;
+  penFlock: number;
+  quantity: number;
 }
 
 const FarmDetail: React.FC = () => {
@@ -62,6 +72,11 @@ const FarmDetail: React.FC = () => {
     pathname: location.pathname,
     user: user?.role
   });
+
+  // Set farmer view based on user role
+  useEffect(() => {
+    setIsFarmerView(user?.role === Role.Farmer);
+  }, [user?.role]);
   
   const [farmInfo, setFarmInfo] = useState({
     farmName: '',
@@ -81,6 +96,8 @@ const FarmDetail: React.FC = () => {
   const [dispatchInvoiceData, setDispatchInvoiceData] = useState<any>(null);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [tripDistribution, setTripDistribution] = useState<any[]>([]);
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [isFarmerView, setIsFarmerView] = useState(false);
   const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
@@ -253,9 +270,20 @@ const FarmDetail: React.FC = () => {
         
         console.log('Calculated trips:', trips);
         
+        // Initialize trip distribution with default status values for farmer view
+        const tripsWithStatus = trips.map(trip => ({
+          ...trip,
+          status: 'pending' as 'pending' | 'received',
+          reason: 'DOA' as 'DOA' | 'N/A'
+        }));
+        
         setDispatchInvoiceData(invoiceData);
         setCustomerDetails(customerDetails);
-        setTripDistribution(trips);
+        setTripDistribution(tripsWithStatus);
+        
+        // Clear placements when opening modal
+        setPlacements([]);
+        
         setIsDispatchModalVisible(true);
       }
     } catch (err) {
@@ -325,6 +353,50 @@ const FarmDetail: React.FC = () => {
     };
     
     html2pdf().set(opt).from(element).save();
+  };
+
+  // Placement management functions
+  const addPlacement = () => {
+    const newPlacement: Placement = {
+      id: Date.now().toString(),
+      tripId: tripDistribution[0]?.tripId || '',
+      penFlock: 1,
+      quantity: 0
+    };
+    setPlacements([...placements, newPlacement]);
+  };
+
+  const updatePlacement = (id: string, field: keyof Placement, value: string | number) => {
+    setPlacements(placements.map(p => 
+      p.id === id ? { ...p, [field]: value } : p
+    ));
+  };
+
+  const removePlacement = (id: string) => {
+    setPlacements(placements.filter(p => p.id !== id));
+  };
+
+  const calculateTripDifference = (tripId: string) => {
+    const trip = tripDistribution.find(t => t.tripId === tripId);
+    if (!trip) return 0;
+    
+    const placedQuantity = placements
+      .filter(p => p.tripId === tripId)
+      .reduce((sum, p) => sum + p.quantity, 0);
+    
+    return trip.totalQuantity - placedQuantity;
+  };
+
+  const updateTripStatus = (tripId: string, status: 'pending' | 'received') => {
+    setTripDistribution(tripDistribution.map(trip => 
+      trip.tripId === tripId ? { ...trip, status } : trip
+    ));
+  };
+
+  const updateTripReason = (tripId: string, reason: 'DOA' | 'N/A') => {
+    setTripDistribution(tripDistribution.map(trip => 
+      trip.tripId === tripId ? { ...trip, reason } : trip
+    ));
   };
 
   // Fetch dispatches for this farm
@@ -723,66 +795,97 @@ const FarmDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Incoming Dispatches Table */}
+        {/* Incoming Dispatches Section - Different views for Admin vs Farmer */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Dispatch Number
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Date
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Trips
-                  </th>
-                  <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                    Dispatch Note
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {dispatches.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                          <span className="text-gray-400 text-2xl">🚚</span>
-                        </div>
-                        <p className="text-lg font-medium mb-2">No Incoming Dispatches</p>
-                        <p className="text-sm">Dispatches will appear here when invoices are paid for this farm.</p>
-                      </div>
-                    </td>
+          
+          {isFarmerView ? (
+            /* Farmer View - Chicks Arriving Button */
+            <div className="text-center py-8">
+              {dispatches.length > 0 ? (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => handleViewDispatch(dispatches[0])}
+                    className="bg-purple-800 hover:bg-purple-900 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
+                  >
+                    Chicks Arriving
+                  </button>
+                  <p className="text-sm text-gray-600">
+                    {dispatches.length} dispatch{dispatches.length > 1 ? 'es' : ''} scheduled for today
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <button
+                    disabled
+                    className="bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg cursor-not-allowed"
+                  >
+                    Chicks Arriving
+                  </button>
+                  <p className="text-sm text-gray-500">No Planned Dispatch</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Admin View - Table */
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                      Dispatch Number
+                    </th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                      Date
+                    </th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                      Trips
+                    </th>
+                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                      Dispatch Note
+                    </th>
                   </tr>
-                ) : (
-                  dispatches.map(dispatch => (
-                    <tr key={dispatch.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                        {dispatch.dispatch_number}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                        {dispatch.date_dispatched ? new Date(dispatch.date_dispatched).toLocaleDateString() : 'N/A'}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                        {dispatch.trucks || 1}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
-                        <button
-                          onClick={() => handleViewDispatch(dispatch)}
-                          className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
-                        >
-                          View
-                        </button>
+                </thead>
+                <tbody>
+                  {dispatches.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                        <div className="flex flex-col items-center">
+                          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                            <span className="text-gray-400 text-2xl">🚚</span>
+                          </div>
+                          <p className="text-lg font-medium mb-2">No Incoming Dispatches</p>
+                          <p className="text-sm">Dispatches will appear here when invoices are paid for this farm.</p>
+                        </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    dispatches.map(dispatch => (
+                      <tr key={dispatch.id} className="hover:bg-gray-50">
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {dispatch.dispatch_number}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {dispatch.date_dispatched ? new Date(dispatch.date_dispatched).toLocaleDateString() : 'N/A'}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          {dispatch.trucks || 1}
+                        </td>
+                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                          <button
+                            onClick={() => handleViewDispatch(dispatch)}
+                            className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Flock Management */}
@@ -1090,30 +1193,153 @@ const FarmDetail: React.FC = () => {
                         <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip ID</th>
                         <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Hatch NO's</th>
                         <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip Quantity</th>
+                        {isFarmerView && (
+                          <>
+                            <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
+                            <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Difference</th>
+                            {tripDistribution.some(trip => calculateTripDifference(trip.tripId) !== 0) && (
+                              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Reason</th>
+                            )}
+                          </>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {tripDistribution.map((trip, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                            {trip.tripId}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                            {trip.hatches.map((hatch: any, hatchIndex: number) => (
-                              <div key={hatchIndex} className="text-xs">
-                                {hatch.hatchNo}
-                              </div>
-                            ))}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                            {trip.totalQuantity.toLocaleString()}
-                          </td>
-                        </tr>
-                      ))}
+                      {tripDistribution.map((trip, index) => {
+                        const difference = calculateTripDifference(trip.tripId);
+                        const showReason = difference !== 0;
+                        
+                        return (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              {trip.tripId}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              {trip.hatches.map((hatch: any, hatchIndex: number) => (
+                                <div key={hatchIndex} className="text-xs">
+                                  {hatch.hatchNo}
+                                </div>
+                              ))}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              {trip.totalQuantity.toLocaleString()}
+                            </td>
+                            {isFarmerView && (
+                              <>
+                                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                  <button
+                                    onClick={() => updateTripStatus(trip.tripId, trip.status === 'pending' ? 'received' : 'pending')}
+                                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                      trip.status === 'received' 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                                    }`}
+                                  >
+                                    {trip.status || 'pending'}
+                                  </button>
+                                </td>
+                                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                  <span className={`font-medium ${difference > 0 ? 'text-red-600' : difference < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                                    {difference > 0 ? `+${difference.toLocaleString()}` : difference.toLocaleString()}
+                                  </span>
+                                </td>
+                                {showReason && (
+                                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                    <button
+                                      onClick={() => updateTripReason(trip.tripId, trip.reason === 'DOA' ? 'N/A' : 'DOA')}
+                                      className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                                        trip.reason === 'DOA' 
+                                          ? 'bg-red-100 text-red-800 hover:bg-red-200' 
+                                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {trip.reason || 'DOA'}
+                                    </button>
+                                  </td>
+                                )}
+                              </>
+                            )}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               </div>
+
+              {/* Placement Table - Farmer View Only */}
+              {isFarmerView && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Placement:</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip #</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Pen/Flock</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Quantity</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {placements.map(placement => (
+                          <tr key={placement.id} className="hover:bg-gray-50">
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              <select
+                                value={placement.tripId}
+                                onChange={(e) => updatePlacement(placement.id, 'tripId', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              >
+                                {tripDistribution.map(trip => (
+                                  <option key={trip.tripId} value={trip.tripId}>
+                                    {trip.tripId}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              <select
+                                value={placement.penFlock}
+                                onChange={(e) => updatePlacement(placement.id, 'penFlock', parseInt(e.target.value))}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                              >
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                                  <option key={num} value={num}>
+                                    {num}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              <input
+                                type="number"
+                                value={placement.quantity}
+                                onChange={(e) => updatePlacement(placement.id, 'quantity', parseInt(e.target.value) || 0)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                min="0"
+                              />
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                              <button
+                                onClick={() => removePlacement(placement.id)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                Remove
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <button
+                      onClick={addPlacement}
+                      className="mt-3 w-full bg-purple-800 hover:bg-purple-900 text-white font-medium py-2 px-4 rounded transition-colors"
+                    >
+                      + Add Placement
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Footer */}
               <div className="mt-auto pt-6 border-t border-gray-200">
