@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../src/supabase';
+import { Role } from '../types';
 import html2pdf from 'html2pdf.js';
 
 interface Flock {
@@ -441,8 +442,47 @@ const FarmDetail: React.FC = () => {
     console.log('FarmDetail debug:', {
       farmId,
       farmName,
-      decodedFarmName: farmName ? decodeURIComponent(farmName) : null
+      decodedFarmName: farmName ? decodeURIComponent(farmName) : null,
+      userRole: user?.role,
+      userName: user?.name
     });
+    
+    // Check if farmer is trying to access a farm that's not theirs
+    if (user?.role === Role.Farmer && farmId) {
+      const checkFarmerAccess = async () => {
+        try {
+          const { data: farmData, error: farmError } = await supabase
+            .from('farm_customers')
+            .select('id, farm_name')
+            .eq('id', farmId)
+            .single();
+
+          if (farmError || !farmData) {
+            console.error('Error finding farm for access check:', farmError);
+            setError('Farm not found.');
+            return;
+          }
+
+          // Check if the farmer's name matches the farm name
+          if (farmData.farm_name !== user.name) {
+            console.error('Farmer access denied:', {
+              farmerName: user.name,
+              farmName: farmData.farm_name,
+              farmId
+            });
+            setError('Access denied. You can only access your own farm.');
+            return;
+          }
+
+          console.log('Farmer access granted to farm:', farmData);
+        } catch (err) {
+          console.error('Unexpected error in farmer access check:', err);
+          setError('An unexpected error occurred while checking access.');
+        }
+      };
+
+      checkFarmerAccess();
+    }
     
     if (farmName) {
       // If farmName is provided (for farmers), set it directly
@@ -598,8 +638,7 @@ const FarmDetail: React.FC = () => {
 
   // Handle flock click - navigate to flock detail
   const handleFlockClick = (flock: Flock) => {
-    const baseRoute = farmId ? `/farm/${farmId}` : `/farmer/${farmName}`;
-    navigate(`${baseRoute}/flock/${flock.id}`, { 
+    navigate(`/farm/${farmId}/flock/${flock.id}`, { 
       state: { 
         flockName: flock.flockName,
         breed: flock.breed,

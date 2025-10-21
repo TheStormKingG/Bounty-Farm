@@ -27,11 +27,30 @@ const Farm: React.FC = () => {
   // Redirect farmers to their specific farm detail page (only if on /farm route)
   useEffect(() => {
     if (user?.role === Role.Farmer && location.pathname === '/farm') {
-      // For farmers, redirect to their specific farm detail page
-      const farmName = user.name || '';
-      console.log('Farm.tsx redirecting farmer to:', `/farmer/${encodeURIComponent(farmName)}`);
-      navigate(`/farmer/${encodeURIComponent(farmName)}`);
-      return;
+      // For farmers, find their farm UUID and redirect to their specific farm detail page
+      const findAndRedirectFarmer = async () => {
+        try {
+          const { data: farmData, error: farmError } = await supabase
+            .from('farm_customers')
+            .select('id, farm_name')
+            .eq('farm_name', user.name)
+            .single();
+
+          if (farmError || !farmData) {
+            console.error('Error finding farm customer for farmer redirect:', farmError);
+            setError('Farm customer record not found. Please contact administrator.');
+            return;
+          }
+
+          console.log('Farm.tsx redirecting farmer to:', `/farm/${farmData.id}`);
+          navigate(`/farm/${farmData.id}`);
+        } catch (err) {
+          console.error('Unexpected error in farmer redirect:', err);
+          setError('An unexpected error occurred while redirecting.');
+        }
+      };
+
+      findAndRedirectFarmer();
     }
   }, [user, navigate, location.pathname]);
 
