@@ -260,6 +260,32 @@ const FarmDetail: React.FC = () => {
     }
   };
 
+  // Handle viewing dispatch note for received dispatches
+  const handleViewReceivedDispatch = async (receipt: any) => {
+    try {
+      // Create a mock dispatch object from the receipt data
+      const mockDispatch: Dispatch = {
+        id: receipt.id,
+        invoiceId: '', // No invoice for farm dispatches
+        customer: farmInfo.farmName,
+        customerType: 'Farm',
+        type: 'Delivery',
+        qty: receipt.tripDistribution?.reduce((sum: number, trip: any) => sum + (trip.totalQuantity || 0), 0) || 0,
+        hatchDate: receipt.confirmedAt,
+        usedHatches: receipt.tripDistribution?.flatMap((trip: any) => trip.hatches || []) || [],
+        createdAt: receipt.confirmedAt,
+        trucks: receipt.tripDistribution?.length || 1,
+        dispatch_number: receipt.dispatchNumber
+      };
+
+      // Use the existing handleViewDispatch function with the mock dispatch
+      await handleViewDispatch(mockDispatch);
+    } catch (error) {
+      console.error('Error viewing received dispatch:', error);
+      setError('Failed to view dispatch note: ' + (error as Error).message);
+    }
+  };
+
   // Handle viewing dispatch note
   const handleViewDispatch = async (dispatch: Dispatch) => {
     try {
@@ -267,7 +293,6 @@ const FarmDetail: React.FC = () => {
       
       // For farm dispatches, we don't need invoice data since they're post-paid
       let invoiceData = null;
-      let customerDetails = null;
       
       if (dispatch.invoiceId) {
         // Only fetch invoice data if it exists (for individual customers)
@@ -1429,7 +1454,7 @@ const FarmDetail: React.FC = () => {
                         {!isFarmerView && (
                           <div className="mt-4 text-center">
                             <button
-                              onClick={() => handleViewDispatch(receipt)}
+                              onClick={() => handleViewReceivedDispatch(receipt)}
                               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
                             >
                               View Dispatch Note
