@@ -226,10 +226,71 @@ const Dispatch: React.FC = () => {
   };
 
   const handleViewFarmDispatch = async (dispatch: any) => {
-    // This would open a dispatch note modal similar to individual dispatch
-    console.log('Viewing farm dispatch:', dispatch);
-    // TODO: Implement farm dispatch note viewing
+    // Navigate to the farm details page for this farm
+    if (dispatch.customer) {
+      // Find the farm ID from the farm name
+      const { data: farmData } = await supabase
+        .from('farm_customers')
+        .select('id')
+        .eq('farm_name', dispatch.customer)
+        .single();
+      
+      if (farmData) {
+        // Navigate to farm details page
+        window.location.href = `/farm/${farmData.id}`;
+      } else {
+        console.error('Farm not found:', dispatch.customer);
+        alert('Farm not found');
+      }
+    } else {
+      console.error('No customer information available for dispatch');
+      alert('No farm information available');
+    }
   };
+
+  // Process and filter farm dispatches
+  const processedFarmDispatches = React.useMemo(() => {
+    let filtered = [...farmDispatches];
+
+    // Date range filtering
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      filtered = filtered.filter(dispatch => {
+        const dispatchDate = new Date(dispatch.created_at);
+        return dispatchDate >= start && dispatchDate <= end;
+      });
+    }
+
+    // Search filtering
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(dispatch => 
+        dispatch.dispatch_number?.toLowerCase().includes(term) ||
+        dispatch.customer?.toLowerCase().includes(term) ||
+        dispatch.type?.toLowerCase().includes(term)
+      );
+    }
+
+    // Sorting
+    if (sortColumn) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortColumn as keyof typeof a];
+        let bValue = b[sortColumn as keyof typeof b];
+
+        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+        if (sortDirection === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
+    }
+
+    return filtered;
+  }, [farmDispatches, startDate, endDate, searchTerm, sortColumn, sortDirection]);
 
   // Function to download dispatch as PDF
   const downloadDispatchPDF = () => {
@@ -843,12 +904,59 @@ const Dispatch: React.FC = () => {
       </div>
     </div>
 
-      {/* Farm Dispatches Table */}
+      {/* Farm Dispatch Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Farm Dispatches</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Farm Dispatch</h2>
+          <button 
+            onClick={fetchFarmDispatches}
+            className="px-3 py-1.5 bg-[#5c3a6b] text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
+          >
+            Refresh Dispatches
+          </button>
         </div>
         
+        {/* Filtering Section */}
+        <div className="mb-6 mt-2">
+          {/* Date fields row */}
+          <div className="flex gap-2 mb-2">
+            <div className="w-1/2">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
+                placeholder="Start Date"
+              />
+            </div>
+            <div className="w-1/2">
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
+                placeholder="End Date"
+              />
+            </div>
+          </div>
+          
+          {/* Search field */}
+          <div className="relative">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
+              placeholder="Search..."
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -859,7 +967,7 @@ const Dispatch: React.FC = () => {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}>
                 {[
-                  'Dispatch Number', 'Farm Name', 'Date', 'Status', 'Actions'
+                  'DISPATCH NUMBER', 'FARM NAME', 'DATE', 'STATUS', 'ACTIONS'
                 ].map((header, index) => (
                   <th
                     key={header}
@@ -875,15 +983,23 @@ const Dispatch: React.FC = () => {
                   >
                     <div className="flex items-center">
                       <span className="text-white font-medium text-xs">{header}</span>
+                      <div className="ml-1 flex flex-col">
+                        <svg className="w-3 h-3 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        <svg className="w-3 h-3 text-white opacity-50 -mt-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     </div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {farmDispatches.map((dispatch) => (
+              {processedFarmDispatches.map((dispatch) => (
                 <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                  <td className="px-4 py-3 text-sm">{dispatch.dispatch_number}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
                   <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
                   <td className="px-4 py-3 text-sm">
                     {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
@@ -919,6 +1035,12 @@ const Dispatch: React.FC = () => {
             </tbody>
           </table>
         </div>
+        
+        {processedFarmDispatches.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No farm dispatches found matching your criteria.
+          </div>
+        )}
       </div>
 
       {/* Dispatch Note Modal */}
