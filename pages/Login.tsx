@@ -59,6 +59,8 @@ const Login: React.FC = () => {
         
         // For farmers, redirect to their specific farm page
         if (userRole === Role.Farmer) {
+          console.log('Farmer login - searching for farm:', staffData?.name);
+          
           // Find the farm customer record to get the UUID
           const { data: farmData, error: farmError } = await supabase
             .from('farm_customers')
@@ -66,19 +68,23 @@ const Login: React.FC = () => {
             .eq('farm_name', staffData?.name)
             .single();
 
+          console.log('Farm query result:', { farmData, farmError });
+
           if (farmError || !farmData) {
             console.error('Error finding farm customer:', farmError);
-            setError('Farm customer record not found. Please contact administrator.');
+            setError(`Farm customer record not found for "${staffData?.name}". Please contact administrator.`);
             setIsLoading(false);
             return;
           }
 
           console.log('Farmer login - found farm:', farmData);
           console.log('Farmer login - navigating to:', `/farm/${farmData.id}`);
-          navigate(`/farm/${farmData.id}`);
+          
+          // Use replace to prevent back button issues
+          navigate(`/farm/${farmData.id}`, { replace: true });
         } else {
           console.log('Non-farmer login - navigating to:', getHomeRouteForRole(userRole));
-          navigate(getHomeRouteForRole(userRole));
+          navigate(getHomeRouteForRole(userRole), { replace: true });
         }
       } else {
         setError('Invalid email or password');

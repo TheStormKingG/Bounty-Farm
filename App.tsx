@@ -57,9 +57,9 @@ const App: React.FC = () => {
       case Role.SalesClerk:
         return '/sales';
       case Role.Farmer:
-        // For farmers, we need to get their farm name and redirect to specific farm
-        // This will be handled in the Login component, not here
-        return '/farm';
+        // Farmers should not be redirected from root - they should go directly to their farm
+        // This prevents redirect loops. Login component handles farmer redirects.
+        return '/';
       case Role.User:
         return '/';
       default:

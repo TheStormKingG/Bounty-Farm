@@ -38,12 +38,12 @@ const Farm: React.FC = () => {
 
           if (farmError || !farmData) {
             console.error('Error finding farm customer for farmer redirect:', farmError);
-            setError('Farm customer record not found. Please contact administrator.');
+            setError(`Farm customer record not found for "${user.name}". Please contact administrator.`);
             return;
           }
 
           console.log('Farm.tsx redirecting farmer to:', `/farm/${farmData.id}`);
-          navigate(`/farm/${farmData.id}`);
+          navigate(`/farm/${farmData.id}`, { replace: true });
         } catch (err) {
           console.error('Unexpected error in farmer redirect:', err);
           setError('An unexpected error occurred while redirecting.');
