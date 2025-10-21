@@ -57,6 +57,7 @@ const Dispatch: React.FC = () => {
         .from('dispatches')
         .select('*')
         .eq('type', 'Pick Up')
+        .eq('payment_status', 'paid')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -97,12 +98,13 @@ const Dispatch: React.FC = () => {
         return;
       }
 
-      // Update local state
-      setDispatches(prev => prev.map(dispatch => 
-        dispatch.id === dispatchId 
-          ? { ...dispatch, payment_status: newStatus }
-          : dispatch
-      ));
+      // Update local state - remove from table if changed to pending
+      if (newStatus === 'pending') {
+        setDispatches(prev => prev.filter(dispatch => dispatch.id !== dispatchId));
+      } else {
+        // If changed to paid, we need to refetch to get the updated dispatch
+        await fetchDispatches();
+      }
 
       console.log(`Payment status updated to ${newStatus} for dispatch ${dispatchId}`);
     } catch (err) {

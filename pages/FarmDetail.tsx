@@ -1149,25 +1149,6 @@ const FarmDetail: React.FC = () => {
             </button>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">{farmInfo.farmName}</h1>
           </div>
-          
-          {/* Farm Info Card */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Farm Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <span className="text-gray-600 font-medium">Address:</span>
-                <p className="text-gray-800">{farmInfo.farmAddress}</p>
-              </div>
-              <div>
-                <span className="text-gray-600 font-medium">Contact Person:</span>
-                <p className="text-gray-800">{farmInfo.contactPerson}</p>
-              </div>
-              <div>
-                <span className="text-gray-600 font-medium">Contact Number:</span>
-                <p className="text-gray-800">{farmInfo.contactNumber}</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Incoming Dispatches Section - Different views for Admin vs Farmer */}

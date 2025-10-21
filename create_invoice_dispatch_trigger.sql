@@ -50,7 +50,6 @@ BEGIN
         date_dispatched,
         type,
         trucks,
-        payment_status,
         created_by,
         updated_by
     ) VALUES (
@@ -60,7 +59,6 @@ BEGIN
         NEW.date_ordered,
         dispatch_type,
         NEW.trucks_required,
-        CASE WHEN customer_type = 'Farm' THEN 'Post-paid' ELSE 'pending' END,
         NEW.created_by,
         NEW.updated_by
     ) RETURNING id INTO dispatch_id;

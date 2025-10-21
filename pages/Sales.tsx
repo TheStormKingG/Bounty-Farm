@@ -964,7 +964,7 @@ const Sales: React.FC = () => {
       {/* Combined Filtering and Table Section */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Purchase Orders</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Purchase Orders</h2>
                 <button
             onClick={async () => {
               const nextPO = await generateNextPONumber();
@@ -1173,7 +1173,7 @@ const Sales: React.FC = () => {
       {/* Invoices Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Individual Invoices</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Individual Invoices</h2>
                         </div>
         
         {/* Filtering Section */}
