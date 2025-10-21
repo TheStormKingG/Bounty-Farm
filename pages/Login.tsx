@@ -41,6 +41,9 @@ const Login: React.FC = () => {
       const success = await login(email, password);
       
       if (success) {
+        // Wait a moment for the user context to be updated
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Get user role to determine redirect
         const { data: staffData } = await supabase
           .from('staff_table')

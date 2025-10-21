@@ -13,13 +13,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
 
   console.log('ProtectedRoute check:', {
     user: user?.role,
+    userName: user?.name,
+    userEmail: user?.email,
     allowedRoles,
-    hasAccess: user && allowedRoles.includes(user.role)
+    hasAccess: user && allowedRoles.includes(user.role),
+    userObject: user
   });
 
   if (!user || !allowedRoles.includes(user.role)) {
     // Redirect them to the root, which will then handle role-based redirection.
     console.log('ProtectedRoute: Access denied, redirecting to /');
+    console.log('Access denied details:', {
+      hasUser: !!user,
+      userRole: user?.role,
+      allowedRoles,
+      roleMatch: user ? allowedRoles.includes(user.role) : false
+    });
     return <Navigate to="/" replace />;
   }
 
