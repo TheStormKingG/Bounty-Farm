@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS received_dispatches (
   placements JSONB,
   pen_flock_summary JSONB,
   confirmed_by VARCHAR(255),
+  edit_count INTEGER DEFAULT 0,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

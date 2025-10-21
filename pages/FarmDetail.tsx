@@ -191,6 +191,68 @@ const FarmDetail: React.FC = () => {
     return trips;
   };
 
+  // Handle editing receipt with existing data
+  const handleEditReceipt = async (receipt: any) => {
+    try {
+      // Find the original dispatch
+      const originalDispatch = dispatches.find(d => d.id === receipt.id);
+      if (!originalDispatch) return;
+
+      setCurrentDispatch(originalDispatch);
+      
+      // Load existing receipt data into state
+      setPlacements(receipt.placements || []);
+      setDoaValues(receipt.tripDistribution?.reduce((acc: any, trip: any) => {
+        acc[trip.tripId] = trip.doa || 0;
+        return acc;
+      }, {}) || {});
+      setNaValues(receipt.tripDistribution?.reduce((acc: any, trip: any) => {
+        acc[trip.tripId] = trip.na || 0;
+        return acc;
+      }, {}) || {});
+
+      // Fetch invoice data for this dispatch
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('id', originalDispatch.invoiceId)
+        .single();
+
+      if (invoiceError) {
+        console.error('Error fetching invoice data:', invoiceError);
+        setError('Failed to fetch invoice data: ' + invoiceError.message);
+      } else {
+        // Get customer name and determine customer type
+        let customerName = farmInfo.farmName; // Use farm name
+        let customerType = 'Farm';
+        let quantity = originalDispatch.qty || 0;
+        let usedHatches = originalDispatch.usedHatches || [];
+
+        // Fetch hatch cycles data
+        const { data: hatchCycles, error: hatchError } = await supabase
+          .from('hatch_cycles')
+          .select('hatch_number, hatch_date, qty')
+          .in('hatch_number', usedHatches);
+
+        if (hatchError) {
+          console.error('Error fetching hatch cycles:', hatchError);
+        }
+
+        // Calculate trip distribution
+        const tripDistribution = calculateTripDistribution(quantity, 1, hatchCycles || [], originalDispatch.dispatch_number, 'Delivery');
+
+        // Set the trip distribution for the modal
+        setTripDistribution(tripDistribution);
+
+        // Open the modal
+        setIsDispatchModalVisible(true);
+      }
+    } catch (error) {
+      console.error('Error in handleEditReceipt:', error);
+      setError('Failed to load receipt for editing: ' + (error as Error).message);
+    }
+  };
+
   // Handle viewing dispatch note
   const handleViewDispatch = async (dispatch: Dispatch) => {
     try {
@@ -374,6 +436,18 @@ const FarmDetail: React.FC = () => {
     setPlacements(placements.map(p => 
       p.id === id ? { ...p, [field]: value } : p
     ));
+
+    // Auto-calculate N/A when quantity changes
+    if (field === 'quantity') {
+      const updatedPlacement = placements.find(p => p.id === id);
+      if (updatedPlacement) {
+        const tripId = updatedPlacement.tripId;
+        const difference = calculateTripDifference(tripId);
+        const doaValue = doaValues[tripId] || 0;
+        const naValue = Math.max(0, difference - doaValue);
+        updateNaValue(tripId, naValue);
+      }
+    }
   };
 
   const removePlacement = (id: string) => {
@@ -445,14 +519,24 @@ const FarmDetail: React.FC = () => {
     const existingReceiptIndex = receivedDispatches.findIndex(r => r.id === currentDispatch.id);
     
     if (existingReceiptIndex >= 0) {
-      // Update existing receipt
-      updateReceipt(currentDispatch.id, receiptData);
+      // Update existing receipt - increment edit count
+      const existingReceipt = receivedDispatches[existingReceiptIndex];
+      const editCount = (existingReceipt.editCount || 0) + 1;
+      const timerDuration = editCount === 1 ? 3 * 60 : 60; // 3 minutes for first edit, 60 seconds for subsequent
+      
+      updateReceipt(currentDispatch.id, { ...receiptData, editCount });
+      
+      // Set new timer duration
+      setDispatchTimers(prev => ({
+        ...prev,
+        [currentDispatch.id]: timerDuration
+      }));
     } else {
       // Create new receipt
       setReceivedDispatches(prev => [receiptData, ...prev]);
       setDispatchTimers(prev => ({
         ...prev,
-        [currentDispatch.id]: 4 * 60 + 9 // 4 minutes 9 seconds
+        [currentDispatch.id]: 4 * 60 + 9 // 4 minutes 9 seconds for initial confirmation
       }));
       
       // Save to database for cross-device persistence
@@ -496,6 +580,7 @@ const FarmDetail: React.FC = () => {
           placements: receipt.placements,
           pen_flock_summary: receipt.penFlockSummary,
           confirmed_by: receipt.confirmedBy,
+          edit_count: receipt.editCount || 0,
           updated_at: receipt.updatedAt || receipt.confirmedAt
         }));
 
@@ -534,6 +619,7 @@ const FarmDetail: React.FC = () => {
         placements: record.placements,
         penFlockSummary: record.pen_flock_summary,
         confirmedBy: record.confirmed_by,
+        editCount: record.edit_count || 0,
         updatedAt: record.updated_at
       }));
     } catch (error) {
@@ -1154,12 +1240,12 @@ const FarmDetail: React.FC = () => {
                     <div className="mb-4">
                       <h4 className="text-md font-semibold text-gray-700 mb-2">Trip Summary:</h4>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse border border-gray-300">
+                        <table className="w-full border-collapse border border-gray-300 table-fixed">
                           <thead>
                             <tr className="bg-gray-50">
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Trip ID</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Difference</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Trip ID</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Quantity</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Difference</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1190,12 +1276,12 @@ const FarmDetail: React.FC = () => {
                     <div className="mb-4">
                       <h4 className="text-md font-semibold text-gray-700 mb-2">Pen/Flock Summary:</h4>
                       <div className="overflow-x-auto">
-                        <table className="w-full border-collapse border border-gray-300">
+                        <table className="w-full border-collapse border border-gray-300 table-fixed">
                           <thead>
                             <tr className="bg-gray-50">
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Pen/Flock</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Hatches</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Total Chicks</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Pen/Flock</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Hatches</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700 w-1/3">Total Chicks</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1258,13 +1344,7 @@ const FarmDetail: React.FC = () => {
                           You can make edits/corrections until the timer expires
                         </p>
                         <button
-                          onClick={() => {
-                            // Reopen the dispatch modal for editing
-                            const originalDispatch = dispatches.find(d => d.id === receipt.id);
-                            if (originalDispatch) {
-                              handleViewDispatch(originalDispatch);
-                            }
-                          }}
+                          onClick={() => handleEditReceipt(receipt)}
                           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
                         >
                           Edit Receipt
