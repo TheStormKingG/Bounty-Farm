@@ -213,6 +213,12 @@ const FarmDetail: React.FC = () => {
       }, {}) || {});
 
       // Fetch invoice data for this dispatch
+      if (!originalDispatch.invoiceId) {
+        console.error('No invoice ID found for dispatch:', originalDispatch);
+        setError('No invoice ID found for dispatch');
+        return;
+      }
+
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .select('*')
@@ -260,6 +266,12 @@ const FarmDetail: React.FC = () => {
       setCurrentDispatch(dispatch);
       
       // Fetch invoice data for this dispatch
+      if (!dispatch.invoiceId) {
+        console.error('No invoice ID found for dispatch:', dispatch);
+        setError('No invoice ID found for dispatch');
+        return;
+      }
+
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .select('*')
@@ -1190,11 +1202,18 @@ const FarmDetail: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {dispatches.filter(dispatch => 
-                    !receivedDispatches.some(received => 
+                  {dispatches.filter(dispatch => {
+                    const isConfirmed = receivedDispatches.some(received => 
                       received.dispatch_id === dispatch.id && received.status === 'Confirmed'
-                    )
-                  ).length === 0 ? (
+                    );
+                    console.log(`Dispatch ${dispatch.dispatch_number} (ID: ${dispatch.id}) - isConfirmed: ${isConfirmed}`);
+                    if (isConfirmed) {
+                      console.log('Matching received dispatch:', receivedDispatches.find(received => 
+                        received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+                      ));
+                    }
+                    return !isConfirmed;
+                  }).length === 0 ? (
                     <tr>
                       <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                         <div className="flex flex-col items-center">
@@ -1207,11 +1226,13 @@ const FarmDetail: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    dispatches.filter(dispatch => 
-                      !receivedDispatches.some(received => 
+                    dispatches.filter(dispatch => {
+                      const isConfirmed = receivedDispatches.some(received => 
                         received.dispatch_id === dispatch.id && received.status === 'Confirmed'
-                      )
-                    ).map(dispatch => (
+                      );
+                      console.log(`Filtering dispatch ${dispatch.dispatch_number} (ID: ${dispatch.id}) - isConfirmed: ${isConfirmed}`);
+                      return !isConfirmed;
+                    }).map(dispatch => (
                       <tr key={dispatch.id} className="hover:bg-gray-50">
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
                           {dispatch.dispatch_number}
@@ -1241,6 +1262,9 @@ const FarmDetail: React.FC = () => {
 
         {/* Received Dispatches Section */}
         {receivedDispatches.length > 0 && (
+          <>
+            {console.log('Received dispatches:', receivedDispatches)}
+            {console.log('Dispatches:', dispatches)}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Received Dispatches</h2>
             <div className="space-y-4">
@@ -1418,6 +1442,7 @@ const FarmDetail: React.FC = () => {
               })}
             </div>
           </div>
+          </>
         )}
 
         {/* Flock Management */}
