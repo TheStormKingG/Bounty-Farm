@@ -115,8 +115,16 @@ const Dispatch: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('dispatches')
-        .select('*')
-        .eq('customer_type', 'Farm')
+        .select(`
+          *,
+          invoices!inner(
+            id,
+            invoice_number,
+            customer,
+            created_at
+          )
+        `)
+        .eq('type', 'Delivery')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -124,7 +132,18 @@ const Dispatch: React.FC = () => {
         return;
       }
 
-      setFarmDispatches(data || []);
+      // Filter to only include dispatches where the customer is a farm customer
+      const { data: farmCustomers } = await supabase
+        .from('farm_customers')
+        .select('farm_name');
+
+      const farmNames = farmCustomers?.map(fc => fc.farm_name) || [];
+      
+      const farmDispatchesData = data?.filter(dispatch => 
+        dispatch.invoices && farmNames.includes(dispatch.invoices.customer)
+      ) || [];
+
+      setFarmDispatches(farmDispatchesData);
     } catch (error) {
       console.error('Error fetching farm dispatches:', error);
     }
@@ -846,9 +865,9 @@ const Dispatch: React.FC = () => {
               {farmDispatches.map((dispatch) => (
                 <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">{dispatch.dispatch_number}</td>
-                  <td className="px-4 py-3 text-sm">{dispatch.customer}</td>
+                  <td className="px-4 py-3 text-sm">{dispatch.invoices?.customer || 'N/A'}</td>
                   <td className="px-4 py-3 text-sm">
-                    {dispatch.createdAt ? new Date(dispatch.createdAt).toLocaleDateString() : 'N/A'}
+                    {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-4 py-3 text-sm">
                     <button
