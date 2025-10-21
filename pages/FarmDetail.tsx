@@ -98,6 +98,8 @@ const FarmDetail: React.FC = () => {
   const [tripDistribution, setTripDistribution] = useState<any[]>([]);
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [isFarmerView, setIsFarmerView] = useState(false);
+  const [receivedDispatches, setReceivedDispatches] = useState<any[]>([]);
+  const [dispatchTimers, setDispatchTimers] = useState<{ [key: string]: number }>({});
   const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
@@ -384,7 +386,16 @@ const FarmDetail: React.FC = () => {
       .filter(p => p.tripId === tripId)
       .reduce((sum, p) => sum + p.quantity, 0);
     
-    return trip.totalQuantity - placedQuantity;
+    // Positive when placed > trip quantity (over-placement)
+    return placedQuantity - trip.totalQuantity;
+  };
+
+  const calculatePenFlockSummary = () => {
+    const summary: { [key: number]: number } = {};
+    placements.forEach(placement => {
+      summary[placement.penFlock] = (summary[placement.penFlock] || 0) + placement.quantity;
+    });
+    return summary;
   };
 
   const updateTripStatus = (tripId: string, status: 'pending' | 'received') => {
@@ -397,6 +408,53 @@ const FarmDetail: React.FC = () => {
     setTripDistribution(tripDistribution.map(trip => 
       trip.tripId === tripId ? { ...trip, reason } : trip
     ));
+  };
+
+  // Confirm Receipt functionality
+  const confirmReceipt = () => {
+    if (!currentDispatch) return;
+    
+    const receiptData = {
+      id: currentDispatch.id,
+      dispatchNumber: currentDispatch.dispatch_number,
+      confirmedAt: new Date().toISOString(),
+      tripDistribution: tripDistribution.map(trip => ({
+        ...trip,
+        difference: calculateTripDifference(trip.tripId),
+        status: calculateTripDifference(trip.tripId) === 0 ? 'received' : trip.status
+      })),
+      placements: placements,
+      penFlockSummary: calculatePenFlockSummary(),
+      confirmedBy: user?.name || 'Farmer'
+    };
+    
+    setReceivedDispatches(prev => [receiptData, ...prev]);
+    setDispatchTimers(prev => ({
+      ...prev,
+      [currentDispatch.id]: 30 * 60 // 30 minutes in seconds
+    }));
+    
+    // Start timer
+    const timerInterval = setInterval(() => {
+      setDispatchTimers(prev => {
+        const newTimers = { ...prev };
+        if (newTimers[currentDispatch.id] > 0) {
+          newTimers[currentDispatch.id]--;
+        } else {
+          clearInterval(timerInterval);
+        }
+        return newTimers;
+      });
+    }, 1000);
+    
+    setIsDispatchModalVisible(false);
+  };
+
+  // Format timer display
+  const formatTimer = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   // Fetch dispatches for this farm
@@ -802,7 +860,7 @@ const FarmDetail: React.FC = () => {
           {isFarmerView ? (
             /* Farmer View - Chicks Arriving Button */
             <div className="text-center py-8">
-              {dispatches.length > 0 ? (
+              {dispatches.length > 0 && receivedDispatches.length === 0 ? (
                 <div className="space-y-4">
                   <button
                     onClick={() => handleViewDispatch(dispatches[0])}
@@ -813,6 +871,16 @@ const FarmDetail: React.FC = () => {
                   <p className="text-sm text-gray-600">
                     {dispatches.length} dispatch{dispatches.length > 1 ? 'es' : ''} scheduled for today
                   </p>
+                </div>
+              ) : receivedDispatches.length > 0 ? (
+                <div className="space-y-4">
+                  <button
+                    disabled
+                    className="bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg cursor-not-allowed"
+                  >
+                    Chicks Arriving
+                  </button>
+                  <p className="text-sm text-gray-500">Dispatch already received and confirmed</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -887,6 +955,137 @@ const FarmDetail: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Received Dispatches Section */}
+        {receivedDispatches.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Received Dispatches</h2>
+            <div className="space-y-4">
+              {receivedDispatches.map((receipt, index) => {
+                const timer = dispatchTimers[receipt.id] || 0;
+                const isEditable = isFarmerView && timer > 0;
+                
+                return (
+                  <div key={receipt.id} className={`border rounded-lg p-4 ${isEditable ? 'border-yellow-300 bg-yellow-50' : 'border-gray-300 bg-gray-50'}`}>
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {receipt.dispatchNumber}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      {isEditable && (
+                        <div className="text-right">
+                          <div className="text-sm text-gray-600 mb-1">Edit Time Remaining:</div>
+                          <div className={`text-lg font-bold ${timer < 300 ? 'text-red-600' : 'text-green-600'}`}>
+                            {formatTimer(timer)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Trip Summary */}
+                    <div className="mb-4">
+                      <h4 className="text-md font-semibold text-gray-700 mb-2">Trip Summary:</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-300">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Trip ID</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Difference</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {receipt.tripDistribution.map((trip: any, tripIndex: number) => (
+                              <tr key={tripIndex} className="hover:bg-gray-50">
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  {trip.tripId}
+                                </td>
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  {trip.totalQuantity.toLocaleString()}
+                                </td>
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                    trip.status === 'received' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {trip.status}
+                                  </span>
+                                </td>
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  <span className={`font-medium ${
+                                    trip.difference > 0 ? 'text-green-600' :
+                                    trip.difference < 0 ? 'text-red-600' : 'text-gray-600'
+                                  }`}>
+                                    {trip.difference > 0 ? `+${trip.difference.toLocaleString()}` : trip.difference.toLocaleString()}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    {/* Pen/Flock Summary */}
+                    <div className="mb-4">
+                      <h4 className="text-md font-semibold text-gray-700 mb-2">Pen/Flock Summary:</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-300">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Pen/Flock</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Total Chicks</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(receipt.penFlockSummary)
+                              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                              .map(([penFlock, total]) => (
+                                <tr key={penFlock} className="hover:bg-gray-50">
+                                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                    {penFlock}
+                                  </td>
+                                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800 font-medium">
+                                    {total.toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    
+                    {isEditable && (
+                      <div className="text-center pt-3 border-t border-gray-300">
+                        <p className="text-sm text-gray-600 mb-2">
+                          You can make edits/corrections until the timer expires
+                        </p>
+                        <button
+                          onClick={() => {
+                            // Reopen the dispatch modal for editing
+                            const originalDispatch = dispatches.find(d => d.id === receipt.id);
+                            if (originalDispatch) {
+                              handleViewDispatch(originalDispatch);
+                            }
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                        >
+                          Edit Receipt
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Flock Management */}
         <div className="bg-white rounded-lg shadow-md">
@@ -1197,7 +1396,7 @@ const FarmDetail: React.FC = () => {
                           <>
                             <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
                             <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Difference</th>
-                            {tripDistribution.some(trip => calculateTripDifference(trip.tripId) !== 0) && (
+                            {tripDistribution.some(trip => calculateTripDifference(trip.tripId) < 0) && (
                               <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Reason</th>
                             )}
                           </>
@@ -1207,7 +1406,10 @@ const FarmDetail: React.FC = () => {
                     <tbody>
                       {tripDistribution.map((trip, index) => {
                         const difference = calculateTripDifference(trip.tripId);
-                        const showReason = difference !== 0;
+                        const showReason = difference < 0; // Only show reason when under-placed (negative difference)
+                        
+                        // Auto-change status to received when difference = 0
+                        const currentStatus = difference === 0 ? 'received' : (trip.status || 'pending');
                         
                         return (
                           <tr key={index} className="hover:bg-gray-50">
@@ -1228,18 +1430,22 @@ const FarmDetail: React.FC = () => {
                               <>
                                 <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
                                   <button
-                                    onClick={() => updateTripStatus(trip.tripId, trip.status === 'pending' ? 'received' : 'pending')}
+                                    onClick={() => updateTripStatus(trip.tripId, currentStatus === 'pending' ? 'received' : 'pending')}
                                     className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                      trip.status === 'received' 
+                                      currentStatus === 'received' 
                                         ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                                         : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                                     }`}
                                   >
-                                    {trip.status || 'pending'}
+                                    {currentStatus}
                                   </button>
                                 </td>
                                 <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                                  <span className={`font-medium ${difference > 0 ? 'text-red-600' : difference < 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                                  <span className={`font-medium ${
+                                    difference > 0 ? 'text-green-600' : // Over-placed (positive) = green
+                                    difference < 0 ? 'text-red-600' :   // Under-placed (negative) = red
+                                    'text-gray-600'                      // Exact match = gray
+                                  }`}>
                                     {difference > 0 ? `+${difference.toLocaleString()}` : difference.toLocaleString()}
                                   </span>
                                 </td>
@@ -1336,6 +1542,47 @@ const FarmDetail: React.FC = () => {
                       className="mt-3 w-full bg-purple-800 hover:bg-purple-900 text-white font-medium py-2 px-4 rounded transition-colors"
                     >
                       + Add Placement
+                    </button>
+                  </div>
+                  
+                  {/* Summary Table */}
+                  {Object.keys(calculatePenFlockSummary()).length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">Pen/Flock Summary:</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse border border-gray-300">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Pen/Flock</th>
+                              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Total Chicks</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(calculatePenFlockSummary())
+                              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+                              .map(([penFlock, total]) => (
+                                <tr key={penFlock} className="hover:bg-gray-50">
+                                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                    {penFlock}
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800 font-medium">
+                                    {total.toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Confirm Receipt Button */}
+                  <div className="mt-6 text-center">
+                    <button
+                      onClick={confirmReceipt}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
+                    >
+                      Confirm Receipt
                     </button>
                   </div>
                 </div>
