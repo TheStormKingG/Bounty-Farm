@@ -92,9 +92,6 @@ const Sales: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({});
   
-  // Farm dispatches state
-  const [farmDispatches, setFarmDispatches] = useState<any[]>([]);
-  
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -186,7 +183,6 @@ const Sales: React.FC = () => {
       await fetchCustomers();
       await fetchSalesDispatch();
       await fetchInvoices();
-      await fetchFarmDispatches();
     };
 
     initializeData();
@@ -216,25 +212,6 @@ const Sales: React.FC = () => {
       setInvoiceDates(dates);
     } catch (err) {
       console.error('Unexpected error fetching invoices:', err);
-    }
-  };
-
-  const fetchFarmDispatches = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('dispatches')
-        .select('*')
-        .eq('customer_type', 'Farm')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching farm dispatches:', error);
-        return;
-      }
-
-      setFarmDispatches(data || []);
-    } catch (error) {
-      console.error('Error fetching farm dispatches:', error);
     }
   };
 
@@ -676,7 +653,7 @@ const Sales: React.FC = () => {
   };
 
   // Handler functions for new functionality
-  const handleStatusToggle = async (id: string, type: 'invoice' | 'dispatch') => {
+  const handleStatusToggle = async (id: string, type: 'invoice') => {
     try {
       if (type === 'invoice') {
         const invoice = invoices.find(inv => inv.id === id);
@@ -689,19 +666,6 @@ const Sales: React.FC = () => {
           
           setInvoices(prev => prev.map(inv => 
             inv.id === id ? { ...inv, status: newStatus } : inv
-          ));
-        }
-      } else if (type === 'dispatch') {
-        const dispatch = farmDispatches.find(disp => disp.id === id);
-        if (dispatch) {
-          const newStatus = dispatch.status === 'received' ? 'pending' : 'received';
-          await supabase
-            .from('dispatches')
-            .update({ status: newStatus })
-            .eq('id', id);
-          
-          setFarmDispatches(prev => prev.map(disp => 
-            disp.id === id ? { ...disp, status: newStatus } : disp
           ));
         }
       }
@@ -723,27 +687,6 @@ const Sales: React.FC = () => {
         console.error('Error deleting invoice:', error);
       }
     }
-  };
-
-  const handleDeleteDispatch = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this dispatch?')) {
-      try {
-        await supabase
-          .from('dispatches')
-          .delete()
-          .eq('id', id);
-        
-        setFarmDispatches(prev => prev.filter(disp => disp.id !== id));
-      } catch (error) {
-        console.error('Error deleting dispatch:', error);
-      }
-    }
-  };
-
-  const handleViewDispatch = async (dispatch: any) => {
-    // This would open a dispatch note modal similar to invoice modal
-    console.log('Viewing dispatch:', dispatch);
-    // TODO: Implement dispatch note viewing
   };
 
   // Function to find hatches by date and calculate batches required
@@ -1366,83 +1309,6 @@ const Sales: React.FC = () => {
                         </div>
                     </div>
 
-      {/* Farm Dispatches Table */}
-      <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Farm Dispatches</h2>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr style={{ 
-                backgroundColor: '#ff8c42',
-                borderRadius: '8px 8px 0 0',
-                borderBottom: 'none',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}>
-                {[
-                  'Dispatch Number', 'Farm Name', 'Date', 'Status', 'Actions'
-                ].map((header, index) => (
-                  <th
-                    key={header}
-                    className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                    style={{ 
-                      width: '150px', 
-                      minWidth: '150px',
-                      backgroundColor: '#ff8c42',
-                      color: 'white',
-                      fontWeight: '600',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <span className="text-white font-medium text-xs">{header}</span>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {farmDispatches.map((dispatch) => (
-                <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                  <td className="px-4 py-3 text-sm">{dispatch.dispatch_number}</td>
-                  <td className="px-4 py-3 text-sm">{dispatch.customer}</td>
-                  <td className="px-4 py-3 text-sm">
-                    {dispatch.createdAt ? new Date(dispatch.createdAt).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <button
-                      onClick={() => handleStatusToggle(dispatch.id, 'dispatch')}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        dispatch.status === 'received' 
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      }`}
-                    >
-                      {dispatch.status === 'received' ? 'Received' : 'Pending'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-sm space-x-2">
-                    <button 
-                      onClick={() => handleViewDispatch(dispatch)}
-                      className="text-[#5C3A6B] hover:underline font-medium"
-                    >
-                      View
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteDispatch(dispatch.id)}
-                      className="text-red-600 hover:underline font-medium"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
       {/* Add Record Modal */}
       {isAddModalVisible && (
