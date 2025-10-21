@@ -61,6 +61,14 @@ const Login: React.FC = () => {
         if (userRole === Role.Farmer) {
           console.log('Farmer login - searching for farm:', staffData?.name);
           
+          // First, let's check what farm customers exist
+          const { data: allFarms, error: allFarmsError } = await supabase
+            .from('farm_customers')
+            .select('id, farm_name')
+            .order('created_at', { ascending: false });
+          
+          console.log('All farm customers:', allFarms);
+          
           // Find the farm customer record to get the UUID
           const { data: farmData, error: farmError } = await supabase
             .from('farm_customers')
@@ -72,7 +80,7 @@ const Login: React.FC = () => {
 
           if (farmError || !farmData) {
             console.error('Error finding farm customer:', farmError);
-            setError(`Farm customer record not found for "${staffData?.name}". Please contact administrator.`);
+            setError(`Farm customer record not found for "${staffData?.name}". Available farms: ${allFarms?.map(f => f.farm_name).join(', ') || 'none'}`);
             setIsLoading(false);
             return;
           }
