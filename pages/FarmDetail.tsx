@@ -441,26 +441,58 @@ const FarmDetail: React.FC = () => {
       confirmedBy: user?.name || 'Farmer'
     };
     
-    setReceivedDispatches(prev => [receiptData, ...prev]);
-    setDispatchTimers(prev => ({
-      ...prev,
-      [currentDispatch.id]: 30 * 60 // 30 minutes in seconds
-    }));
+    // Check if we're editing an existing receipt
+    const existingReceiptIndex = receivedDispatches.findIndex(r => r.id === currentDispatch.id);
     
-    // Start timer
-    const timerInterval = setInterval(() => {
-      setDispatchTimers(prev => {
-        const newTimers = { ...prev };
-        if (newTimers[currentDispatch.id] > 0) {
-          newTimers[currentDispatch.id]--;
-        } else {
-          clearInterval(timerInterval);
-        }
-        return newTimers;
-      });
-    }, 1000);
+    if (existingReceiptIndex >= 0) {
+      // Update existing receipt
+      updateReceipt(currentDispatch.id, receiptData);
+    } else {
+      // Create new receipt
+      setReceivedDispatches(prev => [receiptData, ...prev]);
+      setDispatchTimers(prev => ({
+        ...prev,
+        [currentDispatch.id]: 4 * 60 + 9 // 4 minutes 9 seconds
+      }));
+      
+      // Save to localStorage
+      const updatedReceivedDispatches = [receiptData, ...receivedDispatches];
+      localStorage.setItem(`receivedDispatches_${farmInfo.farmName}`, JSON.stringify(updatedReceivedDispatches));
+      
+      // Start timer
+      const timerInterval = setInterval(() => {
+        setDispatchTimers(prev => {
+          const newTimers = { ...prev };
+          if (newTimers[currentDispatch.id] > 0) {
+            newTimers[currentDispatch.id]--;
+          } else {
+            clearInterval(timerInterval);
+          }
+          return newTimers;
+        });
+      }, 1000);
+    }
     
     setIsDispatchModalVisible(false);
+  };
+
+  // Update existing receipt instead of creating new one
+  const updateReceipt = (receiptId: string, updatedData: any) => {
+    setReceivedDispatches(prev => 
+      prev.map(receipt => 
+        receipt.id === receiptId 
+          ? { ...receipt, ...updatedData, updatedAt: new Date().toISOString() }
+          : receipt
+      )
+    );
+    
+    // Update localStorage
+    const updatedReceivedDispatches = receivedDispatches.map(receipt => 
+      receipt.id === receiptId 
+        ? { ...receipt, ...updatedData, updatedAt: new Date().toISOString() }
+        : receipt
+    );
+    localStorage.setItem(`receivedDispatches_${farmInfo.farmName}`, JSON.stringify(updatedReceivedDispatches));
   };
 
   // Format timer display
@@ -768,6 +800,32 @@ const FarmDetail: React.FC = () => {
     }
   }, [farmInfo.farmName]);
 
+  // Load received dispatches from localStorage on component mount
+  useEffect(() => {
+    const savedReceivedDispatches = localStorage.getItem(`receivedDispatches_${farmInfo.farmName}`);
+    if (savedReceivedDispatches) {
+      try {
+        const parsed = JSON.parse(savedReceivedDispatches);
+        setReceivedDispatches(parsed);
+        
+        // Restore timers for farmer view
+        if (isFarmerView) {
+          const now = Date.now();
+          parsed.forEach((receipt: any) => {
+            const confirmedAt = new Date(receipt.confirmedAt).getTime();
+            const elapsed = Math.floor((now - confirmedAt) / 1000);
+            const remaining = Math.max(0, (4 * 60 + 9) - elapsed); // 4 minutes 9 seconds
+            if (remaining > 0) {
+              setDispatchTimers(prev => ({ ...prev, [receipt.id]: remaining }));
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error loading received dispatches:', error);
+      }
+    }
+  }, [farmInfo.farmName, isFarmerView]);
+
   // Handle add new flock
   const handleAddFlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1037,8 +1095,6 @@ const FarmDetail: React.FC = () => {
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Trip ID</th>
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Difference</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">DOA</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">N/A</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1057,12 +1113,6 @@ const FarmDetail: React.FC = () => {
                                   }`}>
                                     {trip.difference > 0 ? `+${trip.difference.toLocaleString()}` : trip.difference.toLocaleString()}
                                   </span>
-                                </td>
-                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
-                                  {trip.doa || 0}
-                                </td>
-                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
-                                  {trip.na || 0}
                                 </td>
                               </tr>
                             ))}
@@ -1577,11 +1627,17 @@ const FarmDetail: React.FC = () => {
                                 onChange={(e) => updatePlacement(placement.id, 'tripId', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               >
-                                {tripDistribution.map(trip => (
-                                  <option key={trip.tripId} value={trip.tripId}>
-                                    {getTripIdEnding(trip.tripId)}
-                                  </option>
-                                ))}
+                                {tripDistribution
+                                  .filter(trip => {
+                                    const difference = calculateTripDifference(trip.tripId);
+                                    return difference !== 0; // Hide trips with zero difference (fully placed)
+                                  })
+                                  .map(trip => (
+                                    <option key={trip.tripId} value={trip.tripId}>
+                                      {getTripIdEnding(trip.tripId)}
+                                    </option>
+                                  ))
+                                }
                               </select>
                             </td>
                             <td className="border border-gray-300 px-2 sm:px-4 py-2 text-sm text-gray-800">
