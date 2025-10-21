@@ -476,6 +476,28 @@ const FarmDetail: React.FC = () => {
     return parts.slice(-2).join('-'); // Get last two parts (DISP-01)
   };
 
+  // Get hatches for a specific pen/flock based on placements
+  const getHatchesForPenFlock = (penFlock: number) => {
+    const penPlacements = placements.filter(p => p.penFlock === penFlock);
+    const tripIds = [...new Set(penPlacements.map(p => p.tripId))];
+    
+    return tripIds.flatMap(tripId => {
+      const trip = tripDistribution.find(t => t.tripId === tripId);
+      return trip?.hatches || [];
+    });
+  };
+
+  // Get hatches for a specific pen/flock in received dispatch
+  const getHatchesForPenFlockReceived = (penFlock: number, receipt: any) => {
+    const penPlacements = receipt.placements.filter((p: any) => p.penFlock === penFlock);
+    const tripIds = [...new Set(penPlacements.map((p: any) => p.tripId))];
+    
+    return tripIds.flatMap((tripId: string) => {
+      const trip = receipt.tripDistribution.find((t: any) => t.tripId === tripId);
+      return trip?.hatches || [];
+    });
+  };
+
   // Fetch dispatches for this farm
   const fetchFarmDispatches = async () => {
     try {
@@ -1070,8 +1092,7 @@ const FarmDetail: React.FC = () => {
                                     {penFlock}
                                   </td>
                                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
-                                    {receipt.tripDistribution
-                                      .flatMap((trip: any) => trip.hatches || [])
+                                    {getHatchesForPenFlockReceived(parseInt(penFlock), receipt)
                                       .map((hatch: any, index: number) => (
                                         <div key={index} className="text-xs">
                                           {hatch.hatchNo}
@@ -1088,6 +1109,33 @@ const FarmDetail: React.FC = () => {
                         </table>
                       </div>
                     </div>
+                    
+                    {/* DOA/N/A Summary Note for Received Dispatch */}
+                    {receipt.tripDistribution && receipt.tripDistribution.some((trip: any) => trip.doa > 0 || trip.na > 0) && (
+                      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-sm text-gray-700">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">DOA Total:</span>
+                            <span className="text-red-600 font-semibold">
+                              {receipt.tripDistribution.reduce((sum: number, trip: any) => sum + (trip.doa || 0), 0).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="font-medium">N/A Total:</span>
+                            <span className="text-gray-600 font-semibold">
+                              {receipt.tripDistribution.reduce((sum: number, trip: any) => sum + (trip.na || 0), 0).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-300">
+                            <span className="font-medium">Total Difference:</span>
+                            <span className="text-blue-600 font-semibold">
+                              {(receipt.tripDistribution.reduce((sum: number, trip: any) => sum + (trip.doa || 0), 0) + 
+                                receipt.tripDistribution.reduce((sum: number, trip: any) => sum + (trip.na || 0), 0)).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     
                     {isEditable && (
                       <div className="text-center pt-3 border-t border-gray-300">
@@ -1430,10 +1478,7 @@ const FarmDetail: React.FC = () => {
                           <>
                             <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">Difference</th>
                             {tripDistribution.some(trip => calculateTripDifference(trip.tripId) < 0) && (
-                              <>
-                                <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">DOA</th>
-                                <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">N/A</th>
-                              </>
+                              <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">DOA</th>
                             )}
                           </>
                         )}
@@ -1473,28 +1518,24 @@ const FarmDetail: React.FC = () => {
                                   </span>
                                 </td>
                                 {showDoaNa && (
-                                  <>
-                                    <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
-                                      <input
-                                        type="number"
-                                        value={doaValues[trip.tripId] || 0}
-                                        onChange={(e) => updateDoaValue(trip.tripId, parseInt(e.target.value) || 0)}
-                                        className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
-                                        min="0"
-                                        max={Math.abs(difference)}
-                                      />
-                                    </td>
-                                    <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
-                                      <input
-                                        type="number"
-                                        value={naValues[trip.tripId] || 0}
-                                        onChange={(e) => updateNaValue(trip.tripId, parseInt(e.target.value) || 0)}
-                                        className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
-                                        min="0"
-                                        max={Math.abs(difference)}
-                                      />
-                                    </td>
-                                  </>
+                                  <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
+                                    <input
+                                      type="number"
+                                      value={doaValues[trip.tripId] || 0}
+                                      onChange={(e) => {
+                                        const value = parseInt(e.target.value) || 0;
+                                        const maxDoa = Math.abs(difference);
+                                        if (value <= maxDoa) {
+                                          updateDoaValue(trip.tripId, value);
+                                          // Auto-calculate N/A as remaining difference
+                                          updateNaValue(trip.tripId, maxDoa - value);
+                                        }
+                                      }}
+                                      className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
+                                      min="0"
+                                      max={Math.abs(difference)}
+                                    />
+                                  </td>
                                 )}
                               </>
                             )}
@@ -1514,9 +1555,9 @@ const FarmDetail: React.FC = () => {
                     <table className="w-full border-collapse border border-gray-300">
                       <thead>
                         <tr className="bg-gray-50">
-                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip #</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Pen/Flock</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Quantity</th>
+                          <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-sm font-semibold text-gray-700 w-32 sm:w-auto">Trip #</th>
+                          <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-sm font-semibold text-gray-700 w-20 sm:w-auto">Pen/Flock</th>
+                          <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-sm font-semibold text-gray-700 w-24 sm:w-auto">Quantity</th>
                           <th className="border border-gray-300 px-2 py-2 text-center text-sm font-semibold text-gray-700 w-12">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
                               <polyline points="3,6 5,6 21,6"></polyline>
@@ -1530,7 +1571,7 @@ const FarmDetail: React.FC = () => {
                       <tbody>
                         {placements.map(placement => (
                           <tr key={placement.id} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            <td className="border border-gray-300 px-2 sm:px-4 py-2 text-sm text-gray-800">
                               <select
                                 value={placement.tripId}
                                 onChange={(e) => updatePlacement(placement.id, 'tripId', e.target.value)}
@@ -1543,7 +1584,7 @@ const FarmDetail: React.FC = () => {
                                 ))}
                               </select>
                             </td>
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            <td className="border border-gray-300 px-2 sm:px-4 py-2 text-sm text-gray-800">
                               <select
                                 value={placement.penFlock}
                                 onChange={(e) => updatePlacement(placement.id, 'penFlock', parseInt(e.target.value))}
@@ -1556,7 +1597,7 @@ const FarmDetail: React.FC = () => {
                                 ))}
                               </select>
                             </td>
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            <td className="border border-gray-300 px-2 sm:px-4 py-2 text-sm text-gray-800">
                               <input
                                 type="number"
                                 value={placement.quantity}
@@ -1613,8 +1654,7 @@ const FarmDetail: React.FC = () => {
                                     {penFlock}
                                   </td>
                                   <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                                    {tripDistribution
-                                      .flatMap((trip: any) => trip.hatches || [])
+                                    {getHatchesForPenFlock(parseInt(penFlock))
                                       .map((hatch: any, index: number) => (
                                         <div key={index} className="text-xs">
                                           {hatch.hatchNo}
@@ -1634,7 +1674,7 @@ const FarmDetail: React.FC = () => {
                   )}
                   
                   {/* DOA/N/A Summary Note */}
-                  {Object.keys(doaValues).length > 0 || Object.keys(naValues).length > 0 ? (
+                  {Object.keys(doaValues).length > 0 ? (
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                       <div className="text-sm text-gray-700">
                         <div className="flex justify-between items-center">
@@ -1647,6 +1687,16 @@ const FarmDetail: React.FC = () => {
                           <span className="font-medium">N/A Total:</span>
                           <span className="text-gray-600 font-semibold">
                             {Object.values(naValues).reduce((sum: number, val: number) => sum + (val || 0), 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-300">
+                          <span className="font-medium">Total Difference:</span>
+                          <span className="text-blue-600 font-semibold">
+                            {(() => {
+                              const doaTotal = Object.values(doaValues).reduce((sum, val) => sum + (val || 0), 0);
+                              const naTotal = Object.values(naValues).reduce((sum, val) => sum + (val || 0), 0);
+                              return (doaTotal + naTotal).toLocaleString();
+                            })()}
                           </span>
                         </div>
                       </div>
