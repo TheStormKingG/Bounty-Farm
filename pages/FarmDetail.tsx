@@ -432,7 +432,9 @@ const FarmDetail: React.FC = () => {
       tripDistribution: tripDistribution.map(trip => ({
         ...trip,
         difference: calculateTripDifference(trip.tripId),
-        status: calculateTripDifference(trip.tripId) === 0 ? 'received' : trip.status
+        status: calculateTripDifference(trip.tripId) === 0 ? 'received' : trip.status,
+        doa: doaValues[trip.tripId] || 0,
+        na: naValues[trip.tripId] || 0
       })),
       placements: placements,
       penFlockSummary: calculatePenFlockSummary(),
@@ -466,6 +468,12 @@ const FarmDetail: React.FC = () => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Extract trip ID ending (e.g., "TRIP-BFLOS-053-DISP-01" -> "DISP-01")
+  const getTripIdEnding = (tripId: string) => {
+    const parts = tripId.split('-');
+    return parts.slice(-2).join('-'); // Get last two parts (DISP-01)
   };
 
   // Fetch dispatches for this farm
@@ -1006,8 +1014,9 @@ const FarmDetail: React.FC = () => {
                             <tr className="bg-gray-50">
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Trip ID</th>
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Quantity</th>
-                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Difference</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">DOA</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">N/A</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1020,21 +1029,18 @@ const FarmDetail: React.FC = () => {
                                   {trip.totalQuantity.toLocaleString()}
                                 </td>
                                 <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
-                                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                    trip.status === 'received' 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {trip.status}
-                                  </span>
-                                </td>
-                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
                                   <span className={`font-medium ${
                                     trip.difference > 0 ? 'text-green-600' :
                                     trip.difference < 0 ? 'text-red-600' : 'text-gray-600'
                                   }`}>
                                     {trip.difference > 0 ? `+${trip.difference.toLocaleString()}` : trip.difference.toLocaleString()}
                                   </span>
+                                </td>
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  {trip.doa || 0}
+                                </td>
+                                <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                  {trip.na || 0}
                                 </td>
                               </tr>
                             ))}
@@ -1051,6 +1057,7 @@ const FarmDetail: React.FC = () => {
                           <thead>
                             <tr className="bg-gray-50">
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Pen/Flock</th>
+                              <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Hatches</th>
                               <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold text-gray-700">Total Chicks</th>
                             </tr>
                           </thead>
@@ -1061,6 +1068,16 @@ const FarmDetail: React.FC = () => {
                                 <tr key={penFlock} className="hover:bg-gray-50">
                                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
                                     {penFlock}
+                                  </td>
+                                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800">
+                                    {receipt.tripDistribution
+                                      .flatMap((trip: any) => trip.hatches || [])
+                                      .map((hatch: any, index: number) => (
+                                        <div key={index} className="text-xs">
+                                          {hatch.hatchNo}
+                                        </div>
+                                      ))
+                                    }
                                   </td>
                                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-800 font-medium">
                                     {total.toLocaleString()}
@@ -1364,15 +1381,17 @@ const FarmDetail: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Dispatch Note Header */}
-                <div className="text-right">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-4">DISPATCH NOTE</h2>
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">Tin #010067340</p>
-                    <p className="text-sm text-gray-600 mb-1">Date: {dispatchInvoiceData?.date_sent ? new Date(dispatchInvoiceData.date_sent).toLocaleDateString() : new Date().toLocaleDateString()}</p>
-                    <p className="text-sm text-gray-600">Dispatch #: {currentDispatch.dispatch_number}</p>
+                {/* Dispatch Note Header - Admin Only */}
+                {!isFarmerView && (
+                  <div className="text-right">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">DISPATCH NOTE</h2>
+                    <div className="bg-gray-100 p-4 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-1">Tin #010067340</p>
+                      <p className="text-sm text-gray-600 mb-1">Date: {dispatchInvoiceData?.date_sent ? new Date(dispatchInvoiceData.date_sent).toLocaleDateString() : new Date().toLocaleDateString()}</p>
+                      <p className="text-sm text-gray-600">Dispatch #: {currentDispatch.dispatch_number}</p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Customer Details */}
@@ -1498,7 +1517,14 @@ const FarmDetail: React.FC = () => {
                           <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip #</th>
                           <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Pen/Flock</th>
                           <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Quantity</th>
-                          <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Actions</th>
+                          <th className="border border-gray-300 px-2 py-2 text-center text-sm font-semibold text-gray-700 w-12">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto">
+                              <polyline points="3,6 5,6 21,6"></polyline>
+                              <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1512,7 +1538,7 @@ const FarmDetail: React.FC = () => {
                               >
                                 {tripDistribution.map(trip => (
                                   <option key={trip.tripId} value={trip.tripId}>
-                                    {trip.tripId}
+                                    {getTripIdEnding(trip.tripId)}
                                   </option>
                                 ))}
                               </select>
@@ -1539,12 +1565,18 @@ const FarmDetail: React.FC = () => {
                                 min="0"
                               />
                             </td>
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            <td className="border border-gray-300 px-2 py-2 text-center text-sm text-gray-800">
                               <button
                                 onClick={() => removePlacement(placement.id)}
-                                className="text-red-600 hover:text-red-800 text-sm"
+                                className="text-red-600 hover:text-red-800 p-1"
+                                title="Remove placement"
                               >
-                                Remove
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3,6 5,6 21,6"></polyline>
+                                  <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
                               </button>
                             </td>
                           </tr>
@@ -1568,6 +1600,7 @@ const FarmDetail: React.FC = () => {
                           <thead>
                             <tr className="bg-gray-50">
                               <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Pen/Flock</th>
+                              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Hatches</th>
                               <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Total Chicks</th>
                             </tr>
                           </thead>
@@ -1578,6 +1611,16 @@ const FarmDetail: React.FC = () => {
                                 <tr key={penFlock} className="hover:bg-gray-50">
                                   <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
                                     {penFlock}
+                                  </td>
+                                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                    {tripDistribution
+                                      .flatMap((trip: any) => trip.hatches || [])
+                                      .map((hatch: any, index: number) => (
+                                        <div key={index} className="text-xs">
+                                          {hatch.hatchNo}
+                                        </div>
+                                      ))
+                                    }
                                   </td>
                                   <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800 font-medium">
                                     {total.toLocaleString()}
