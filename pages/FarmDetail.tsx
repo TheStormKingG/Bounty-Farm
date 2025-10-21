@@ -1248,6 +1248,7 @@ const FarmDetail: React.FC = () => {
                       received.dispatch_id === dispatch.id && received.status === 'Confirmed'
                     );
                     console.log(`Dispatch ${dispatch.dispatch_number} (ID: ${dispatch.id}) - isConfirmed: ${isConfirmed}`);
+                    console.log('Received dispatches:', receivedDispatches.map(r => ({ id: r.id, dispatch_id: r.dispatch_id, status: r.status, dispatchNumber: r.dispatchNumber })));
                     if (isConfirmed) {
                       console.log('Matching received dispatch:', receivedDispatches.find(received => 
                         received.dispatch_id === dispatch.id && received.status === 'Confirmed'
