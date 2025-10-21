@@ -30,14 +30,12 @@ BEGIN
     -- Create invoice
     INSERT INTO invoices (
         invoice_number,
-        po_number,
         date_sent,
         payment_status,
         created_by,
         updated_by
     ) VALUES (
         invoice_number,
-        NEW.po_number,
         NEW.date_ordered,
         CASE WHEN customer_type = 'Farm' THEN 'Post-paid' ELSE 'pending' END,
         NEW.created_by,

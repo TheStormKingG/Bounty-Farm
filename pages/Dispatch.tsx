@@ -957,83 +957,89 @@ const Dispatch: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr style={{ 
+        {/* Dispatch Table */}
+        <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div 
+            className="overflow-auto flex-1" 
+            style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
+          >
+            <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <thead className="sticky top-0 z-10" style={{
                 backgroundColor: '#ff8c42',
                 borderRadius: '8px 8px 0 0',
                 borderBottom: 'none',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}>
-                {[
-                  'DISPATCH NUMBER', 'FARM NAME', 'DATE', 'STATUS', 'ACTIONS'
-                ].map((header, index) => (
-                  <th
-                    key={header}
-                    className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                    style={{ 
-                      width: '150px', 
-                      minWidth: '150px',
-                      backgroundColor: '#ff8c42',
-                      color: 'white',
-                      fontWeight: '600',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                    }}
-                  >
-                    <div className="flex items-center">
-                      <span className="text-white font-medium text-xs">{header}</span>
-                      <div className="ml-1 flex flex-col">
-                        <svg className="w-3 h-3 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                        </svg>
-                        <svg className="w-3 h-3 text-white opacity-50 -mt-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
+                <tr>
+                  {[
+                    'DISPATCH NUMBER', 'FARM NAME', 'DATE', 'STATUS', 'ACTIONS'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                        <div className="ml-1 flex flex-col">
+                          <svg className="w-3 h-3 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                          </svg>
+                          <svg className="w-3 h-3 text-white opacity-50 -mt-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {processedFarmDispatches.map((dispatch) => (
-                <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                  <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
-                  <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
-                  <td className="px-4 py-3 text-sm">
-                    {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <button
-                      onClick={() => handleFarmStatusToggle(dispatch.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        dispatch.status === 'received' 
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                          : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      }`}
-                    >
-                      {dispatch.status === 'received' ? 'Received' : 'Pending'}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-sm space-x-2">
-                    <button 
-                      onClick={() => handleViewFarmDispatch(dispatch)}
-                      className="text-[#5C3A6B] hover:underline font-medium"
-                    >
-                      View
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteFarmDispatch(dispatch.id)}
-                      className="text-red-600 hover:underline font-medium"
-                    >
-                      Delete
-                    </button>
-                  </td>
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {processedFarmDispatches.map((dispatch) => (
+                  <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
+                    <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <button
+                        onClick={() => handleFarmStatusToggle(dispatch.id)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          dispatch.status === 'received' 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        }`}
+                      >
+                        {dispatch.status === 'received' ? 'Received' : 'Pending'}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-sm space-x-2">
+                      <button 
+                        onClick={() => handleViewFarmDispatch(dispatch)}
+                        className="text-[#5C3A6B] hover:underline font-medium"
+                      >
+                        View
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteFarmDispatch(dispatch.id)}
+                        className="text-red-600 hover:underline font-medium"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         
         {processedFarmDispatches.length === 0 && (
