@@ -100,6 +100,8 @@ const FarmDetail: React.FC = () => {
   const [isFarmerView, setIsFarmerView] = useState(false);
   const [receivedDispatches, setReceivedDispatches] = useState<any[]>([]);
   const [dispatchTimers, setDispatchTimers] = useState<{ [key: string]: number }>({});
+  const [doaValues, setDoaValues] = useState<{ [key: string]: number }>({});
+  const [naValues, setNaValues] = useState<{ [key: string]: number }>({});
   const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
@@ -408,6 +410,15 @@ const FarmDetail: React.FC = () => {
     setTripDistribution(tripDistribution.map(trip => 
       trip.tripId === tripId ? { ...trip, reason } : trip
     ));
+  };
+
+  // Update DOA and N/A values
+  const updateDoaValue = (tripId: string, value: number) => {
+    setDoaValues(prev => ({ ...prev, [tripId]: value }));
+  };
+
+  const updateNaValue = (tripId: string, value: number) => {
+    setNaValues(prev => ({ ...prev, [tripId]: value }));
   };
 
   // Confirm Receipt functionality
@@ -1284,33 +1295,35 @@ const FarmDetail: React.FC = () => {
 
       {/* Dispatch Note Modal */}
       {isDispatchModalVisible && currentDispatch && dispatchInvoiceData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center p-6 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">Dispatch Note - {currentDispatch.dispatch_number}</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 pr-2">Dispatch Note - {currentDispatch.dispatch_number}</h3>
               <div className="flex items-center space-x-3">
-                {/* Download PDF Button */}
-                <button 
-                  onClick={downloadDispatchPDF}
-                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
-                  title="Download PDF"
-                >
-                  <svg 
-                    width="16" 
-                    height="16" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
+                {/* Download PDF Button - Admin Only */}
+                {!isFarmerView && (
+                  <button 
+                    onClick={downloadDispatchPDF}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                    title="Download PDF"
                   >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7,10 12,15 17,10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
-                  <span className="text-sm">Download PDF</span>
-                </button>
+                    <svg 
+                      width="16" 
+                      height="16" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7,10 12,15 17,10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span className="text-sm">Download PDF</span>
+                  </button>
+                )}
                 
                 {/* Close Button */}
                 <button 
@@ -1363,13 +1376,13 @@ const FarmDetail: React.FC = () => {
               </div>
 
               {/* Customer Details */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">
                   {currentDispatch.type === 'Delivery' ? 'Deliver to:' : 'Dispatch to:'}
                 </h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
                   {customerDetails ? (
-                    <div className="space-y-1">
+                    <div className="space-y-1 text-sm sm:text-base">
                       <p className="font-medium text-gray-800">Customer Name: {customerDetails.name}</p>
                       <p className="text-gray-600">Address: {customerDetails.address}</p>
                       <p className="text-gray-600">Phone: {customerDetails.phone}</p>
@@ -1377,27 +1390,31 @@ const FarmDetail: React.FC = () => {
                       {customerDetails.contactPerson && <p className="text-gray-600">Contact Person: {customerDetails.contactPerson}</p>}
                     </div>
                   ) : (
-                    <p className="text-gray-600">Customer details not available</p>
+                    <p className="text-gray-600 text-sm sm:text-base">Customer details not available</p>
                   )}
                 </div>
               </div>
 
               {/* Trip Details */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">Trip Details:</h3>
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">Trip Details:</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300">
+                  <table className="w-full border-collapse border border-gray-300 text-xs sm:text-sm">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip ID</th>
-                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Hatch NO's</th>
-                        <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Trip Quantity</th>
+                        <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">Trip ID</th>
+                        {!isFarmerView && (
+                          <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">Hatch NO's</th>
+                        )}
+                        <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">Trip Quantity</th>
                         {isFarmerView && (
                           <>
-                            <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Status</th>
-                            <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Difference</th>
+                            <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">Difference</th>
                             {tripDistribution.some(trip => calculateTripDifference(trip.tripId) < 0) && (
-                              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">Reason</th>
+                              <>
+                                <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">DOA</th>
+                                <th className="border border-gray-300 px-2 sm:px-4 py-2 text-left text-xs sm:text-sm font-semibold text-gray-700">N/A</th>
+                              </>
                             )}
                           </>
                         )}
@@ -1406,41 +1423,28 @@ const FarmDetail: React.FC = () => {
                     <tbody>
                       {tripDistribution.map((trip, index) => {
                         const difference = calculateTripDifference(trip.tripId);
-                        const showReason = difference < 0; // Only show reason when under-placed (negative difference)
-                        
-                        // Auto-change status to received when difference = 0
-                        const currentStatus = difference === 0 ? 'received' : (trip.status || 'pending');
+                        const showDoaNa = difference < 0; // Only show DOA/N/A fields when under-placed (negative difference)
                         
                         return (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
                               {trip.tripId}
                             </td>
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                              {trip.hatches.map((hatch: any, hatchIndex: number) => (
-                                <div key={hatchIndex} className="text-xs">
-                                  {hatch.hatchNo}
-                                </div>
-                              ))}
-                            </td>
-                            <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                            {!isFarmerView && (
+                              <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
+                                {trip.hatches.map((hatch: any, hatchIndex: number) => (
+                                  <div key={hatchIndex} className="text-xs">
+                                    {hatch.hatchNo}
+                                  </div>
+                                ))}
+                              </td>
+                            )}
+                            <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
                               {trip.totalQuantity.toLocaleString()}
                             </td>
                             {isFarmerView && (
                               <>
-                                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                                  <button
-                                    onClick={() => updateTripStatus(trip.tripId, currentStatus === 'pending' ? 'received' : 'pending')}
-                                    className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                      currentStatus === 'received' 
-                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                        : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                                    }`}
-                                  >
-                                    {currentStatus}
-                                  </button>
-                                </td>
-                                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
+                                <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
                                   <span className={`font-medium ${
                                     difference > 0 ? 'text-green-600' : // Over-placed (positive) = green
                                     difference < 0 ? 'text-red-600' :   // Under-placed (negative) = red
@@ -1449,19 +1453,29 @@ const FarmDetail: React.FC = () => {
                                     {difference > 0 ? `+${difference.toLocaleString()}` : difference.toLocaleString()}
                                   </span>
                                 </td>
-                                {showReason && (
-                                  <td className="border border-gray-300 px-4 py-2 text-sm text-gray-800">
-                                    <button
-                                      onClick={() => updateTripReason(trip.tripId, trip.reason === 'DOA' ? 'N/A' : 'DOA')}
-                                      className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                                        trip.reason === 'DOA' 
-                                          ? 'bg-red-100 text-red-800 hover:bg-red-200' 
-                                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                                      }`}
-                                    >
-                                      {trip.reason || 'DOA'}
-                                    </button>
-                                  </td>
+                                {showDoaNa && (
+                                  <>
+                                    <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
+                                      <input
+                                        type="number"
+                                        value={doaValues[trip.tripId] || 0}
+                                        onChange={(e) => updateDoaValue(trip.tripId, parseInt(e.target.value) || 0)}
+                                        className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
+                                        min="0"
+                                        max={Math.abs(difference)}
+                                      />
+                                    </td>
+                                    <td className="border border-gray-300 px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-800">
+                                      <input
+                                        type="number"
+                                        value={naValues[trip.tripId] || 0}
+                                        onChange={(e) => updateNaValue(trip.tripId, parseInt(e.target.value) || 0)}
+                                        className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
+                                        min="0"
+                                        max={Math.abs(difference)}
+                                      />
+                                    </td>
+                                  </>
                                 )}
                               </>
                             )}
@@ -1575,6 +1589,26 @@ const FarmDetail: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* DOA/N/A Summary Note */}
+                  {Object.keys(doaValues).length > 0 || Object.keys(naValues).length > 0 ? (
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-700">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">DOA Total:</span>
+                          <span className="text-red-600 font-semibold">
+                            {Object.values(doaValues).reduce((sum: number, val: number) => sum + (val || 0), 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                          <span className="font-medium">N/A Total:</span>
+                          <span className="text-gray-600 font-semibold">
+                            {Object.values(naValues).reduce((sum: number, val: number) => sum + (val || 0), 0).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                   
                   {/* Confirm Receipt Button */}
                   <div className="mt-6 text-center">
