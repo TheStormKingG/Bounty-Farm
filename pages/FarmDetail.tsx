@@ -1124,27 +1124,38 @@ const FarmDetail: React.FC = () => {
           {isFarmerView ? (
             /* Farmer View - Chicks Arriving Button */
             <div className="text-center py-8">
-              {dispatches.length > 0 && receivedDispatches.length === 0 ? (
+              {dispatches.filter(dispatch => 
+                !receivedDispatches.some(received => 
+                  received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+                )
+              ).length > 0 ? (
                 <div className="space-y-4">
                   <button
-                    onClick={() => handleViewDispatch(dispatches[0])}
+                    onClick={() => {
+                      const incomingDispatches = dispatches.filter(dispatch => 
+                        !receivedDispatches.some(received => 
+                          received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+                        )
+                      );
+                      if (incomingDispatches.length > 0) {
+                        handleViewDispatch(incomingDispatches[0]);
+                      }
+                    }}
                     className="bg-purple-800 hover:bg-purple-900 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
                   >
                     Chicks Arriving
                   </button>
                   <p className="text-sm text-gray-600">
-                    {dispatches.length} dispatch{dispatches.length > 1 ? 'es' : ''} scheduled for today
+                    {dispatches.filter(dispatch => 
+                      !receivedDispatches.some(received => 
+                        received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+                      )
+                    ).length} dispatch{dispatches.filter(dispatch => 
+                      !receivedDispatches.some(received => 
+                        received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+                      )
+                    ).length > 1 ? 'es' : ''} scheduled for today
                   </p>
-                </div>
-              ) : receivedDispatches.length > 0 ? (
-                <div className="space-y-4">
-                  <button
-                    disabled
-                    className="bg-gray-400 text-white font-semibold py-3 px-8 rounded-lg cursor-not-allowed"
-                  >
-                    Chicks Arriving
-                  </button>
-                  <p className="text-sm text-gray-500">Dispatch already received and confirmed</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1154,7 +1165,7 @@ const FarmDetail: React.FC = () => {
                   >
                     Chicks Arriving
                   </button>
-                  <p className="text-sm text-gray-500">No Planned Dispatch</p>
+                  <p className="text-sm text-gray-500">No incoming dispatches</p>
                 </div>
               )}
             </div>
@@ -1181,7 +1192,7 @@ const FarmDetail: React.FC = () => {
                 <tbody>
                   {dispatches.filter(dispatch => 
                     !receivedDispatches.some(received => 
-                      received.id === dispatch.id && received.status === 'Confirmed'
+                      received.dispatch_id === dispatch.id && received.status === 'Confirmed'
                     )
                   ).length === 0 ? (
                     <tr>
@@ -1198,7 +1209,7 @@ const FarmDetail: React.FC = () => {
                   ) : (
                     dispatches.filter(dispatch => 
                       !receivedDispatches.some(received => 
-                        received.id === dispatch.id && received.status === 'Confirmed'
+                        received.dispatch_id === dispatch.id && received.status === 'Confirmed'
                       )
                     ).map(dispatch => (
                       <tr key={dispatch.id} className="hover:bg-gray-50">
