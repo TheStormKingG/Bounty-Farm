@@ -120,7 +120,6 @@ const Dispatch: React.FC = () => {
           invoices!inner(
             id,
             invoice_number,
-            customer,
             created_at
           )
         `)
@@ -132,16 +131,36 @@ const Dispatch: React.FC = () => {
         return;
       }
 
-      // Filter to only include dispatches where the customer is a farm customer
+      // Filter to only include dispatches where the related sales_dispatch customer is a farm customer
       const { data: farmCustomers } = await supabase
         .from('farm_customers')
         .select('farm_name');
 
       const farmNames = farmCustomers?.map(fc => fc.farm_name) || [];
       
-      const farmDispatchesData = data?.filter(dispatch => 
-        dispatch.invoices && farmNames.includes(dispatch.invoices.customer)
-      ) || [];
+      // For each dispatch, check if its related sales_dispatch customer is a farm customer
+      const farmDispatchesData = [];
+      
+      for (const dispatch of data || []) {
+        if (dispatch.invoices) {
+          // Get the PO number from the invoice number
+          const poNumber = dispatch.invoices.invoice_number.replace('-INV', '-PO');
+          
+          // Fetch the sales_dispatch record to get the customer
+          const { data: salesData } = await supabase
+            .from('sales_dispatch')
+            .select('customer')
+            .eq('po_number', poNumber)
+            .single();
+          
+          if (salesData && farmNames.includes(salesData.customer)) {
+            farmDispatchesData.push({
+              ...dispatch,
+              customer: salesData.customer
+            });
+          }
+        }
+      }
 
       setFarmDispatches(farmDispatchesData);
     } catch (error) {
@@ -865,7 +884,7 @@ const Dispatch: React.FC = () => {
               {farmDispatches.map((dispatch) => (
                 <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                   <td className="px-4 py-3 text-sm">{dispatch.dispatch_number}</td>
-                  <td className="px-4 py-3 text-sm">{dispatch.invoices?.customer || 'N/A'}</td>
+                  <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
                   <td className="px-4 py-3 text-sm">
                     {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
                   </td>
