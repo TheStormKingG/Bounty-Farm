@@ -824,20 +824,15 @@ const Dispatch: React.FC = () => {
                             textShadow: '0 1px 2px rgba(0,0,0,0.2)'
                           }}
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex items-center">
                             <span className="text-white font-medium text-xs">{header}</span>
-                            <div className="flex items-center space-x-1 ml-2">
-                              <button
-                                onClick={() => handleSort(columnMap[header])}
-                                className="p-1 hover:bg-gray-200 rounded"
-                                title={`Sort by ${header}`}
-                              >
-                                {sortColumn === columnMap[header] ? (
-                                  sortDirection === 'asc' ? '↑' : '↓'
-                                ) : (
-                                  '↕'
-                                )}
-                              </button>
+                            <div className="ml-1 flex flex-col">
+                              <svg className="w-3 h-3 text-white opacity-50" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                              </svg>
+                              <svg className="w-3 h-3 text-white opacity-50 -mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
                             </div>
                           </div>
                         </th>
@@ -907,7 +902,7 @@ const Dispatch: React.FC = () => {
       {/* Farm Dispatch Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Farm Dispatch</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Farm Dispatch</h2>
           <button 
             onClick={fetchFarmDispatches}
             className="px-3 py-1.5 bg-[#5c3a6b] text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
@@ -923,36 +918,41 @@ const Dispatch: React.FC = () => {
             <div className="w-1/2">
               <input
                 type="date"
+                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                placeholder="Start Date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
-                placeholder="Start Date"
               />
             </div>
             <div className="w-1/2">
               <input
                 type="date"
+                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                placeholder="End Date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
-                placeholder="End Date"
               />
             </div>
           </div>
-          
-          {/* Search field */}
-          <div className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg text-sm bg-[#FFF8F0] focus:outline-none focus:ring-2 focus:ring-[#5c3a6b] focus:border-transparent"
-              placeholder="Search..."
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          {/* Search field row */}
+          <div className="w-full">
+            <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button 
+                onClick={handleSearch}
+                className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
