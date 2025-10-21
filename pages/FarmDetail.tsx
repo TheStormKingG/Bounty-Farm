@@ -102,6 +102,7 @@ const FarmDetail: React.FC = () => {
   const [dispatchTimers, setDispatchTimers] = useState<{ [key: string]: number }>({});
   const [doaValues, setDoaValues] = useState<{ [key: string]: number }>({});
   const [naValues, setNaValues] = useState<{ [key: string]: number }>({});
+  const [expandedReceivedDispatches, setExpandedReceivedDispatches] = useState<Set<string>>(new Set());
   const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
@@ -647,6 +648,19 @@ const FarmDetail: React.FC = () => {
     await saveReceivedDispatchesToDB(updatedReceivedDispatches);
   };
 
+  // Toggle expanded state for received dispatches
+  const toggleExpandedReceivedDispatch = (dispatchId: string) => {
+    setExpandedReceivedDispatches(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dispatchId)) {
+        newSet.delete(dispatchId);
+      } else {
+        newSet.add(dispatchId);
+      }
+      return newSet;
+    });
+  };
+
   // Format timer display
   const formatTimer = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -1165,7 +1179,11 @@ const FarmDetail: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {dispatches.length === 0 ? (
+                  {dispatches.filter(dispatch => 
+                    !receivedDispatches.some(received => 
+                      received.id === dispatch.id && received.status === 'Confirmed'
+                    )
+                  ).length === 0 ? (
                     <tr>
                       <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                         <div className="flex flex-col items-center">
@@ -1178,7 +1196,11 @@ const FarmDetail: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    dispatches.map(dispatch => (
+                    dispatches.filter(dispatch => 
+                      !receivedDispatches.some(received => 
+                        received.id === dispatch.id && received.status === 'Confirmed'
+                      )
+                    ).map(dispatch => (
                       <tr key={dispatch.id} className="hover:bg-gray-50">
                         <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
                           {dispatch.dispatch_number}
@@ -1214,17 +1236,27 @@ const FarmDetail: React.FC = () => {
               {receivedDispatches.map((receipt, index) => {
                 const timer = dispatchTimers[receipt.id] || 0;
                 const isEditable = isFarmerView && timer > 0;
+                const isExpanded = expandedReceivedDispatches.has(receipt.id);
                 
                 return (
                   <div key={receipt.id} className={`border rounded-lg p-4 ${isEditable ? 'border-yellow-300 bg-yellow-50' : 'border-gray-300 bg-gray-50'}`}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {receipt.dispatchNumber}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
-                        </p>
+                    {/* Header with expand/collapse button */}
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => toggleExpandedReceivedDispatch(receipt.id)}
+                          className="text-gray-600 hover:text-gray-800 transition-colors"
+                        >
+                          {isExpanded ? '▼' : '▶'}
+                        </button>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {receipt.dispatchNumber}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
                       {isEditable && (
                         <div className="text-right">
@@ -1235,6 +1267,10 @@ const FarmDetail: React.FC = () => {
                         </div>
                       )}
                     </div>
+                    
+                    {/* Expanded content */}
+                    {isExpanded && (
+                      <>
                     
                     {/* Trip Summary */}
                     <div className="mb-4">
@@ -1338,18 +1374,33 @@ const FarmDetail: React.FC = () => {
                       </div>
                     )}
                     
-                    {isEditable && (
-                      <div className="text-center pt-3 border-t border-gray-300">
-                        <p className="text-sm text-gray-600 mb-2">
-                          You can make edits/corrections until the timer expires
-                        </p>
-                        <button
-                          onClick={() => handleEditReceipt(receipt)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
-                        >
-                          Edit Receipt
-                        </button>
-                      </div>
+                        {/* View Dispatch Note Button - Admin Only */}
+                        {!isFarmerView && (
+                          <div className="mt-4 text-center">
+                            <button
+                              onClick={() => handleViewDispatch(receipt)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
+                            >
+                              View Dispatch Note
+                            </button>
+                          </div>
+                        )}
+                        
+                        {/* Edit Receipt Button - Only show when editable */}
+                        {isEditable && (
+                          <div className="text-center pt-3 border-t border-gray-300">
+                            <p className="text-sm text-gray-600 mb-2">
+                              You can make edits/corrections until the timer expires
+                            </p>
+                            <button
+                              onClick={() => handleEditReceipt(receipt)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+                            >
+                              Edit Receipt
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 );
