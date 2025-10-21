@@ -265,28 +265,44 @@ const FarmDetail: React.FC = () => {
     try {
       setCurrentDispatch(dispatch);
       
-      // Fetch invoice data for this dispatch
-      if (!dispatch.invoiceId) {
-        console.error('No invoice ID found for dispatch:', dispatch);
-        setError('No invoice ID found for dispatch');
-        return;
+      // For farm dispatches, we don't need invoice data since they're post-paid
+      let invoiceData = null;
+      let customerDetails = null;
+      
+      if (dispatch.invoiceId) {
+        // Only fetch invoice data if it exists (for individual customers)
+        const { data: fetchedInvoiceData, error: invoiceError } = await supabase
+          .from('invoices')
+          .select('*')
+          .eq('id', dispatch.invoiceId)
+          .single();
+
+        if (invoiceError) {
+          console.error('Error fetching invoice data:', invoiceError);
+          setError('Failed to fetch invoice data: ' + invoiceError.message);
+          return;
+        }
+        invoiceData = fetchedInvoiceData;
       }
 
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('id', dispatch.invoiceId)
-        .single();
+      // For farm dispatches, create mock invoice data or use dispatch data directly
+      if (!invoiceData) {
+        // Create mock invoice data for farm dispatches
+        invoiceData = {
+          invoice_number: dispatch.dispatch_number?.replace('-DISP', '-INV') || 'N/A',
+          customer: farmInfo.farmName,
+          total_amount: 0, // Will be calculated after growout
+          created_at: dispatch.createdAt,
+          payment_status: 'Post-paid' // Farm dispatches are post-paid
+        };
+      }
 
-      if (invoiceError) {
-        console.error('Error fetching invoice data:', invoiceError);
-        setError('Failed to fetch invoice data: ' + invoiceError.message);
-      } else {
-        // Get customer name and determine customer type
-        let customerName = farmInfo.farmName; // Use farm name
-        let customerType = 'Farm';
-        let quantity = dispatch.qty || 0;
-        let usedHatches = dispatch.usedHatches || [];
+      // Get customer details (works for both farm and individual dispatches)
+      // Get customer name and determine customer type
+      let customerName = farmInfo.farmName; // Use farm name
+      let customerType = 'Farm';
+      let quantity = dispatch.qty || 0;
+      let usedHatches = dispatch.usedHatches || [];
         
         // If not available, try to get from sales_dispatch
         if (!quantity || !usedHatches.length) {
@@ -364,7 +380,6 @@ const FarmDetail: React.FC = () => {
         setPlacements([]);
         
         setIsDispatchModalVisible(true);
-      }
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('An unexpected error occurred.');
@@ -633,7 +648,8 @@ const FarmDetail: React.FC = () => {
         penFlockSummary: record.pen_flock_summary,
         confirmedBy: record.confirmed_by,
         editCount: record.edit_count || 0,
-        updatedAt: record.updated_at
+        updatedAt: record.updated_at,
+        status: record.status || 'Confirmed' // Ensure status is set
       }));
     } catch (error) {
       console.error('Error in loadReceivedDispatchesFromDB:', error);
