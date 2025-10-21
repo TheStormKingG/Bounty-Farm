@@ -422,7 +422,7 @@ const FarmDetail: React.FC = () => {
   };
 
   // Confirm Receipt functionality
-  const confirmReceipt = () => {
+  const confirmReceipt = async () => {
     if (!currentDispatch) return;
     
     const receiptData = {
@@ -455,9 +455,9 @@ const FarmDetail: React.FC = () => {
         [currentDispatch.id]: 4 * 60 + 9 // 4 minutes 9 seconds
       }));
       
-      // Save to localStorage
+      // Save to database for cross-device persistence
       const updatedReceivedDispatches = [receiptData, ...receivedDispatches];
-      localStorage.setItem(`receivedDispatches_${farmInfo.farmName}`, JSON.stringify(updatedReceivedDispatches));
+      await saveReceivedDispatchesToDB(updatedReceivedDispatches);
       
       // Start timer
       const timerInterval = setInterval(() => {
@@ -476,8 +476,74 @@ const FarmDetail: React.FC = () => {
     setIsDispatchModalVisible(false);
   };
 
+  // Save received dispatches to database for cross-device persistence
+  const saveReceivedDispatchesToDB = async (dispatches: any[]) => {
+    try {
+      // First, clear existing records for this farm
+      await supabase
+        .from('received_dispatches')
+        .delete()
+        .eq('farm_name', farmInfo.farmName);
+
+      // Insert new records
+      if (dispatches.length > 0) {
+        const records = dispatches.map(receipt => ({
+          farm_name: farmInfo.farmName,
+          dispatch_id: receipt.id,
+          dispatch_number: receipt.dispatchNumber,
+          confirmed_at: receipt.confirmedAt,
+          trip_distribution: receipt.tripDistribution,
+          placements: receipt.placements,
+          pen_flock_summary: receipt.penFlockSummary,
+          confirmed_by: receipt.confirmedBy,
+          updated_at: receipt.updatedAt || receipt.confirmedAt
+        }));
+
+        const { error } = await supabase
+          .from('received_dispatches')
+          .insert(records);
+
+        if (error) {
+          console.error('Error saving received dispatches to DB:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in saveReceivedDispatchesToDB:', error);
+    }
+  };
+
+  // Load received dispatches from database
+  const loadReceivedDispatchesFromDB = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('received_dispatches')
+        .select('*')
+        .eq('farm_name', farmInfo.farmName)
+        .order('confirmed_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading received dispatches from DB:', error);
+        return [];
+      }
+
+      return data.map(record => ({
+        id: record.dispatch_id,
+        dispatchNumber: record.dispatch_number,
+        confirmedAt: record.confirmed_at,
+        tripDistribution: record.trip_distribution,
+        placements: record.placements,
+        penFlockSummary: record.pen_flock_summary,
+        confirmedBy: record.confirmed_by,
+        updatedAt: record.updated_at
+      }));
+    } catch (error) {
+      console.error('Error in loadReceivedDispatchesFromDB:', error);
+      return [];
+    }
+  };
+
   // Update existing receipt instead of creating new one
-  const updateReceipt = (receiptId: string, updatedData: any) => {
+  const updateReceipt = async (receiptId: string, updatedData: any) => {
     setReceivedDispatches(prev => 
       prev.map(receipt => 
         receipt.id === receiptId 
@@ -492,7 +558,7 @@ const FarmDetail: React.FC = () => {
         ? { ...receipt, ...updatedData, updatedAt: new Date().toISOString() }
         : receipt
     );
-    localStorage.setItem(`receivedDispatches_${farmInfo.farmName}`, JSON.stringify(updatedReceivedDispatches));
+    await saveReceivedDispatchesToDB(updatedReceivedDispatches);
   };
 
   // Format timer display
@@ -800,18 +866,17 @@ const FarmDetail: React.FC = () => {
     }
   }, [farmInfo.farmName]);
 
-  // Load received dispatches from localStorage on component mount
+  // Load received dispatches from database on component mount
   useEffect(() => {
-    const savedReceivedDispatches = localStorage.getItem(`receivedDispatches_${farmInfo.farmName}`);
-    if (savedReceivedDispatches) {
-      try {
-        const parsed = JSON.parse(savedReceivedDispatches);
-        setReceivedDispatches(parsed);
+    const loadDispatches = async () => {
+      if (farmInfo.farmName) {
+        const dbDispatches = await loadReceivedDispatchesFromDB();
+        setReceivedDispatches(dbDispatches);
         
         // Restore timers for farmer view
         if (isFarmerView) {
           const now = Date.now();
-          parsed.forEach((receipt: any) => {
+          dbDispatches.forEach((receipt: any) => {
             const confirmedAt = new Date(receipt.confirmedAt).getTime();
             const elapsed = Math.floor((now - confirmedAt) / 1000);
             const remaining = Math.max(0, (4 * 60 + 9) - elapsed); // 4 minutes 9 seconds
@@ -820,10 +885,10 @@ const FarmDetail: React.FC = () => {
             }
           });
         }
-      } catch (error) {
-        console.error('Error loading received dispatches:', error);
       }
-    }
+    };
+    
+    loadDispatches();
   }, [farmInfo.farmName, isFarmerView]);
 
   // Handle add new flock
@@ -1627,17 +1692,11 @@ const FarmDetail: React.FC = () => {
                                 onChange={(e) => updatePlacement(placement.id, 'tripId', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               >
-                                {tripDistribution
-                                  .filter(trip => {
-                                    const difference = calculateTripDifference(trip.tripId);
-                                    return difference !== 0; // Hide trips with zero difference (fully placed)
-                                  })
-                                  .map(trip => (
-                                    <option key={trip.tripId} value={trip.tripId}>
-                                      {getTripIdEnding(trip.tripId)}
-                                    </option>
-                                  ))
-                                }
+                                {tripDistribution.map(trip => (
+                                  <option key={trip.tripId} value={trip.tripId}>
+                                    {getTripIdEnding(trip.tripId)}
+                                  </option>
+                                ))}
                               </select>
                             </td>
                             <td className="border border-gray-300 px-2 sm:px-4 py-2 text-sm text-gray-800">
@@ -1736,22 +1795,22 @@ const FarmDetail: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <span className="font-medium">DOA Total:</span>
                           <span className="text-red-600 font-semibold">
-                            {Object.values(doaValues).reduce((sum: number, val: number) => sum + (val || 0), 0).toLocaleString()}
+                            {Object.values(doaValues).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between items-center mt-1">
                           <span className="font-medium">N/A Total:</span>
                           <span className="text-gray-600 font-semibold">
-                            {Object.values(naValues).reduce((sum: number, val: number) => sum + (val || 0), 0).toLocaleString()}
+                            {Object.values(naValues).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0).toLocaleString()}
                           </span>
                         </div>
                         <div className="flex justify-between items-center mt-1 pt-1 border-t border-gray-300">
                           <span className="font-medium">Total Difference:</span>
                           <span className="text-blue-600 font-semibold">
                             {(() => {
-                              const doaTotal = Object.values(doaValues).reduce((sum, val) => sum + (val || 0), 0);
-                              const naTotal = Object.values(naValues).reduce((sum, val) => sum + (val || 0), 0);
-                              return (doaTotal + naTotal).toLocaleString();
+                              const doaTotal = Object.values(doaValues).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                              const naTotal = Object.values(naValues).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0);
+                              return (Number(doaTotal) + Number(naTotal)).toLocaleString();
                             })()}
                           </span>
                         </div>
