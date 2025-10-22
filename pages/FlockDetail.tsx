@@ -72,8 +72,7 @@ const FlockDetail: React.FC = () => {
     runts: 0,
     deaths: 0,
     feedType: 'Starter',
-    feedUsed: 0,
-    bagsUsed: 0
+    feedUsed: 0
   });
 
   // Toggle week expansion
@@ -110,13 +109,88 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
-  // Calculate dates for a given week
+  // Save today's data to Supabase
+  const saveTodaysData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      // Check if data already exists for today
+      const { data: existingData } = await supabase
+        .from('daily_flock_data')
+        .select('id')
+        .eq('flock_id', flockId)
+        .eq('date', today)
+        .single();
+
+      const dataToSave = {
+        flock_id: flockId,
+        farm_name: farmInfo.farmName,
+        date: today,
+        culls: todaysData.culls,
+        runts: todaysData.runts,
+        deaths: todaysData.deaths,
+        feed_type: todaysData.feedType,
+        feed_used: todaysData.feedUsed,
+        created_by: 'farmer',
+        updated_by: 'farmer'
+      };
+
+      if (existingData) {
+        // Update existing record
+        const { error } = await supabase
+          .from('daily_flock_data')
+          .update(dataToSave)
+          .eq('id', existingData.id);
+
+        if (error) {
+          console.error('Error updating daily flock data:', error);
+          alert('Error updating data. Please try again.');
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('daily_flock_data')
+          .insert(dataToSave);
+
+        if (error) {
+          console.error('Error inserting daily flock data:', error);
+          alert('Error saving data. Please try again.');
+          return;
+        }
+      }
+
+      console.log('Successfully saved today\'s data:', dataToSave);
+      alert('Data saved successfully!');
+      setIsTodaysInfoOpen(false);
+      
+      // Reset form data
+      setTodaysData({
+        culls: 0,
+        runts: 0,
+        deaths: 0,
+        feedType: 'Starter',
+        feedUsed: 0
+      });
+      
+    } catch (error) {
+      console.error('Unexpected error saving data:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  // Calculate dates for a given week based on actual current year
   const getWeekDates = (week: number) => {
-    // Assuming flock started on a specific date - for now using current date as reference
+    // Get current year
+    const currentYear = new Date().getFullYear();
+    
+    // Calculate the start date for week 1 (assuming flock starts at beginning of year)
     // In a real implementation, this would be based on the actual flock start date
-    const startDate = new Date(); // This should be the actual flock start date
-    const weekStart = new Date(startDate);
-    weekStart.setDate(startDate.getDate() + (week - 1) * 7);
+    const yearStart = new Date(currentYear, 0, 1); // January 1st of current year
+    
+    // Calculate the start date for the requested week
+    const weekStart = new Date(yearStart);
+    weekStart.setDate(yearStart.getDate() + (week - 1) * 7);
     
     const dates = [];
     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -204,7 +278,7 @@ const FlockDetail: React.FC = () => {
               })()}
             </h1>
           </div>
-        </div>
+          </div>
           
         {/* Today's Info Button */}
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
@@ -269,8 +343,8 @@ const FlockDetail: React.FC = () => {
                     </div>
                     <div className="mt-3 text-xs text-gray-500 text-center">
                       Buttons will be enabled when data is entered for each day
-                    </div>
-                  </div>
+                        </div>
+                      </div>
                 )}
               </div>
             ))}
@@ -408,7 +482,7 @@ const FlockDetail: React.FC = () => {
                   {expandedItems.has('feedUsed') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Feed Type Radio Options */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
                         <div className="space-y-2">
                           {['Starter', 'Grower', 'Finisher'].map((type) => (
@@ -422,7 +496,7 @@ const FlockDetail: React.FC = () => {
                                 className="mr-2 text-green-600 focus:ring-green-500"
                               />
                               <span className="text-gray-700">{type}</span>
-                            </label>
+                      </label>
                           ))}
                         </div>
                       </div>
@@ -430,7 +504,7 @@ const FlockDetail: React.FC = () => {
                       {/* Feed Amount */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Amount Used:</label>
-                        <input
+                      <input
                           type="number"
                           value={todaysData.feedUsed}
                           onChange={(e) => handleTodaysDataChange('feedUsed', parseInt(e.target.value) || 0)}
@@ -438,57 +512,24 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter amount of feed used"
                           min="0"
                           step="0.1"
-                        />
-                      </div>
+                      />
+                    </div>
                     </div>
                   )}
                 </div>
 
-                {/* Bags Used */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleItemExpansion('bagsUsed')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
-                  >
-                    <span className="font-medium text-gray-800">Bags Used</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedItems.has('bagsUsed') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedItems.has('bagsUsed') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={todaysData.bagsUsed}
-                        onChange={(e) => handleTodaysDataChange('bagsUsed', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter number of bags used"
-                        min="0"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+                  </div>
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
-                <button
+                    <button
                   onClick={() => setIsTodaysInfoOpen(false)}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
+                    >
+                      Cancel
+                    </button>
                 <button
-                  onClick={() => {
-                    // Save data logic here
-                    console.log('Saving today\'s data:', todaysData);
-                    setIsTodaysInfoOpen(false);
-                  }}
+                  onClick={saveTodaysData}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Save Data
