@@ -1376,7 +1376,7 @@ const HatchCycleList: React.FC = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#E69500' }}>
+                    <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#ff8c42' }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
@@ -1746,7 +1746,7 @@ const HatchCycleList: React.FC = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsAddFlockModalVisible(true)}
-                                                className="w-6 h-6 bg-[#5c3a6b] hover:bg-[#4a2f56] text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
+                                                className="w-6 h-6 bg-[#ff8c42] hover:bg-[#e67a35] text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
                                                 title="Add New Flock"
                                             >
                                                 +
@@ -1814,9 +1814,9 @@ const HatchCycleList: React.FC = () => {
                                 <button
                                     type="submit"
                                     className="px-6 py-2 text-white rounded-md transition-colors shadow-sm font-semibold"
-                                    style={{ backgroundColor: '#E69500' }}
-                                    onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
-                                    onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
+                                    style={{ backgroundColor: '#ff8c42' }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                                 >
                                     Save
                                 </button>

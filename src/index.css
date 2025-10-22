@@ -70,7 +70,7 @@ html {
 
 /* Modern Button Styles */
 .btn-primary {
-  background: var(--color-purple);
+  background: #ff8c42;
   color: var(--color-white);
   border: none;
   border-radius: 16px;
@@ -78,7 +78,7 @@ html {
   font-weight: 600;
   font-size: 14px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(92, 58, 107, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 140, 66, 0.3);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -87,14 +87,14 @@ html {
 }
 
 .btn-primary:hover {
-  background: #4A2F56;
+  background: #e67a35;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(92, 58, 107, 0.4);
+  box-shadow: 0 6px 20px rgba(255, 140, 66, 0.4);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(92, 58, 107, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 140, 66, 0.3);
 }
 
 .btn-blue {

@@ -523,7 +523,7 @@ const Customers: React.FC = () => {
                 value={farmSearchTerm}
                 onChange={(e) => setFarmSearchTerm(e.target.value)}
               />
-              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
+              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#ff8c42' }}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -686,7 +686,7 @@ const Customers: React.FC = () => {
                 value={individualSearchTerm}
                 onChange={(e) => setIndividualSearchTerm(e.target.value)}
               />
-              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
+              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#ff8c42' }}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"

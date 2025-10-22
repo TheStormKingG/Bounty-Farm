@@ -1229,9 +1229,9 @@ const FarmDetail: React.FC = () => {
                       }
                     }}
                     className="text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
-                    style={{ backgroundColor: '#E69500' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
+                    style={{ backgroundColor: '#ff8c42' }}
+             onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+             onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
                     Chicks Arriving
                   </button>
@@ -1900,9 +1900,9 @@ const FarmDetail: React.FC = () => {
                     <button
                       onClick={addPlacement}
                       className="mt-3 w-full text-white font-medium py-2 px-4 rounded transition-colors"
-                      style={{ backgroundColor: '#E69500' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
+                      style={{ backgroundColor: '#ff8c42' }}
+             onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+             onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                     >
                       + Add Placement
                     </button>
