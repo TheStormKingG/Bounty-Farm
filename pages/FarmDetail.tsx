@@ -984,10 +984,10 @@ const FarmDetail: React.FC = () => {
         let flockCounter = 1;
         
         // Process each received dispatch to create flocks
-        receivedDispatches.forEach((receipt, receiptIndex) => {
+        for (const [receiptIndex, receipt] of receivedDispatches.entries()) {
           if (receipt.penFlockSummary) {
             // Convert pen/flock summary to flock objects
-            Object.entries(receipt.penFlockSummary).forEach(([penFlockNumber, quantity]) => {
+            for (const [penFlockNumber, quantity] of Object.entries(receipt.penFlockSummary)) {
               const penFlockNum = parseInt(penFlockNumber);
               const totalQuantity = quantity as number;
               
@@ -995,8 +995,23 @@ const FarmDetail: React.FC = () => {
               const hatches = getHatchesForPenFlockReceived(penFlockNum, receipt);
               const hatchNumbers = hatches.map((h: any) => h.hatchNo).join(', ');
               
-              // Determine breed based on dispatch data or default
-              const breed = 'Broiler'; // Default breed, could be enhanced to detect from dispatch data
+              // Fetch breed data from hatches table
+              let breed = 'Broiler'; // Default breed
+              if (hatches.length > 0) {
+                try {
+                  const { data: hatchData } = await supabase
+                    .from('hatch_cycles')
+                    .select('breed, supplier')
+                    .in('hatch_no', hatches.map((h: any) => h.hatchNo))
+                    .limit(1);
+                  
+                  if (hatchData && hatchData.length > 0) {
+                    breed = hatchData[0].breed || 'Broiler';
+                  }
+                } catch (error) {
+                  console.error('Error fetching breed data:', error);
+                }
+              }
               
               // Determine status based on dispatch age
               const dispatchDate = new Date(receipt.confirmedAt);
@@ -1018,9 +1033,9 @@ const FarmDetail: React.FC = () => {
               };
               
               autoFlocks.push(flock);
-            });
+            }
           }
-        });
+        }
         
         // Sort flocks by flock number
         autoFlocks.sort((a, b) => a.flockNumber - b.flockNumber);
@@ -1102,6 +1117,17 @@ const FarmDetail: React.FC = () => {
       Object.values(intervals).forEach(interval => clearInterval(interval));
     };
   }, [dispatchTimers]);
+
+  // Calculate flock age in weeks and days
+  const calculateFlockAge = (startDate: string) => {
+    const start = new Date(startDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - start.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const weeks = Math.floor(diffDays / 7);
+    const days = diffDays % 7;
+    return { weeks, days };
+  };
 
   // Handle flock click - navigate to flock detail
   const handleFlockClick = (flock: Flock) => {
@@ -1526,19 +1552,44 @@ const FarmDetail: React.FC = () => {
                     {/* Flock Details */}
                     <div className="space-y-3 mb-4">
                       <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-20 text-sm">Breed:</span>
+                        <span className="text-gray-600 font-medium w-24 text-sm">Breed:</span>
                         <span className="text-gray-800 text-sm flex-1">{flock.breed}</span>
                       </div>
                       <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-20 text-sm">Quantity:</span>
-                        <span className="text-gray-800 text-sm flex-1">{flock.quantity.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-20 text-sm">Start Date:</span>
+                        <span className="text-gray-600 font-medium w-24 text-sm">Date Started:</span>
                         <span className="text-gray-800 text-sm flex-1">{new Date(flock.startDate).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-20 text-sm">Status:</span>
+                        <span className="text-gray-600 font-medium w-24 text-sm">Flock Age:</span>
+                        <span className="text-gray-800 text-sm flex-1">
+                          {(() => {
+                            const age = calculateFlockAge(flock.startDate);
+                            return `${age.weeks} weeks ${age.days} days`;
+                          })()}
+                        </span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Weight:</span>
+                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Mortality:</span>
+                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Starting Qty:</span>
+                        <span className="text-gray-800 text-sm flex-1">{flock.quantity.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Current Qty:</span>
+                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Current FCR:</span>
+                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="text-gray-600 font-medium w-24 text-sm">Status:</span>
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           flock.status === 'Active' 
                             ? 'bg-green-100 text-green-800' 
