@@ -1,3 +1,4 @@
+-- Simple version for Supabase SQL Editor
 -- Create table for storing daily flock data
 CREATE TABLE IF NOT EXISTS daily_flock_data (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -26,18 +27,3 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_flock_data_unique ON daily_flock_dat
 
 -- Disable Row Level Security (RLS) for this table since we're using custom auth
 ALTER TABLE daily_flock_data DISABLE ROW LEVEL SECURITY;
-
--- Create function to automatically update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create trigger to automatically update updated_at on row updates
-CREATE TRIGGER update_daily_flock_data_updated_at
-    BEFORE UPDATE ON daily_flock_data
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
