@@ -822,13 +822,22 @@ const FlockDetail: React.FC = () => {
                           <button
                             key={index}
                             disabled={!isEnabled}
-                            className={`px-2 py-2 rounded-lg text-xs font-medium transition-colors ${
+                            className={`px-2 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
                               isEnabled
                                 ? hasData
-                                  ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer'
+                                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105 cursor-pointer'
                                   : 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
+                            style={isEnabled && hasData ? { backgroundColor: '#fffae5' } : {}}
+                            onMouseEnter={isEnabled && hasData ? (e) => {
+                              e.target.style.backgroundColor = '#f5f0d8';
+                              e.target.style.transform = 'translateY(-2px) scale(1.02)';
+                            } : undefined}
+                            onMouseLeave={isEnabled && hasData ? (e) => {
+                              e.target.style.backgroundColor = '#fffae5';
+                              e.target.style.transform = 'translateY(0) scale(1)';
+                            } : undefined}
                             title={
                               isEnabled
                                 ? hasData
