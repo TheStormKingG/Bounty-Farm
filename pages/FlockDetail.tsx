@@ -70,6 +70,7 @@ const FlockDetail: React.FC = () => {
   const [flockStartDate, setFlockStartDate] = useState<Date | null>(null);
   const [submittedDates, setSubmittedDates] = useState<Set<string>>(new Set());
   const [todaysDataSubmitted, setTodaysDataSubmitted] = useState(false);
+  const [mondayMeasuresSubmitted, setMondayMeasuresSubmitted] = useState(false);
   const [isMondayMeasuresOpen, setIsMondayMeasuresOpen] = useState(false);
   const [expandedBirds, setExpandedBirds] = useState<Set<string>>(new Set());
   const [mondayMeasuresData, setMondayMeasuresData] = useState({
@@ -248,6 +249,10 @@ const FlockDetail: React.FC = () => {
       console.log('Successfully saved Monday Measures data:', dataToSave);
       alert('Monday Measures data saved successfully!');
       setIsMondayMeasuresOpen(false);
+      
+      // Mark Monday Measures as submitted
+      setMondayMeasuresSubmitted(true);
+      console.log('Monday Measures marked as submitted');
       
       // Reset form data
       setMondayMeasuresData({
@@ -480,6 +485,41 @@ const FlockDetail: React.FC = () => {
     loadSubmittedDates();
   }, [flockId]);
 
+  // Load existing Monday Measures data from database
+  useEffect(() => {
+    const loadMondayMeasuresStatus = async () => {
+      if (!flockId) return;
+      
+      try {
+        console.log('Loading Monday Measures status for flock:', flockId);
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data: existingData, error } = await supabase
+          .from('monday_measures')
+          .select('id')
+          .eq('flock_id', flockId)
+          .eq('date', today)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching Monday Measures status:', error);
+          return;
+        }
+
+        if (existingData) {
+          setMondayMeasuresSubmitted(true);
+          console.log('Monday Measures already submitted for today');
+        } else {
+          console.log('No Monday Measures data found for today');
+        }
+      } catch (error) {
+        console.error('Error loading Monday Measures status:', error);
+      }
+    };
+
+    loadMondayMeasuresStatus();
+  }, [flockId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -562,11 +602,16 @@ const FlockDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md mt-6 p-6">
             <button
               onClick={() => setIsMondayMeasuresOpen(true)}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg transition-colors text-lg font-semibold"
+              disabled={mondayMeasuresSubmitted}
+              className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
+                mondayMeasuresSubmitted
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+              }`}
             >
-              Monday Measures
+              Monday Measures{mondayMeasuresSubmitted && ' (Submitted)'}
             </button>
-                </div>
+          </div>
         )}
 
         {/* Week-by-Week Tracking */}
@@ -608,7 +653,10 @@ const FlockDetail: React.FC = () => {
                         const isEnabled = isDateEnabled(date.fullDate);
                         const hasData = submittedDates.has(date.fullDate.toISOString().split('T')[0]);
                         
-                        console.log(`Button ${date.dayName}-${date.dayNumber}: isEnabled=${isEnabled}, hasData=${hasData}, submittedDates=`, Array.from(submittedDates));
+                        console.log(`Button ${date.dayName}-${date.dayNumber}: isEnabled=${isEnabled}, hasData=${hasData}`);
+                        console.log(`Date string: ${date.fullDate.toISOString().split('T')[0]}`);
+                        console.log(`Submitted dates:`, Array.from(submittedDates));
+                        console.log(`Today's date: ${new Date().toISOString().split('T')[0]}`);
                         
                         return (
                           <button
@@ -1344,12 +1392,12 @@ const FlockDetail: React.FC = () => {
                     >
                       Cancel
                     </button>
-                <button
+                    <button
                   onClick={saveMondayMeasuresData}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
+                    >
                   Save Data
-                </button>
+                    </button>
               </div>
             </div>
           </div>
