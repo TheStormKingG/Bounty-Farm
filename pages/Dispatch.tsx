@@ -741,7 +741,8 @@ const Dispatch: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-800">Individual Dispatch</h1>
             <button 
               onClick={fetchDispatches}
-              className="px-3 py-1.5 bg-[#5c3a6b] text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
+              className="px-3 py-1.5 text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
+              style={{ backgroundColor: '#E69500' }}
             >
               Refresh Dispatches
             </button>
@@ -782,7 +783,8 @@ const Dispatch: React.FC = () => {
                 />
                 <button 
                   onClick={handleSearch}
-                  className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90"
+                  className="px-3 py-2 text-white hover:opacity-90"
+                  style={{ backgroundColor: '#E69500' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8"/>
@@ -900,7 +902,8 @@ const Dispatch: React.FC = () => {
           <h2 className="text-3xl font-bold text-gray-800">Farm Dispatch</h2>
           <button 
             onClick={fetchFarmDispatches}
-            className="px-3 py-1.5 bg-[#5c3a6b] text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
+            className="px-3 py-1.5 text-white rounded-2xl hover:opacity-90 transition-opacity text-sm"
+            style={{ backgroundColor: '#E69500' }}
           >
             Refresh Dispatches
           </button>
@@ -941,7 +944,8 @@ const Dispatch: React.FC = () => {
               />
               <button 
                 onClick={handleSearch}
-                className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90"
+                className="px-3 py-2 text-white hover:opacity-90"
+                style={{ backgroundColor: '#E69500' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/>
@@ -1051,7 +1055,10 @@ const Dispatch: React.FC = () => {
                 {/* Download PDF Button */}
                 <button 
                   onClick={downloadDispatchPDF}
-                  className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 text-white rounded-md transition-colors"
+                  style={{ backgroundColor: '#E69500' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                   title="Download PDF"
                 >
                   <svg 

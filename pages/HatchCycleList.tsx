@@ -1270,7 +1270,7 @@ const HatchCycleList: React.FC = () => {
               culled: chicksCulled, // Auto-calculated
             },
         createdBy: user?.name || 'admin',
-        createdAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
         };
 
       // Insert into base table with QUOTED column names
@@ -1327,14 +1327,14 @@ const HatchCycleList: React.FC = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl">
           {error}
-        </div>
+                            </div>
       )}
 
       {/* Loading State */}
       {loading ? (
         <div className="flex justify-center items-center py-12">
           <div className="text-lg text-[#AAAAAA]">Loading hatch cycles...</div>
-        </div>
+                            </div>
       ) : (
             <div className="bg-white rounded-2xl p-6 shadow-md">
                 {/* Filters */}
@@ -1352,7 +1352,7 @@ const HatchCycleList: React.FC = () => {
                         title="Start Date"
                         placeholder="Start Date"
                       />
-                    </div>
+                        </div>
                     <div className="w-1/2">
                       <input
                         id="hatch-end"
@@ -1364,8 +1364,8 @@ const HatchCycleList: React.FC = () => {
                         title="End Date"
                         placeholder="End Date"
                       />
+                        </div>
                     </div>
-                  </div>
                   {/* Search field row */}
                   <div className="w-full">
                   <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
@@ -1376,7 +1376,7 @@ const HatchCycleList: React.FC = () => {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
+                    <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#E69500' }}>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5"
@@ -1390,9 +1390,9 @@ const HatchCycleList: React.FC = () => {
                         />
                       </svg>
                     </button>
-                  </div>
-                        </div>
+                         </div>
                     </div>
+                </div>
 
           <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
@@ -1544,7 +1544,7 @@ const HatchCycleList: React.FC = () => {
                             title={cycle.status === 'OPEN' ? 'Close Cycle' : 'Reopen Cycle'}
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              {cycle.status === 'OPEN' ? (
+                                        {cycle.status === 'OPEN' ? (
                                 <circle cx="12" cy="12" r="10"/>
                               ) : (
                                 <circle cx="12" cy="12" r="10" fill="currentColor"/>
@@ -1627,13 +1627,13 @@ const HatchCycleList: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap white-cell" style={{ width: '150px', minWidth: '150px' }}>
                         {renderEditableCell(cycle, 'UPDATED AT', cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : null, 'white-cell')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
       )}
 
              {/* New Hatch Cycle Modal */}
@@ -1664,7 +1664,7 @@ const HatchCycleList: React.FC = () => {
                                             placeholder="Auto-generated"
                                             readOnly
                                         />
-                                    </div>
+                                </div>
                                 <div>
                                         <label className="block font-bold text-gray-700 mb-2">Hatch Colour</label>
                                         <select
@@ -1688,7 +1688,7 @@ const HatchCycleList: React.FC = () => {
                                             onChange={handleFormChange}
                                             className="modern-input w-full"
                                         />
-                                    </div>
+                                </div>
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Packed</label>
                                         <input
@@ -1698,7 +1698,7 @@ const HatchCycleList: React.FC = () => {
                                             className="modern-input w-full"
                                         />
                                     </div>
-                                </div>
+                            </div>
 
                                 {/* Column 2 */}
                                 <div className="space-y-4">
@@ -1813,7 +1813,10 @@ const HatchCycleList: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-[#5c3a6b] hover:bg-[#4a2f56] text-white rounded-md transition-colors shadow-sm font-semibold"
+                                    className="px-6 py-2 text-white rounded-md transition-colors shadow-sm font-semibold"
+                                    style={{ backgroundColor: '#E69500' }}
+                                    onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                                    onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                                 >
                                     Save
                                 </button>

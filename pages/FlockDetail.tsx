@@ -180,12 +180,17 @@ const FlockDetail: React.FC = () => {
     const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const weekNumber = Math.floor(daysDiff / 7) + 1; // Week 1, 2, 3, etc.
     
+    // Calculate day number within the week (1-based, starting from flock start date)
+    // If daysDiff = 0 (same day as start), it's day 1
+    // If daysDiff = 1 (next day), it's day 2, etc.
+    const dayInWeek = (daysDiff % 7) + 1;
+    
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const dayNumber = date.getDate();
     const dayName = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][dayOfWeek];
     const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    return `W${weekNumber}D${dayOfWeek + 1}${dayName}${dayNumber.toString().padStart(2, '0')}${monthName}`;
+    return `W${weekNumber}D${dayInWeek}${dayName}${dayNumber.toString().padStart(2, '0')}${monthName}`;
   };
 
   // Load existing data for a specific date
@@ -1031,9 +1036,9 @@ const FlockDetail: React.FC = () => {
                     <button
                       onClick={saveTodaysData}
                       className="px-4 py-2 text-white rounded-lg transition-colors"
-                      style={{ backgroundColor: '#FFB343' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#E6A23C'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#FFB343'}
+                      style={{ backgroundColor: '#E69500' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                     >
                   Save Data
                     </button>
@@ -1558,9 +1563,9 @@ const FlockDetail: React.FC = () => {
                     <button
                       onClick={saveMondayMeasuresData}
                       className="px-4 py-2 text-white rounded-lg transition-colors"
-                      style={{ backgroundColor: '#FFB343' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#E6A23C'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#FFB343'}
+                      style={{ backgroundColor: '#E69500' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                     >
                   Save Data
                     </button>

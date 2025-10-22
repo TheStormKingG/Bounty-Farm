@@ -1079,7 +1079,7 @@ const Sales: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#5c3a6b' }}>
+              <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#E69500' }}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-5 w-5"
@@ -1268,7 +1268,7 @@ const Sales: React.FC = () => {
                 placeholder="Search..."
                 className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
               />
-              <button className="px-3 py-2 bg-[#5c3a6b] text-white hover:opacity-90">
+              <button className="px-3 py-2 text-white hover:opacity-90" style={{ backgroundColor: '#E69500' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"/>
                   <path d="M21 21l-4.35-4.35"/>
@@ -1487,7 +1487,8 @@ const Sales: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[#5C3A6B] text-white rounded-md hover:opacity-90"
+                  className="px-6 py-3 text-white rounded-md hover:opacity-90"
+                  style={{ backgroundColor: '#E69500' }}
                 >
                   Create PO
                 </button>
@@ -1601,7 +1602,8 @@ const Sales: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="btn-blue px-6 py-3"
+                  className="px-6 py-3 text-white rounded-md hover:opacity-90"
+                  style={{ backgroundColor: '#E69500' }}
                 >
                   Update Record
                 </button>
@@ -1621,7 +1623,10 @@ const Sales: React.FC = () => {
                   {/* Download PDF Button */}
                   <button 
                     onClick={downloadInvoicePDF}
-                    className="flex items-center space-x-2 px-3 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
+                    className="flex items-center space-x-2 px-3 py-2 text-white rounded-md transition-colors"
+                    style={{ backgroundColor: '#E69500' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                     title="Download PDF"
                   >
                     <svg 
