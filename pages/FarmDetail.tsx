@@ -1262,28 +1262,36 @@ const FarmDetail: React.FC = () => {
           ) : (
             /* Admin View - Table */
             <div className="overflow-x-auto">
-              <table className="modern-table w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
-                <thead className="sticky top-0 z-10" style={{
-                  backgroundColor: '#ff8c42',
-                  borderRadius: '8px 8px 0 0',
-                  borderBottom: 'none',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}>
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
-                      Dispatch Number
+            <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <thead className="sticky top-0 z-10" style={{
+                backgroundColor: '#ff8c42',
+                borderRadius: '8px 8px 0 0',
+                borderBottom: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <tr>
+                  {[
+                    'Dispatch Number', 'Date', 'Trips', 'Dispatch Note'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '25%', 
+                        minWidth: '25%',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                      </div>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
-                      Trips
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
-                      Dispatch Note
-                    </th>
-                  </tr>
-                </thead>
+                  ))}
+                </tr>
+              </thead>
                 <tbody>
                   {dispatches.filter(dispatch => {
                     const isConfirmed = receivedDispatches.some(received => 
@@ -1299,7 +1307,7 @@ const FarmDetail: React.FC = () => {
                     return !isConfirmed;
                   }).length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500" style={{ width: '100%' }}>
                         <div className="flex flex-col items-center">
                           <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                             <span className="text-gray-400 text-2xl">🚚</span>
@@ -1318,16 +1326,16 @@ const FarmDetail: React.FC = () => {
                       return !isConfirmed;
                     }).map(dispatch => (
                       <tr key={dispatch.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
+                        <td className="px-4 py-3 text-xs text-gray-800 break-words" style={{ width: '25%', minWidth: '25%' }}>
                           {dispatch.dispatch_number}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
+                        <td className="px-4 py-3 text-xs text-gray-800 break-words" style={{ width: '25%', minWidth: '25%' }}>
                           {dispatch.date_dispatched ? new Date(dispatch.date_dispatched).toLocaleDateString() : 'N/A'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
+                        <td className="px-4 py-3 text-xs text-gray-800 break-words" style={{ width: '25%', minWidth: '25%' }}>
                           {dispatch.trucks || 1}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
+                        <td className="px-4 py-3 text-xs text-gray-800 break-words" style={{ width: '25%', minWidth: '25%' }}>
                           <button
                             onClick={() => handleViewDispatch(dispatch)}
                             className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
