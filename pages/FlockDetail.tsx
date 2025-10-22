@@ -721,14 +721,20 @@ const FlockDetail: React.FC = () => {
               setIsTodaysInfoOpen(true);
               loadTodaysData(); // Load existing data if submitted
             }}
-            className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
+            className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
               todaysDataSubmitted
-                ? 'text-gray-800'
+                ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
                 : 'text-white'
             }`}
             style={todaysDataSubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
-            onMouseEnter={todaysDataSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#e67a35'}
-            onMouseLeave={todaysDataSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            onMouseEnter={todaysDataSubmitted ? (e) => {
+              e.target.style.backgroundColor = '#f5f0d8';
+              e.target.style.transform = 'translateY(-2px) scale(1.02)';
+            } : (e) => e.target.style.backgroundColor = '#e67a35'}
+            onMouseLeave={todaysDataSubmitted ? (e) => {
+              e.target.style.backgroundColor = '#fffae5';
+              e.target.style.transform = 'translateY(0) scale(1)';
+            } : (e) => e.target.style.backgroundColor = '#ff8c42'}
           >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -745,14 +751,20 @@ const FlockDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md mt-6 p-6">
             <button
               onClick={() => setIsMondayMeasuresOpen(true)}
-              className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
+              className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
                 mondayMeasuresSubmitted
-                  ? 'text-gray-800'
+                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
                   : 'text-white'
               }`}
               style={mondayMeasuresSubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
-              onMouseEnter={mondayMeasuresSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#e67a35'}
-              onMouseLeave={mondayMeasuresSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#ff8c42'}
+              onMouseEnter={mondayMeasuresSubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              onMouseLeave={mondayMeasuresSubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
             >
               Monday Measures{mondayMeasuresSubmitted && ' (Submitted)'}
             </button>
@@ -864,12 +876,38 @@ const FlockDetail: React.FC = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
               <div className="flex justify-between items-center p-6 border-b">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  Today's Info - {new Date().toLocaleDateString('en-US', { 
+                  {currentEditingDate ? (() => {
+                    const date = currentEditingDate;
+                    const today = new Date();
+                    const isToday = date.toDateString() === today.toDateString();
+                    
+                    if (isToday) {
+                      return `Today's Info - ${date.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}`;
+                    } else {
+                      // Calculate week and day for past dates
+                      const startDate = flockStartDate || new Date();
+                      const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                      const weekNumber = Math.floor(daysDiff / 7) + 1;
+                      const dayInWeek = (daysDiff % 7) + 1;
+                      
+                      return `Wk ${weekNumber} Day ${dayInWeek} ${date.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}`;
+                    }
+                  })() : `Today's Info - ${new Date().toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
-                  })}
+                  })}`}
                 </h3>
                 <button
                   onClick={() => setIsTodaysInfoOpen(false)}
