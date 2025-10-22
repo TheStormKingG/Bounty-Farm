@@ -62,6 +62,7 @@ const Dispatch: React.FC = () => {
           *,
           invoices!inner(
             id,
+            invoice_number,
             status
           )
         `)
@@ -83,7 +84,7 @@ const Dispatch: React.FC = () => {
       const dispatchesWithCustomers = [];
       
       for (const dispatch of data || []) {
-        if (dispatch.invoices) {
+        if (dispatch.invoices && dispatch.invoices.invoice_number) {
           // Get the PO number from the invoice number
           const poNumber = dispatch.invoices.invoice_number.replace('-INV', '-PO');
           
@@ -97,6 +98,12 @@ const Dispatch: React.FC = () => {
           dispatchesWithCustomers.push({
             ...dispatch,
             customer: salesData?.customer || 'N/A'
+          });
+        } else {
+          // If no invoice_number, still add the dispatch but with N/A customer
+          dispatchesWithCustomers.push({
+            ...dispatch,
+            customer: 'N/A'
           });
         }
       }
