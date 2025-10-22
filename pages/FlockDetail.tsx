@@ -372,6 +372,7 @@ const FlockDetail: React.FC = () => {
     
     const dates = [];
     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const dayNamesShort = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']; // 2-letter abbreviations for mobile
     
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
@@ -380,9 +381,11 @@ const FlockDetail: React.FC = () => {
       // Get the actual day of the week for this date
       const actualDayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
       const dayName = dayNames[actualDayOfWeek];
+      const dayNameShort = dayNamesShort[actualDayOfWeek];
       
       dates.push({
-        dayName: dayName,
+        dayName: dayName, // Full weekday name
+        dayNameShort: dayNameShort, // 2-letter abbreviation for mobile
         dayNumber: date.getDate().toString().padStart(2, '0'),
         fullDate: date,
         monthName: date.toLocaleDateString('en-US', { month: 'long' }),
@@ -611,7 +614,7 @@ const FlockDetail: React.FC = () => {
                           <button
                             key={index}
                             disabled={!isEnabled}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            className={`px-2 py-2 rounded-lg text-xs font-medium transition-colors ${
                               isEnabled
                                 ? hasData
                                   ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer'
@@ -633,7 +636,9 @@ const FlockDetail: React.FC = () => {
                               }
                             }}
                           >
-                            {date.dayName}-{date.dayNumber}
+                            {/* Show short day names on mobile, full names on desktop */}
+                            <span className="block sm:hidden">{date.dayNameShort}-{date.dayNumber}</span>
+                            <span className="hidden sm:block">{date.dayName}-{date.dayNumber}</span>
                           </button>
                         );
                       })}
