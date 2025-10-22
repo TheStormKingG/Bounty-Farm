@@ -833,8 +833,8 @@ const Dispatch: React.FC = () => {
                           key={header}
                           className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
                           style={{ 
-                            width: '200px', 
-                            minWidth: '200px',
+                            width: '20%', 
+                            minWidth: '20%',
                             backgroundColor: '#ff8c42',
                             color: 'white',
                             fontWeight: '600',
@@ -860,9 +860,9 @@ const Dispatch: React.FC = () => {
                 <tbody>
                   {processedDispatches.map((dispatch) => (
                     <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                      <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
-                      <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
-                      <td className="px-4 py-3 text-sm">{new Date(dispatch.date_dispatched).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B] break-words">{dispatch.dispatch_number}</td>
+                      <td className="px-4 py-3 text-sm break-words">{dispatch.customer || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm break-words">{new Date(dispatch.date_dispatched).toLocaleDateString()}</td>
                       <td className="px-4 py-3 text-sm">
                         <button 
                           onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.invoices?.status || 'pending')}
@@ -983,8 +983,8 @@ const Dispatch: React.FC = () => {
                       key={header}
                       className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
                       style={{ 
-                        width: '150px', 
-                        minWidth: '150px',
+                        width: '20%', 
+                        minWidth: '20%',
                         backgroundColor: '#ff8c42',
                         color: 'white',
                         fontWeight: '600',
@@ -1009,9 +1009,9 @@ const Dispatch: React.FC = () => {
               <tbody>
                 {processedFarmDispatches.map((dispatch) => (
                   <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
-                    <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B] break-words">{dispatch.dispatch_number}</td>
+                    <td className="px-4 py-3 text-sm break-words">{dispatch.customer || 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm break-words">
                       {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-4 py-3 text-sm">
