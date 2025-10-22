@@ -684,20 +684,13 @@ const FarmDetail: React.FC = () => {
 
   // Update existing receipt instead of creating new one
   const updateReceipt = async (receiptId: string, updatedData: any) => {
-    setReceivedDispatches(prev => 
-      prev.map(receipt => 
-        receipt.id === receiptId 
-          ? { ...receipt, ...updatedData, updatedAt: new Date().toISOString() }
-          : receipt
-      )
-    );
-    
-    // Update localStorage
     const updatedReceivedDispatches = receivedDispatches.map(receipt => 
       receipt.id === receiptId 
         ? { ...receipt, ...updatedData, updatedAt: new Date().toISOString() }
         : receipt
     );
+    
+    setReceivedDispatches(updatedReceivedDispatches);
     await saveReceivedDispatchesToDB(updatedReceivedDispatches);
   };
 
@@ -1907,6 +1900,7 @@ const FarmDetail: React.FC = () => {
                                 type="number"
                                 value={placement.quantity}
                                 onChange={(e) => updatePlacement(placement.id, 'quantity', parseInt(e.target.value) || 0)}
+                                onFocus={(e) => e.target.select()}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                 min="0"
                               />
