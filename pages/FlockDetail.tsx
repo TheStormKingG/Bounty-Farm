@@ -208,19 +208,8 @@ const FlockDetail: React.FC = () => {
         .eq('week_day_id', weekDayId)
         .single();
 
-      // If week_day_id query fails (no data found or column issues), fallback to date query
-      if (error && error.code === 'PGRST116') {
-        console.log('No data found with week_day_id, trying date query');
-        const fallbackResult = await supabase
-          .from('daily_flock_data')
-          .select('*')
-          .eq('flock_id', flockId)
-          .eq('date', dateString)
-          .single();
-        
-        existingData = fallbackResult.data;
-        error = fallbackResult.error;
-      } else if (error && ((error as any).status === 406 || error.message?.includes('column') || error.message?.includes('week_day_id'))) {
+      // If week_day_id column doesn't exist, fallback to date query
+      if (error && ((error as any).status === 406 || error.message?.includes('column') || error.message?.includes('week_day_id'))) {
         console.log('week_day_id column issue, falling back to date query. Error:', error);
         const fallbackResult = await supabase
           .from('daily_flock_data')
@@ -380,9 +369,10 @@ const FlockDetail: React.FC = () => {
       const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
       
       console.log('Saving data with week_day_id:', weekDayId, 'for date:', dateString);
+      console.log('Looking for existing record with week_day_id:', weekDayId);
       
-      // Check if data already exists for this date
-      // Try week_day_id first
+      // Check if data already exists for this specific week_day_id
+      // Only use week_day_id for checking existing data to avoid conflicts
       let { data: existingData, error: checkError } = await supabase
         .from('daily_flock_data')
         .select('id')
@@ -390,19 +380,8 @@ const FlockDetail: React.FC = () => {
         .eq('week_day_id', weekDayId)
         .single();
 
-      // If week_day_id query fails (no data found or column issues), fallback to date query
-      if (checkError && checkError.code === 'PGRST116') {
-        console.log('No existing data found with week_day_id, trying date query');
-        const fallbackResult = await supabase
-          .from('daily_flock_data')
-          .select('id')
-          .eq('flock_id', flockId)
-          .eq('date', dateString)
-          .single();
-        
-        existingData = fallbackResult.data;
-        checkError = fallbackResult.error;
-      } else if (checkError && ((checkError as any).status === 406 || checkError.message?.includes('column') || checkError.message?.includes('week_day_id'))) {
+      // If week_day_id column doesn't exist, fallback to date query
+      if (checkError && ((checkError as any).status === 406 || checkError.message?.includes('column') || checkError.message?.includes('week_day_id'))) {
         console.log('week_day_id column issue, falling back to date query for existing data check. Error:', checkError);
         const fallbackResult = await supabase
           .from('daily_flock_data')
@@ -420,6 +399,8 @@ const FlockDetail: React.FC = () => {
         alert('Error checking existing data. Please try again.');
         return;
       }
+
+      console.log('Existing data check result:', existingData ? 'Found existing record' : 'No existing record found');
 
       const dataToSave = {
         flock_id: flockId,
