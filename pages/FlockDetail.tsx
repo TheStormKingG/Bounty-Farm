@@ -151,19 +151,16 @@ const FlockDetail: React.FC = () => {
     const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
     const today = new Date().toISOString().split('T')[0];
     
-    // Enable if data has been submitted for this date
-    if (submittedDates.has(dateString)) {
-      console.log(`Date ${dateString} is enabled because data was submitted`);
+    // Enable if data has been submitted for this date OR if the date has passed (including today)
+    const hasData = submittedDates.has(dateString);
+    const isPastOrToday = dateString <= today;
+    
+    if (hasData || isPastOrToday) {
+      console.log(`Date ${dateString} is enabled - hasData: ${hasData}, isPastOrToday: ${isPastOrToday}`);
       return true;
     }
     
-    // Enable if the date has passed (including today)
-    if (dateString <= today) {
-      console.log(`Date ${dateString} is enabled because it's past/today`);
-      return true;
-    }
-    
-    console.log(`Date ${dateString} is disabled (future date)`);
+    console.log(`Date ${dateString} is disabled (future date with no data)`);
     return false;
   };
 
@@ -602,10 +599,9 @@ const FlockDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md mt-6 p-6">
             <button
               onClick={() => setIsMondayMeasuresOpen(true)}
-              disabled={mondayMeasuresSubmitted}
               className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
                 mondayMeasuresSubmitted
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
                   : 'bg-purple-600 hover:bg-purple-700 text-white'
               }`}
             >
