@@ -172,6 +172,39 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
+  // Load existing Today's Info data when opening popup
+  const loadTodaysData = async () => {
+    if (!todaysDataSubmitted) return; // Only load if data was submitted
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data: existingData, error } = await supabase
+        .from('daily_flock_data')
+        .select('*')
+        .eq('flock_id', flockId)
+        .eq('date', today)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading Today\'s Info data:', error);
+        return;
+      }
+
+      if (existingData) {
+        setTodaysData({
+          culls: existingData.culls || 0,
+          runts: existingData.runts || 0,
+          deaths: existingData.deaths || 0,
+          feedType: existingData.feed_type || 'Starter',
+          feedUsed: existingData.feed_used || 0
+        });
+        console.log('Loaded existing Today\'s Info data:', existingData);
+      }
+    } catch (error) {
+      console.error('Error loading Today\'s Info data:', error);
+    }
+  };
+
   // Save Monday Measures data to database
   const saveMondayMeasuresData = async () => {
     try {
@@ -580,12 +613,14 @@ const FlockDetail: React.FC = () => {
         {/* Today's Info Button */}
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
           <button 
-            onClick={() => setIsTodaysInfoOpen(true)}
-            disabled={todaysDataSubmitted}
+            onClick={() => {
+              setIsTodaysInfoOpen(true);
+              loadTodaysData(); // Load existing data if submitted
+            }}
             className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
               todaysDataSubmitted
-                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700 text-white'
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-purple-600 hover:bg-purple-700 text-white'
             }`}
           >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
@@ -596,7 +631,7 @@ const FlockDetail: React.FC = () => {
             })}
             {todaysDataSubmitted && ' (Submitted)'}
           </button>
-                </div>
+        </div>
 
         {/* Monday Measures Button - Only show on Mondays */}
         {isTodayMonday() && (
@@ -748,6 +783,7 @@ const FlockDetail: React.FC = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Enter number of culls"
                         min="0"
+                        onFocus={(e) => e.target.select()}
                       />
                 </div>
                   )}
@@ -778,6 +814,7 @@ const FlockDetail: React.FC = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Enter number of runts"
                         min="0"
+                        onFocus={(e) => e.target.select()}
                       />
               </div>
                   )}
@@ -808,6 +845,7 @@ const FlockDetail: React.FC = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         placeholder="Enter number of deaths"
                         min="0"
+                        onFocus={(e) => e.target.select()}
                       />
                 </div>
                   )}
@@ -862,6 +900,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter amount of feed used"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                       />
                 </div>
                 </div>
@@ -942,6 +981,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter weight"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                         />
                 </div>
                       
@@ -953,6 +993,7 @@ const FlockDetail: React.FC = () => {
                           min="0"
                           max="5"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                           value={mondayMeasuresData.bird1.gaitScore}
                           onChange={(e) => handleMondayMeasuresChange('bird1', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -1036,6 +1077,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter weight"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                         />
                 </div>
                       
@@ -1047,6 +1089,7 @@ const FlockDetail: React.FC = () => {
                           min="0"
                           max="5"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                           value={mondayMeasuresData.bird2.gaitScore}
                           onChange={(e) => handleMondayMeasuresChange('bird2', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -1130,6 +1173,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter weight"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                         />
                 </div>
                       
@@ -1141,6 +1185,7 @@ const FlockDetail: React.FC = () => {
                           min="0"
                           max="5"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                           value={mondayMeasuresData.bird3.gaitScore}
                           onChange={(e) => handleMondayMeasuresChange('bird3', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -1224,6 +1269,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter weight"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                         />
           </div>
 
@@ -1235,6 +1281,7 @@ const FlockDetail: React.FC = () => {
                           min="0"
                           max="5"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                           value={mondayMeasuresData.bird4.gaitScore}
                           onChange={(e) => handleMondayMeasuresChange('bird4', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -1318,6 +1365,7 @@ const FlockDetail: React.FC = () => {
                           placeholder="Enter weight"
                           min="0"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                       />
                     </div>
                       
@@ -1329,6 +1377,7 @@ const FlockDetail: React.FC = () => {
                           min="0"
                           max="5"
                           step="1"
+                          onFocus={(e) => e.target.select()}
                           value={mondayMeasuresData.bird5.gaitScore}
                           onChange={(e) => handleMondayMeasuresChange('bird5', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
