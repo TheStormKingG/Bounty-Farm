@@ -190,9 +190,22 @@ const Sales: React.FC = () => {
 
   const fetchInvoices = async () => {
     try {
+      // First, get all farm customer names
+      const { data: farmCustomers } = await supabase
+        .from('farm_customers')
+        .select('farm_name');
+
+      const farmCustomerNames = farmCustomers?.map(fc => fc.farm_name) || [];
+
+      // Fetch invoices and join with sales_dispatch to get customer info
       const { data, error } = await supabase
         .from('invoices')
-        .select('*')
+        .select(`
+          *,
+          sales_dispatch!inner(
+            customer
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -200,12 +213,18 @@ const Sales: React.FC = () => {
         return;
       }
 
-      setInvoices(data || []);
+      // Filter out farm customer invoices
+      const individualInvoices = data?.filter(invoice => {
+        const customer = invoice.sales_dispatch?.customer;
+        return customer && !farmCustomerNames.includes(customer);
+      }) || [];
+
+      setInvoices(individualInvoices);
       
       // Initialize invoice dates only (no payment status handling)
       const dates: {[key: string]: string} = {};
       
-      data?.forEach(invoice => {
+      individualInvoices.forEach(invoice => {
         dates[invoice.invoice_number] = invoice.date_sent || '';
       });
       

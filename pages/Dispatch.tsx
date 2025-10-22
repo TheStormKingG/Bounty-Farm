@@ -255,24 +255,6 @@ const Dispatch: React.FC = () => {
   }, []);
 
   // Handler functions for farm dispatches
-  const handleFarmStatusToggle = async (id: string) => {
-    try {
-      const dispatch = farmDispatches.find(disp => disp.id === id);
-      if (dispatch) {
-        const newStatus = dispatch.status === 'received' ? 'pending' : 'received';
-        await supabase
-          .from('dispatches')
-          .update({ status: newStatus })
-          .eq('id', id);
-        
-        setFarmDispatches(prev => prev.map(disp => 
-          disp.id === id ? { ...disp, status: newStatus } : disp
-        ));
-      }
-    } catch (error) {
-      console.error('Error updating farm dispatch status:', error);
-    }
-  };
 
   const handleDeleteFarmDispatch = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this farm dispatch?')) {
@@ -1022,16 +1004,13 @@ const Dispatch: React.FC = () => {
                       {dispatch.created_at ? new Date(dispatch.created_at).toLocaleDateString() : 'N/A'}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => handleFarmStatusToggle(dispatch.id)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                          dispatch.status === 'received' 
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                        }`}
-                      >
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        dispatch.status === 'received' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                         {dispatch.status === 'received' ? 'Received' : 'Pending'}
-                      </button>
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button 
