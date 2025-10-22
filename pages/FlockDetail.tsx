@@ -175,22 +175,38 @@ const FlockDetail: React.FC = () => {
 
   // Generate week_day_id for a specific date
   const generateWeekDayId = (date: Date) => {
-    // Calculate week number based on flock start date
-    const startDate = flockStartDate || new Date();
-    const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const weekNumber = Math.floor(daysDiff / 7) + 1; // Week 1, 2, 3, etc.
+    if (!flockStartDate) {
+      console.error('Flock start date not available');
+      return `W1D1${date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}${date.getDate().toString().padStart(2, '0')}${date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}`;
+    }
     
-    // Calculate day number within the week (1-based, starting from flock start date)
-    // If daysDiff = 0 (same day as start), it's day 1
-    // If daysDiff = 1 (next day), it's day 2, etc.
-    const dayInWeek = (daysDiff % 7) + 1;
+    // Calculate the difference in days from flock start date
+    const startDate = new Date(flockStartDate);
+    const targetDate = new Date(date);
     
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNumber = date.getDate();
+    // Set both dates to start of day to avoid time zone issues
+    startDate.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor((targetDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Calculate week number (1-based)
+    const weekNumber = Math.floor(daysDiff / 7) + 1;
+    
+    // Calculate day number within the week (1-based)
+    // Day 1 = flock start date, Day 2 = next day, etc.
+    const dayInWeek = daysDiff + 1;
+    
+    const dayOfWeek = targetDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const dayNumber = targetDate.getDate();
     const dayName = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][dayOfWeek];
-    const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const monthName = targetDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
-    return `W${weekNumber}D${dayInWeek}${dayName}${dayNumber.toString().padStart(2, '0')}${monthName}`;
+    const weekDayId = `W${weekNumber}D${dayInWeek}${dayName}${dayNumber.toString().padStart(2, '0')}${monthName}`;
+    
+    console.log(`Generated week_day_id: ${weekDayId} for date: ${targetDate.toISOString().split('T')[0]}, daysDiff: ${daysDiff}, weekNumber: ${weekNumber}, dayInWeek: ${dayInWeek}`);
+    
+    return weekDayId;
   };
 
   // Load existing data for a specific date
