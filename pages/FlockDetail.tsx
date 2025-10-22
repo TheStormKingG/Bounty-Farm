@@ -448,7 +448,7 @@ const FlockDetail: React.FC = () => {
         console.log('Loading submitted dates for flock:', flockId);
         const { data: existingData, error } = await supabase
           .from('daily_flock_data')
-          .select('date')
+          .select('*')
           .eq('flock_id', flockId);
 
         if (error) {
@@ -457,9 +457,13 @@ const FlockDetail: React.FC = () => {
         }
 
         console.log('Raw data from database:', existingData);
+        console.log('All records for this flock:', existingData);
 
         if (existingData && existingData.length > 0) {
-          const dates = existingData.map(record => record.date);
+          const dates = existingData.map(record => {
+            console.log('Record date:', record.date, 'Type:', typeof record.date);
+            return record.date;
+          });
           setSubmittedDates(new Set(dates));
           console.log('Loaded submitted dates:', dates);
           console.log('Submitted dates Set:', Array.from(new Set(dates)));
