@@ -63,6 +63,18 @@ const FlockDetail: React.FC = () => {
   
   // Week tracking state
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
+  
+  // Today's Info popup state
+  const [isTodaysInfoOpen, setIsTodaysInfoOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [todaysData, setTodaysData] = useState({
+    culls: 0,
+    runts: 0,
+    deaths: 0,
+    feedType: 'Starter',
+    feedUsed: 0,
+    bagsUsed: 0
+  });
 
   // Toggle week expansion
   const toggleWeekExpansion = (week: number) => {
@@ -75,6 +87,27 @@ const FlockDetail: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  // Toggle Today's Info item expansion
+  const toggleItemExpansion = (item: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(item)) {
+        newSet.delete(item);
+      } else {
+        newSet.add(item);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle Today's Info data changes
+  const handleTodaysDataChange = (field: string, value: any) => {
+    setTodaysData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   // Calculate dates for a given week
@@ -175,7 +208,10 @@ const FlockDetail: React.FC = () => {
           
         {/* Today's Info Button */}
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
-          <button className="w-full bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-semibold">
+          <button 
+            onClick={() => setIsTodaysInfoOpen(true)}
+            className="w-full bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-semibold"
+          >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -240,6 +276,227 @@ const FlockDetail: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Today's Info Popup Modal */}
+        {isTodaysInfoOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Today's Info - {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </h3>
+                <button
+                  onClick={() => setIsTodaysInfoOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                {/* Culls */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleItemExpansion('culls')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Culls</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedItems.has('culls') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedItems.has('culls') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={todaysData.culls}
+                        onChange={(e) => handleTodaysDataChange('culls', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter number of culls"
+                        min="0"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Runts */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleItemExpansion('runts')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Runts</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedItems.has('runts') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedItems.has('runts') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={todaysData.runts}
+                        onChange={(e) => handleTodaysDataChange('runts', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter number of runts"
+                        min="0"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Deaths */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleItemExpansion('deaths')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Deaths</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedItems.has('deaths') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedItems.has('deaths') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={todaysData.deaths}
+                        onChange={(e) => handleTodaysDataChange('deaths', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter number of deaths"
+                        min="0"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Feed Used */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleItemExpansion('feedUsed')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Feed Used</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedItems.has('feedUsed') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedItems.has('feedUsed') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Feed Type Radio Options */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
+                        <div className="space-y-2">
+                          {['Starter', 'Grower', 'Finisher'].map((type) => (
+                            <label key={type} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="feedType"
+                                value={type}
+                                checked={todaysData.feedType === type}
+                                onChange={(e) => handleTodaysDataChange('feedType', e.target.value)}
+                                className="mr-2 text-green-600 focus:ring-green-500"
+                              />
+                              <span className="text-gray-700">{type}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Feed Amount */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Amount Used:</label>
+                        <input
+                          type="number"
+                          value={todaysData.feedUsed}
+                          onChange={(e) => handleTodaysDataChange('feedUsed', parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="Enter amount of feed used"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bags Used */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleItemExpansion('bagsUsed')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bags Used</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedItems.has('bagsUsed') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedItems.has('bagsUsed') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={todaysData.bagsUsed}
+                        onChange={(e) => handleTodaysDataChange('bagsUsed', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter number of bags used"
+                        min="0"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 p-6 border-t">
+                <button
+                  onClick={() => setIsTodaysInfoOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // Save data logic here
+                    console.log('Saving today\'s data:', todaysData);
+                    setIsTodaysInfoOpen(false);
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save Data
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
