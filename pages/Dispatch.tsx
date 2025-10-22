@@ -78,7 +78,30 @@ const Dispatch: React.FC = () => {
 
       console.log('Fetched Pick Up dispatches:', data); // Debug log
       console.log('Number of Pick Up dispatches found:', data?.length || 0);
-      setDispatches(data || []);
+      
+      // Get customer names for individual dispatches
+      const dispatchesWithCustomers = [];
+      
+      for (const dispatch of data || []) {
+        if (dispatch.invoices) {
+          // Get the PO number from the invoice number
+          const poNumber = dispatch.invoices.invoice_number.replace('-INV', '-PO');
+          
+          // Fetch the sales_dispatch record to get the customer
+          const { data: salesData } = await supabase
+            .from('sales_dispatch')
+            .select('customer')
+            .eq('po_number', poNumber)
+            .single();
+          
+          dispatchesWithCustomers.push({
+            ...dispatch,
+            customer: salesData?.customer || 'N/A'
+          });
+        }
+      }
+
+      setDispatches(dispatchesWithCustomers || []);
     } catch (err) {
       console.error('Unexpected error fetching dispatches:', err);
       setError('An unexpected error occurred while fetching dispatches');
@@ -127,6 +150,21 @@ const Dispatch: React.FC = () => {
     } catch (err) {
       console.error('Unexpected error updating payment status:', err);
       alert('An unexpected error occurred while updating payment status');
+    }
+  };
+
+  const handleDeleteDispatch = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this dispatch?')) {
+      try {
+        await supabase
+          .from('dispatches')
+          .delete()
+          .eq('id', id);
+        
+        setDispatches(prev => prev.filter(dispatch => dispatch.id !== id));
+      } catch (error) {
+        console.error('Error deleting dispatch:', error);
+      }
     }
   };
 
@@ -780,14 +818,14 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TRUCKS', 'PAYMENT STATUS', 'DISPATCH NOTE'
+                      'DISPATCH NUMBER', 'INDIVIDUAL NAME', 'DATE', 'STATUS', 'ACTIONS'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
+                        'INDIVIDUAL NAME': 'customer',
                         'DATE': 'date_dispatched',
-                        'TRUCKS': 'trucks',
-                        'PAYMENT STATUS': 'status',
-                        'DISPATCH NOTE': 'receipt'
+                        'STATUS': 'status',
+                        'ACTIONS': 'actions'
                       };
                       
                       return (
@@ -823,8 +861,8 @@ const Dispatch: React.FC = () => {
                   {processedDispatches.map((dispatch) => (
                     <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
+                      <td className="px-4 py-3 text-sm">{dispatch.customer || 'N/A'}</td>
                       <td className="px-4 py-3 text-sm">{new Date(dispatch.date_dispatched).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
                       <td className="px-4 py-3 text-sm">
                         <button 
                           onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.invoices?.status || 'pending')}
@@ -837,12 +875,18 @@ const Dispatch: React.FC = () => {
                           {dispatch.invoices?.status || 'pending'}
                         </button>
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm space-x-2">
                         <button
                           onClick={() => handleViewReceipt(dispatch)}
-                          className="text-[#5c3a6b] hover:text-[#4a2c5a] underline cursor-pointer"
+                          className="text-[#5C3A6B] hover:underline font-medium"
                         >
                           View
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteDispatch(dispatch.id)}
+                          className="text-red-600 hover:underline font-medium"
+                        >
+                          Delete
                         </button>
                       </td>
                     </tr>
