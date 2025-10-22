@@ -106,13 +106,6 @@ const FarmDetail: React.FC = () => {
   const dispatchRef = useRef<HTMLDivElement>(null);
   
   // Modal states
-  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [newFlockName, setNewFlockName] = useState('');
-  const [newBreed, setNewBreed] = useState('');
-  const [newQuantity, setNewQuantity] = useState('');
-  const [newStartDate, setNewStartDate] = useState('');
-  const [newStatus, setNewStatus] = useState('Active');
-  const [newNotes, setNewNotes] = useState('');
 
   // Get farm info from navigation state
   useEffect(() => {
@@ -979,57 +972,60 @@ const FarmDetail: React.FC = () => {
   }, [farmId, farmName]);
 
   // Fetch flocks for this farm
+  // Fetch flocks based on received dispatches
   useEffect(() => {
     const fetchFlocks = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        // For now, we'll create mock data since the flocks table doesn't exist yet
-        // In the future, this would fetch from a flocks table
-        const mockFlocks: Flock[] = [
-          {
-            id: '1',
-            farmId: farmId || '',
-            flockNumber: 1,
-            flockName: 'Flock 1',
-            breed: 'Broiler',
-            quantity: 1000,
-            startDate: '2024-01-15',
-            status: 'Active',
-            notes: 'First flock for this farm',
-            createdBy: user?.email || 'Unknown',
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: '2',
-            farmId: farmId || '',
-            flockNumber: 2,
-            flockName: 'Flock 2',
-            breed: 'Layer',
-            quantity: 500,
-            startDate: '2024-02-01',
-            status: 'Active',
-            notes: 'Layer flock for egg production',
-            createdBy: user?.email || 'Unknown',
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: '3',
-            farmId: farmId || '',
-            flockNumber: 3,
-            flockName: 'Flock 3',
-            breed: 'Breeder',
-            quantity: 200,
-            startDate: '2024-03-01',
-            status: 'Completed',
-            notes: 'Breeder flock for reproduction',
-            createdBy: user?.email || 'Unknown',
-            createdAt: new Date().toISOString(),
-          }
-        ];
+        // Create flocks based on received dispatches data
+        const autoFlocks: Flock[] = [];
+        let flockCounter = 1;
         
-        setFlocks(mockFlocks);
+        // Process each received dispatch to create flocks
+        receivedDispatches.forEach((receipt, receiptIndex) => {
+          if (receipt.penFlockSummary) {
+            // Convert pen/flock summary to flock objects
+            Object.entries(receipt.penFlockSummary).forEach(([penFlockNumber, quantity]) => {
+              const penFlockNum = parseInt(penFlockNumber);
+              const totalQuantity = quantity as number;
+              
+              // Get hatch information for this pen/flock
+              const hatches = getHatchesForPenFlockReceived(penFlockNum, receipt);
+              const hatchNumbers = hatches.map((h: any) => h.hatchNo).join(', ');
+              
+              // Determine breed based on dispatch data or default
+              const breed = 'Broiler'; // Default breed, could be enhanced to detect from dispatch data
+              
+              // Determine status based on dispatch age
+              const dispatchDate = new Date(receipt.confirmedAt);
+              const daysSinceDispatch = Math.floor((Date.now() - dispatchDate.getTime()) / (1000 * 60 * 60 * 24));
+              const status = daysSinceDispatch > 30 ? 'Completed' : 'Active';
+              
+              const flock: Flock = {
+                id: `flock-${receiptIndex}-${penFlockNum}`,
+                farmId: farmId || '',
+                flockNumber: flockCounter++,
+                flockName: `Flock ${penFlockNum}`,
+                breed: breed,
+                quantity: totalQuantity,
+                startDate: dispatchDate.toISOString().split('T')[0],
+                status: status,
+                notes: `Auto-created from dispatch ${receipt.dispatchNumber}. Hatches: ${hatchNumbers}`,
+                createdBy: receipt.confirmedBy || 'System',
+                createdAt: receipt.confirmedAt,
+              };
+              
+              autoFlocks.push(flock);
+            });
+          }
+        });
+        
+        // Sort flocks by flock number
+        autoFlocks.sort((a, b) => a.flockNumber - b.flockNumber);
+        
+        setFlocks(autoFlocks);
       } catch (err) {
         console.error('Unexpected error:', err);
         setError('An unexpected error occurred.');
@@ -1038,11 +1034,11 @@ const FarmDetail: React.FC = () => {
         setLoading(false);
       }
     };
-
-    if (farmId || farmName) {
+    
+    if (farmInfo.farmName) {
       fetchFlocks();
     }
-  }, [farmId, farmName, user?.email]);
+  }, [farmInfo.farmName, receivedDispatches, farmId]);
 
   // Fetch dispatches when farm info is available
   useEffect(() => {
@@ -1106,45 +1102,6 @@ const FarmDetail: React.FC = () => {
       Object.values(intervals).forEach(interval => clearInterval(interval));
     };
   }, [dispatchTimers]);
-
-  // Handle add new flock
-  const handleAddFlock = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!farmId && !farmName) return;
-
-    try {
-      // For now, we'll just add to local state
-      // In the future, this would insert into the flocks table
-      const newFlock: Flock = {
-        id: Date.now().toString(),
-        farmId: farmId || farmName || '',
-        flockNumber: flocks.length + 1,
-        flockName: newFlockName,
-        breed: newBreed,
-        quantity: parseInt(newQuantity),
-        startDate: newStartDate,
-        status: newStatus,
-        notes: newNotes,
-        createdBy: user?.email || 'Unknown',
-        createdAt: new Date().toISOString(),
-      };
-
-      setFlocks(prev => [newFlock, ...prev]);
-      
-      // Reset form
-      setNewFlockName('');
-      setNewBreed('');
-      setNewQuantity('');
-      setNewStartDate('');
-      setNewStatus('Active');
-      setNewNotes('');
-      setIsAddModalVisible(false);
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred.');
-    }
-  };
 
   // Handle flock click - navigate to flock detail
   const handleFlockClick = (flock: Flock) => {
@@ -1536,12 +1493,6 @@ const FarmDetail: React.FC = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-800">Flock Management</h2>
-              <button
-                onClick={() => setIsAddModalVisible(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Add Flock
-              </button>
             </div>
           </div>
 
@@ -1615,115 +1566,6 @@ const FarmDetail: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Add Flock Modal */}
-        {isAddModalVisible && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <h2 className="text-xl font-semibold mb-4">Add New Flock</h2>
-                <form onSubmit={handleAddFlock}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Flock Name
-                      </label>
-                      <input
-                        type="text"
-                        value={newFlockName}
-                        onChange={(e) => setNewFlockName(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Breed
-                      </label>
-                      <select
-                        value={newBreed}
-                        onChange={(e) => setNewBreed(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="">Select Breed</option>
-                        <option value="Broiler">Broiler</option>
-                        <option value="Layer">Layer</option>
-                        <option value="Breeder">Breeder</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity
-                      </label>
-                      <input
-                        type="number"
-                        value={newQuantity}
-                        onChange={(e) => setNewQuantity(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                        min="1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Start Date
-                      </label>
-                      <input
-                        type="date"
-                        value={newStartDate}
-                        onChange={(e) => setNewStartDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Status
-                      </label>
-                      <select
-                        value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Notes
-                      </label>
-                      <textarea
-                        value={newNotes}
-                        onChange={(e) => setNewNotes(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button
-                      type="button"
-                      onClick={() => setIsAddModalVisible(false)}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Add Flock
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Dispatch Note Modal */}
