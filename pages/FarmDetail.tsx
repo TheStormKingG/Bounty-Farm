@@ -105,6 +105,9 @@ const FarmDetail: React.FC = () => {
   const [expandedReceivedDispatches, setExpandedReceivedDispatches] = useState<Set<string>>(new Set());
   const dispatchRef = useRef<HTMLDivElement>(null);
   
+  // Track if received dispatches have been loaded
+  const [receivedDispatchesLoaded, setReceivedDispatchesLoaded] = useState(false);
+  
   // Modal states
 
   // Get farm info from navigation state
@@ -979,12 +982,15 @@ const FarmDetail: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        // Get current received dispatches
+        const currentReceivedDispatches = receivedDispatches;
+        
         // Create flocks based on received dispatches data
         const autoFlocks: Flock[] = [];
         let flockCounter = 1;
         
         // Process each received dispatch to create flocks
-        for (const [receiptIndex, receipt] of receivedDispatches.entries()) {
+        for (const [receiptIndex, receipt] of currentReceivedDispatches.entries()) {
           if (receipt.penFlockSummary) {
             // Convert pen/flock summary to flock objects
             for (const [penFlockNumber, quantity] of Object.entries(receipt.penFlockSummary)) {
@@ -1050,10 +1056,10 @@ const FarmDetail: React.FC = () => {
       }
     };
     
-    if (farmInfo.farmName) {
+    if (farmInfo.farmName && receivedDispatchesLoaded) {
       fetchFlocks();
     }
-  }, [farmInfo.farmName, receivedDispatches, farmId]);
+  }, [farmInfo.farmName, receivedDispatchesLoaded, farmId]);
 
   // Fetch dispatches when farm info is available
   useEffect(() => {
@@ -1068,6 +1074,7 @@ const FarmDetail: React.FC = () => {
       if (farmInfo.farmName) {
         const dbDispatches = await loadReceivedDispatchesFromDB();
         setReceivedDispatches(dbDispatches);
+        setReceivedDispatchesLoaded(true); // Mark as loaded
         
         // Restore timers for farmer view
         if (isFarmerView) {
