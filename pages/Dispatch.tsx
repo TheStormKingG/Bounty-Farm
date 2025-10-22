@@ -130,7 +130,7 @@ const Dispatch: React.FC = () => {
           updated_at: new Date().toISOString(),
           updated_by: 'admin'
         })
-        .eq('id', dispatch.invoiceId);
+        .eq('id', dispatch.invoices?.id);
 
       if (error) {
         console.error('Error updating payment status:', error);
@@ -818,11 +818,11 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'INDIVIDUAL NAME', 'DATE', 'STATUS', 'ACTIONS'
+                      'Disp #', 'Name', 'DATE', 'STATUS', 'ACTIONS'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
-                        'DISPATCH NUMBER': 'dispatch_number',
-                        'INDIVIDUAL NAME': 'customer',
+                        'Disp #': 'dispatch_number',
+                        'Name': 'customer',
                         'DATE': 'date_dispatched',
                         'STATUS': 'status',
                         'ACTIONS': 'actions'
@@ -977,7 +977,7 @@ const Dispatch: React.FC = () => {
               }}>
                 <tr>
                   {[
-                    'DISPATCH NUMBER', 'FARM NAME', 'DATE', 'STATUS', 'ACTIONS'
+                    'Disp #', 'Name', 'DATE', 'STATUS', 'ACTIONS'
                   ].map((header, index) => (
                     <th
                       key={header}
