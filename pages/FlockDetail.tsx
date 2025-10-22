@@ -69,6 +69,16 @@ const FlockDetail: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [flockStartDate, setFlockStartDate] = useState<Date | null>(null);
   const [submittedDates, setSubmittedDates] = useState<Set<string>>(new Set());
+  const [todaysDataSubmitted, setTodaysDataSubmitted] = useState(false);
+  const [isMondayMeasuresOpen, setIsMondayMeasuresOpen] = useState(false);
+  const [expandedBirds, setExpandedBirds] = useState<Set<string>>(new Set());
+  const [mondayMeasuresData, setMondayMeasuresData] = useState({
+    bird1: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+    bird2: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+    bird3: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+    bird4: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+    bird5: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' }
+  });
   const [todaysData, setTodaysData] = useState({
     culls: 0,
     runts: 0,
@@ -101,6 +111,36 @@ const FlockDetail: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  // Toggle Monday Measures bird expansion
+  const toggleBirdExpansion = (bird: string) => {
+    setExpandedBirds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(bird)) {
+        newSet.delete(bird);
+      } else {
+        newSet.add(bird);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle Monday Measures data changes
+  const handleMondayMeasuresChange = (bird: string, field: string, value: any) => {
+    setMondayMeasuresData(prev => ({
+      ...prev,
+      [bird]: {
+        ...prev[bird],
+        [field]: value
+      }
+    }));
+  };
+
+  // Check if today is Monday
+  const isTodayMonday = () => {
+    const today = new Date();
+    return today.getDay() === 1; // 1 = Monday
   };
 
   // Check if a date button should be enabled
@@ -193,6 +233,9 @@ const FlockDetail: React.FC = () => {
       
       // Add today's date to submitted dates
       setSubmittedDates(prev => new Set([...prev, today]));
+      
+      // Mark today's data as submitted
+      setTodaysDataSubmitted(true);
       
       // Reset form data
       setTodaysData({
@@ -306,6 +349,12 @@ const FlockDetail: React.FC = () => {
           const dates = existingData.map(record => record.date);
           setSubmittedDates(new Set(dates));
           console.log('Loaded submitted dates:', dates);
+          
+          // Check if today's data has been submitted
+          const today = new Date().toISOString().split('T')[0];
+          if (dates.includes(today)) {
+            setTodaysDataSubmitted(true);
+          }
         }
       } catch (error) {
         console.error('Error loading submitted dates:', error);
@@ -375,7 +424,12 @@ const FlockDetail: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
           <button 
             onClick={() => setIsTodaysInfoOpen(true)}
-            className="w-full bg-green-600 text-white px-6 py-4 rounded-lg hover:bg-green-700 transition-colors text-lg font-semibold"
+            disabled={todaysDataSubmitted}
+            className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
+              todaysDataSubmitted
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
           >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -383,8 +437,21 @@ const FlockDetail: React.FC = () => {
               month: 'long', 
               day: 'numeric' 
             })}
+            {todaysDataSubmitted && ' (Submitted)'}
           </button>
         </div>
+
+        {/* Monday Measures Button - Only show on Mondays */}
+        {isTodayMonday() && (
+          <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+            <button
+              onClick={() => setIsMondayMeasuresOpen(true)}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg transition-colors text-lg font-semibold"
+            >
+              Monday Measures
+            </button>
+          </div>
+        )}
 
         {/* Week-by-Week Tracking */}
         <div className="bg-white rounded-lg shadow-md mt-6">
@@ -458,7 +525,7 @@ const FlockDetail: React.FC = () => {
                     </div>
                     <div className="mt-3 text-xs text-gray-500 text-center">
                       Blue buttons: Submit data | Green buttons: Data submitted (click to edit) | Gray buttons: Future dates
-                    </div>
+                        </div>
                       </div>
                 )}
               </div>
@@ -649,6 +716,524 @@ const FlockDetail: React.FC = () => {
                     >
                   Save Data
                     </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Monday Measures Popup Modal */}
+        {isMondayMeasuresOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Monday Measures - {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                  })}
+                </h3>
+                <button
+                  onClick={() => setIsMondayMeasuresOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {/* Bird 1: From corner 1 */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleBirdExpansion('bird1')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bird 1: From corner 1</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedBirds.has('bird1') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedBirds.has('bird1') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Weight */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <input
+                          type="number"
+                          value={mondayMeasuresData.bird1.weight}
+                          onChange={(e) => handleMondayMeasuresChange('bird1', 'weight', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="Enter weight"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                      
+                      {/* Gait Score */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={mondayMeasuresData.bird1.gaitScore}
+                          onChange={(e) => handleMondayMeasuresChange('bird1', 'gaitScore', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>0</span>
+                          <span className="font-medium">{mondayMeasuresData.bird1.gaitScore}</span>
+                          <span>5</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dust Bathing */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird1-dustBathing"
+                                value={option}
+                                checked={mondayMeasuresData.bird1.dustBathing === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird1', 'dustBathing', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Panting */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird1-panting"
+                                value={option}
+                                checked={mondayMeasuresData.bird1.panting === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird1', 'panting', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bird 2: From corner 2 */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleBirdExpansion('bird2')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bird 2: From corner 2</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedBirds.has('bird2') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedBirds.has('bird2') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Weight */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <input
+                          type="number"
+                          value={mondayMeasuresData.bird2.weight}
+                          onChange={(e) => handleMondayMeasuresChange('bird2', 'weight', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="Enter weight"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                      
+                      {/* Gait Score */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={mondayMeasuresData.bird2.gaitScore}
+                          onChange={(e) => handleMondayMeasuresChange('bird2', 'gaitScore', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>0</span>
+                          <span className="font-medium">{mondayMeasuresData.bird2.gaitScore}</span>
+                          <span>5</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dust Bathing */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird2-dustBathing"
+                                value={option}
+                                checked={mondayMeasuresData.bird2.dustBathing === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird2', 'dustBathing', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Panting */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird2-panting"
+                                value={option}
+                                checked={mondayMeasuresData.bird2.panting === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird2', 'panting', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bird 3: From corner 3 */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleBirdExpansion('bird3')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bird 3: From corner 3</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedBirds.has('bird3') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedBirds.has('bird3') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Weight */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <input
+                          type="number"
+                          value={mondayMeasuresData.bird3.weight}
+                          onChange={(e) => handleMondayMeasuresChange('bird3', 'weight', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="Enter weight"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                      
+                      {/* Gait Score */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={mondayMeasuresData.bird3.gaitScore}
+                          onChange={(e) => handleMondayMeasuresChange('bird3', 'gaitScore', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>0</span>
+                          <span className="font-medium">{mondayMeasuresData.bird3.gaitScore}</span>
+                          <span>5</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dust Bathing */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird3-dustBathing"
+                                value={option}
+                                checked={mondayMeasuresData.bird3.dustBathing === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird3', 'dustBathing', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Panting */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird3-panting"
+                                value={option}
+                                checked={mondayMeasuresData.bird3.panting === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird3', 'panting', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bird 4: From corner 4 */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleBirdExpansion('bird4')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bird 4: From corner 4</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedBirds.has('bird4') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedBirds.has('bird4') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Weight */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <input
+                          type="number"
+                          value={mondayMeasuresData.bird4.weight}
+                          onChange={(e) => handleMondayMeasuresChange('bird4', 'weight', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="Enter weight"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                      
+                      {/* Gait Score */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={mondayMeasuresData.bird4.gaitScore}
+                          onChange={(e) => handleMondayMeasuresChange('bird4', 'gaitScore', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>0</span>
+                          <span className="font-medium">{mondayMeasuresData.bird4.gaitScore}</span>
+                          <span>5</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dust Bathing */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird4-dustBathing"
+                                value={option}
+                                checked={mondayMeasuresData.bird4.dustBathing === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird4', 'dustBathing', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Panting */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird4-panting"
+                                value={option}
+                                checked={mondayMeasuresData.bird4.panting === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird4', 'panting', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bird 5: Middle */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleBirdExpansion('bird5')}
+                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                  >
+                    <span className="font-medium text-gray-800">Bird 5: Middle</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedBirds.has('bird5') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedBirds.has('bird5') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      {/* Weight */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <input
+                          type="number"
+                          value={mondayMeasuresData.bird5.weight}
+                          onChange={(e) => handleMondayMeasuresChange('bird5', 'weight', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="Enter weight"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                      
+                      {/* Gait Score */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="5"
+                          step="0.1"
+                          value={mondayMeasuresData.bird5.gaitScore}
+                          onChange={(e) => handleMondayMeasuresChange('bird5', 'gaitScore', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>0</span>
+                          <span className="font-medium">{mondayMeasuresData.bird5.gaitScore}</span>
+                          <span>5</span>
+                        </div>
+                      </div>
+                      
+                      {/* Dust Bathing */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird5-dustBathing"
+                                value={option}
+                                checked={mondayMeasuresData.bird5.dustBathing === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird5', 'dustBathing', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Panting */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
+                        <div className="space-y-2">
+                          {['yes', 'no'].map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="bird5-panting"
+                                value={option}
+                                checked={mondayMeasuresData.bird5.panting === option}
+                                onChange={(e) => handleMondayMeasuresChange('bird5', 'panting', e.target.value)}
+                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                              />
+                              <span className="text-gray-700 capitalize">{option}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 p-6 border-t">
+                <button
+                  onClick={() => setIsMondayMeasuresOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Save Monday Measures data
+                    alert('Monday Measures data saved successfully!');
+                    setIsMondayMeasuresOpen(false);
+                  }}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Save Data
+                </button>
               </div>
             </div>
           </div>
