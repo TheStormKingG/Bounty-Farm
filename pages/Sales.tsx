@@ -677,19 +677,28 @@ const Sales: React.FC = () => {
               .single();
             
             if (salesData) {
-              // Create dispatch
+              // Check if dispatch already exists to prevent 409 conflict
               const dispatchNumber = poNumber.replace('-PO', '-DISP');
-              await supabase
+              const { data: existingDispatch } = await supabase
                 .from('dispatches')
-                .insert({
-                  dispatch_number: dispatchNumber,
-                  invoice_id: invoice.id,
-                  date_dispatched: new Date().toISOString().split('T')[0],
-                  type: 'Pick Up',
-                  trucks: salesData.trucks_required || 1,
-                  created_by: 'admin',
-                  updated_by: 'admin'
-                });
+                .select('id')
+                .eq('dispatch_number', dispatchNumber)
+                .single();
+              
+              if (!existingDispatch) {
+                // Create dispatch only if it doesn't exist
+                await supabase
+                  .from('dispatches')
+                  .insert({
+                    dispatch_number: dispatchNumber,
+                    invoice_id: invoice.id,
+                    date_dispatched: new Date().toISOString().split('T')[0],
+                    type: 'Pick Up',
+                    trucks: salesData.trucks_required || 1,
+                    created_by: 'admin',
+                    updated_by: 'admin'
+                  });
+              }
             }
           }
           

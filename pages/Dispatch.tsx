@@ -557,45 +557,6 @@ const Dispatch: React.FC = () => {
     }
   };
 
-  // Toggle dispatch type between Delivery and Pick Up
-  const handleTypeToggle = async (dispatchId: string, currentType: string) => {
-    // Guard: prevent editing farm dispatches or locked dispatches
-    const dispatch = dispatches.find(d => d.id === dispatchId);
-    if (dispatch?.customer_type === 'Farm' || dispatch?.type_locked) {
-      console.log('Cannot toggle dispatch type for farm customer or locked dispatch');
-      return;
-    }
-
-    try {
-      const newType = currentType === 'Delivery' ? 'Pick Up' : 'Delivery';
-      
-      const { error } = await supabase
-        .from('dispatches')
-        .update({ 
-          type: newType,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', dispatchId);
-
-      if (error) {
-        console.error('Error updating dispatch type:', error);
-        setError('Failed to update dispatch type: ' + error.message);
-      } else {
-        // Update local state
-        setDispatches(prev => 
-          prev.map(dispatch => 
-            dispatch.id === dispatchId 
-              ? { ...dispatch, type: newType }
-              : dispatch
-          )
-        );
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred.');
-    }
-  };
-
   // Handle viewing delivery receipt
   const handleViewReceipt = async (dispatch: Dispatch) => {
     try {
@@ -819,12 +780,11 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'PAYMENT STATUS', 'DISPATCH NOTE'
+                      'DISPATCH NUMBER', 'DATE', 'TRUCKS', 'PAYMENT STATUS', 'DISPATCH NOTE'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
                         'DATE': 'date_dispatched',
-                        'TYPE': 'type',
                         'TRUCKS': 'trucks',
                         'PAYMENT STATUS': 'status',
                         'DISPATCH NOTE': 'receipt'
@@ -864,24 +824,6 @@ const Dispatch: React.FC = () => {
                     <tr key={dispatch.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B]">{dispatch.dispatch_number}</td>
                       <td className="px-4 py-3 text-sm">{new Date(dispatch.date_dispatched).toLocaleDateString()}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {dispatch.customer_type === 'Farm' || dispatch.type_locked ? (
-                          <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                            Delivery
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleTypeToggle(dispatch.id, dispatch.type || 'Delivery')}
-                            className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 transition-opacity ${
-                              dispatch.type === 'Delivery' 
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                                : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                            }`}
-                          >
-                            {dispatch.type || 'Delivery'}
-                          </button>
-                        )}
-                      </td>
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
                       <td className="px-4 py-3 text-sm">
                         <button 
