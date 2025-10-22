@@ -5,7 +5,7 @@ const Inventory: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center">
         <div className="bg-white rounded-2xl shadow-xl p-12">
-          <div className="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
+          <div className="w-24 h-24 mx-auto mb-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E69500' }}>
             <span className="text-white text-4xl">📦</span>
           </div>
           <h1 className="text-4xl font-bold text-gray-800 mb-6">Inventory Module</h1>

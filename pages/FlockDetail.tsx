@@ -727,8 +727,11 @@ const FlockDetail: React.FC = () => {
             className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
               todaysDataSubmitted
                 ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
+                : 'text-white'
             }`}
+            style={!todaysDataSubmitted ? { backgroundColor: '#E69500' } : {}}
+            onMouseEnter={!todaysDataSubmitted ? (e) => e.target.style.backgroundColor = '#CC8400' : undefined}
+            onMouseLeave={!todaysDataSubmitted ? (e) => e.target.style.backgroundColor = '#E69500' : undefined}
           >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -748,8 +751,11 @@ const FlockDetail: React.FC = () => {
               className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
                 mondayMeasuresSubmitted
                   ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+                  : 'text-white'
               }`}
+              style={!mondayMeasuresSubmitted ? { backgroundColor: '#E69500' } : {}}
+              onMouseEnter={!mondayMeasuresSubmitted ? (e) => e.target.style.backgroundColor = '#CC8400' : undefined}
+              onMouseLeave={!mondayMeasuresSubmitted ? (e) => e.target.style.backgroundColor = '#E69500' : undefined}
             >
               Monday Measures{mondayMeasuresSubmitted && ' (Submitted)'}
             </button>
@@ -1096,7 +1102,8 @@ const FlockDetail: React.FC = () => {
                           type="number"
                           value={mondayMeasuresData.bird1.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird1', 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          style={{ '--tw-ring-color': '#E69500' } as React.CSSProperties}
                           placeholder="Enter weight"
                           min="0"
                           step="1"
@@ -1136,7 +1143,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird1.dustBathing === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird1', 'dustBathing', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1156,7 +1164,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird1.panting === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird1', 'panting', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1192,7 +1201,8 @@ const FlockDetail: React.FC = () => {
                           type="number"
                           value={mondayMeasuresData.bird2.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird2', 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          style={{ '--tw-ring-color': '#E69500' } as React.CSSProperties}
                           placeholder="Enter weight"
                           min="0"
                           step="1"
@@ -1232,7 +1242,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird2.dustBathing === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird2', 'dustBathing', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1252,7 +1263,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird2.panting === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird2', 'panting', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1288,7 +1300,8 @@ const FlockDetail: React.FC = () => {
                           type="number"
                           value={mondayMeasuresData.bird3.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird3', 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          style={{ '--tw-ring-color': '#E69500' } as React.CSSProperties}
                           placeholder="Enter weight"
                           min="0"
                           step="1"
@@ -1328,7 +1341,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird3.dustBathing === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird3', 'dustBathing', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1348,7 +1362,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird3.panting === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird3', 'panting', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1384,7 +1399,8 @@ const FlockDetail: React.FC = () => {
                           type="number"
                           value={mondayMeasuresData.bird4.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird4', 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          style={{ '--tw-ring-color': '#E69500' } as React.CSSProperties}
                           placeholder="Enter weight"
                           min="0"
                           step="1"
@@ -1424,7 +1440,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird4.dustBathing === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird4', 'dustBathing', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
@@ -1444,7 +1461,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird4.panting === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird4', 'panting', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                       </label>
@@ -1480,7 +1498,8 @@ const FlockDetail: React.FC = () => {
                         type="number"
                           value={mondayMeasuresData.bird5.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird5', 'weight', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          style={{ '--tw-ring-color': '#E69500' } as React.CSSProperties}
                           placeholder="Enter weight"
                           min="0"
                           step="1"
@@ -1520,7 +1539,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird5.dustBathing === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird5', 'dustBathing', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                       </label>
@@ -1540,7 +1560,8 @@ const FlockDetail: React.FC = () => {
                                 value={option}
                                 checked={mondayMeasuresData.bird5.panting === option}
                                 onChange={(e) => handleMondayMeasuresChange('bird5', 'panting', e.target.value)}
-                                className="mr-2 text-purple-600 focus:ring-purple-500"
+                                className="mr-2 focus:ring-orange-500"
+                                style={{ color: '#E69500' }}
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>

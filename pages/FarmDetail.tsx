@@ -1228,7 +1228,10 @@ const FarmDetail: React.FC = () => {
                         handleViewDispatch(incomingDispatches[0]);
                       }
                     }}
-                    className="bg-purple-800 hover:bg-purple-900 text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
+                    className="text-white font-semibold py-3 px-8 rounded-lg transition-colors shadow-lg"
+                    style={{ backgroundColor: '#E69500' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                   >
                     Chicks Arriving
                   </button>
@@ -1896,7 +1899,10 @@ const FarmDetail: React.FC = () => {
                     </table>
                     <button
                       onClick={addPlacement}
-                      className="mt-3 w-full bg-purple-800 hover:bg-purple-900 text-white font-medium py-2 px-4 rounded transition-colors"
+                      className="mt-3 w-full text-white font-medium py-2 px-4 rounded transition-colors"
+                      style={{ backgroundColor: '#E69500' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#CC8400'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#E69500'}
                     >
                       + Add Placement
                     </button>
