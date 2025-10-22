@@ -17,10 +17,6 @@ interface Dispatch {
   customer?: string;
   customer_type?: string;
   type_locked?: boolean;
-  invoices?: {
-    id: string;
-    payment_status: string;
-  };
 }
 
 const Dispatch: React.FC = () => {
@@ -58,15 +54,8 @@ const Dispatch: React.FC = () => {
       
       const { data, error } = await supabase
         .from('dispatches')
-        .select(`
-          *,
-          invoices!inner(
-            id,
-            payment_status
-          )
-        `)
+        .select('*')
         .eq('type', 'Pick Up')
-        .eq('invoices.payment_status', 'paid')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -87,47 +76,10 @@ const Dispatch: React.FC = () => {
     }
   };
 
-  // Handle payment status toggle
+  // Handle payment status toggle - removed since payment_status column doesn't exist
   const handlePaymentStatusToggle = async (dispatchId: string, currentStatus: string) => {
-    try {
-      const newStatus = currentStatus === 'pending' ? 'paid' : 'pending';
-      
-      // Find the dispatch to get the invoice_id
-      const dispatch = dispatches.find(d => d.id === dispatchId);
-      if (!dispatch) {
-        console.error('Dispatch not found');
-        return;
-      }
-      
-      // Update the corresponding invoice payment_status instead of dispatch payment_status
-      const { error } = await supabase
-        .from('invoices')
-        .update({ 
-          payment_status: newStatus,
-          updated_at: new Date().toISOString(),
-          updated_by: 'admin'
-        })
-        .eq('id', dispatch.invoiceId);
-
-      if (error) {
-        console.error('Error updating payment status:', error);
-        alert('Failed to update payment status: ' + error.message);
-        return;
-      }
-
-      // Update local state - remove from table if changed to pending
-      if (newStatus === 'pending') {
-        setDispatches(prev => prev.filter(dispatch => dispatch.id !== dispatchId));
-      } else {
-        // If changed to paid, we need to refetch to get the updated dispatch
-        await fetchDispatches();
-      }
-
-      console.log(`Payment status updated to ${newStatus} for dispatch ${dispatchId}`);
-    } catch (err) {
-      console.error('Unexpected error updating payment status:', err);
-      alert('An unexpected error occurred while updating payment status');
-    }
+    console.log('Payment status toggle not available - payment_status column does not exist in invoices table');
+    alert('Payment status functionality is not available - the invoices table does not have a payment_status column');
   };
 
   const fetchFarmDispatches = async () => {
@@ -819,14 +771,13 @@ const Dispatch: React.FC = () => {
                 }}>
                   <tr>
                     {[
-                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'PAYMENT STATUS', 'DISPATCH NOTE'
+                      'DISPATCH NUMBER', 'DATE', 'TYPE', 'TRUCKS', 'DISPATCH NOTE'
                     ].map((header, index) => {
                       const columnMap: { [key: string]: string } = {
                         'DISPATCH NUMBER': 'dispatch_number',
                         'DATE': 'date_dispatched',
                         'TYPE': 'type',
                         'TRUCKS': 'trucks',
-                        'PAYMENT STATUS': 'payment_status',
                         'DISPATCH NOTE': 'receipt'
                       };
                       
@@ -883,18 +834,6 @@ const Dispatch: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <button 
-                          onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.invoices?.payment_status || 'pending')}
-                          className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                            (dispatch.invoices?.payment_status || 'pending') === 'pending' 
-                              ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
-                              : 'bg-green-100 text-green-800 hover:bg-green-200'
-                          }`}
-                        >
-                          {dispatch.invoices?.payment_status || 'pending'}
-                        </button>
-                      </td>
                       <td className="px-4 py-3 text-sm">
                         <button
                           onClick={() => handleViewReceipt(dispatch)}
