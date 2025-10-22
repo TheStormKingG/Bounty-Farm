@@ -31,13 +31,11 @@ BEGIN
     INSERT INTO invoices (
         invoice_number,
         date_sent,
-        payment_status,
         created_by,
         updated_by
     ) VALUES (
         invoice_number,
         NEW.date_ordered,
-        CASE WHEN customer_type = 'Farm' THEN 'Post-paid' ELSE 'pending' END,
         NEW.created_by,
         NEW.updated_by
     ) RETURNING id INTO invoice_id;
