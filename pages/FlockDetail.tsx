@@ -137,10 +137,12 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
-  // Check if today is Monday
+  // Check if today is Monday (TEMPORARILY ALWAYS TRUE FOR TESTING)
   const isTodayMonday = () => {
-    const today = new Date();
-    return today.getDay() === 1; // 1 = Monday
+    // TODO: Revert this to only show on Mondays
+    return true; // Temporarily always true for testing
+    // const today = new Date();
+    // return today.getDay() === 1; // 1 = Monday
   };
 
   // Check if a date button should be enabled
@@ -150,14 +152,17 @@ const FlockDetail: React.FC = () => {
     
     // Enable if data has been submitted for this date
     if (submittedDates.has(dateString)) {
+      console.log(`Date ${dateString} is enabled because data was submitted`);
       return true;
     }
     
     // Enable if the date has passed (including today)
     if (dateString <= today) {
+      console.log(`Date ${dateString} is enabled because it's past/today`);
       return true;
     }
     
+    console.log(`Date ${dateString} is disabled (future date)`);
     return false;
   };
 
@@ -232,10 +237,15 @@ const FlockDetail: React.FC = () => {
       setIsTodaysInfoOpen(false);
       
       // Add today's date to submitted dates
-      setSubmittedDates(prev => new Set([...prev, today]));
+      setSubmittedDates(prev => {
+        const newSet = new Set([...prev, today]);
+        console.log('Updated submittedDates:', Array.from(newSet));
+        return newSet;
+      });
       
       // Mark today's data as submitted
       setTodaysDataSubmitted(true);
+      console.log('Today\'s data marked as submitted');
       
       // Reset form data
       setTodaysData({
@@ -491,6 +501,8 @@ const FlockDetail: React.FC = () => {
                       {getWeekDates(week).map((date, index) => {
                         const isEnabled = isDateEnabled(date.fullDate);
                         const hasData = submittedDates.has(date.fullDate.toISOString().split('T')[0]);
+                        
+                        console.log(`Button ${date.dayName}-${date.dayNumber}: isEnabled=${isEnabled}, hasData=${hasData}, submittedDates=`, Array.from(submittedDates));
                         
                         return (
                           <button
