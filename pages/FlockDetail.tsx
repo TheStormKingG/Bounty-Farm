@@ -75,11 +75,11 @@ const FlockDetail: React.FC = () => {
   const [isMondayMeasuresOpen, setIsMondayMeasuresOpen] = useState(false);
   const [expandedBirds, setExpandedBirds] = useState<Set<string>>(new Set());
   const [mondayMeasuresData, setMondayMeasuresData] = useState({
-    bird1: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-    bird2: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-    bird3: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-    bird4: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-    bird5: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' }
+    bird1: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+    bird2: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+    bird3: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+    bird4: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+    bird5: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' }
   });
   const [todaysData, setTodaysData] = useState({
     culls: 0,
@@ -359,11 +359,11 @@ const FlockDetail: React.FC = () => {
       
       // Reset form data
       setMondayMeasuresData({
-        bird1: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-        bird2: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-        bird3: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-        bird4: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
-        bird5: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' }
+        bird1: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+        bird2: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+        bird3: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+        bird4: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
+        bird5: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' }
       });
       
     } catch (error) {
@@ -1081,9 +1081,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleBirdExpansion('bird1')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Bird 1: From corner 1</span>
+                    <span className="font-medium text-white">Bird 1: From corner 1</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedBirds.has('bird1') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -1097,7 +1100,7 @@ const FlockDetail: React.FC = () => {
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
                 <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg):</label>
                         <input
                           type="number"
                           value={mondayMeasuresData.bird1.weight}
@@ -1180,9 +1183,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleBirdExpansion('bird2')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Bird 2: From corner 2</span>
+                    <span className="font-medium text-white">Bird 2: From corner 2</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedBirds.has('bird2') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -1196,7 +1202,7 @@ const FlockDetail: React.FC = () => {
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
                 <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg):</label>
                         <input
                           type="number"
                           value={mondayMeasuresData.bird2.weight}
@@ -1279,9 +1285,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleBirdExpansion('bird3')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Bird 3: From corner 3</span>
+                    <span className="font-medium text-white">Bird 3: From corner 3</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedBirds.has('bird3') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -1295,7 +1304,7 @@ const FlockDetail: React.FC = () => {
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
                 <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg):</label>
                         <input
                           type="number"
                           value={mondayMeasuresData.bird3.weight}
@@ -1378,9 +1387,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
               <button
                     onClick={() => toggleBirdExpansion('bird4')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Bird 4: From corner 4</span>
+                    <span className="font-medium text-white">Bird 4: From corner 4</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedBirds.has('bird4') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -1394,7 +1406,7 @@ const FlockDetail: React.FC = () => {
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg):</label>
                         <input
                           type="number"
                           value={mondayMeasuresData.bird4.weight}
@@ -1477,9 +1489,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleBirdExpansion('bird5')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Bird 5: Middle</span>
+                    <span className="font-medium text-white">Bird 5: Middle</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedBirds.has('bird5') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -1493,7 +1508,7 @@ const FlockDetail: React.FC = () => {
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg):</label>
                       <input
                         type="number"
                           value={mondayMeasuresData.bird5.weight}

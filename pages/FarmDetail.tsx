@@ -1375,24 +1375,24 @@ const FarmDetail: React.FC = () => {
                       onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
                       onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {receipt.dispatchNumber}
-                          </h3>
-                          <p className="text-sm text-white opacity-90">
-                            Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
-                          </p>
-                        </div>
+                      <div className="flex items-center">
+                        <h3 className="text-lg font-semibold text-white">
+                          {receipt.dispatchNumber}
+                        </h3>
                       </div>
-                      <svg
-                        className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <div className="flex items-center space-x-3">
+                        <p className="text-sm text-white opacity-90">
+                          Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
+                        </p>
+                        <svg
+                          className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
                     </button>
                     
                     {isEditable && (
