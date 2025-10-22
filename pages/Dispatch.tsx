@@ -243,6 +243,7 @@ const Dispatch: React.FC = () => {
       console.log('Dispatch component received refreshDispatches event');
       console.log('Refreshing dispatches due to invoice payment status change');
       fetchDispatches();
+      fetchFarmDispatches(); // Also refresh farm dispatches
     };
 
     console.log('Dispatch component setting up event listener for refreshDispatches');

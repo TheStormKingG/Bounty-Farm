@@ -238,8 +238,8 @@ const FarmDetail: React.FC = () => {
         // Fetch hatch cycles data
         const { data: hatchCycles, error: hatchError } = await supabase
           .from('hatch_cycles')
-          .select('hatch_number, hatch_date, qty')
-          .in('hatch_number', usedHatches);
+          .select('hatch_no, hatch_date, qty')
+          .in('hatch_no', usedHatches);
 
         if (hatchError) {
           console.error('Error fetching hatch cycles:', hatchError);
@@ -579,6 +579,15 @@ const FarmDetail: React.FC = () => {
       
       updateReceipt(currentDispatch.id, { ...receiptData, editCount });
       
+      // Update dispatch status in main dispatches table
+      await supabase
+        .from('dispatches')
+        .update({ status: 'received' })
+        .eq('id', currentDispatch.id);
+      
+      // Trigger refresh event for Dispatch page
+      window.dispatchEvent(new CustomEvent('refreshDispatches'));
+      
       // Set new timer duration
       setDispatchTimers(prev => ({
         ...prev,
@@ -595,6 +604,15 @@ const FarmDetail: React.FC = () => {
       // Save to database for cross-device persistence
       const updatedReceivedDispatches = [receiptData, ...receivedDispatches];
       await saveReceivedDispatchesToDB(updatedReceivedDispatches);
+      
+      // Update dispatch status in main dispatches table
+      await supabase
+        .from('dispatches')
+        .update({ status: 'received' })
+        .eq('id', currentDispatch.id);
+      
+      // Trigger refresh event for Dispatch page
+      window.dispatchEvent(new CustomEvent('refreshDispatches'));
       
       // Start timer
       const timerInterval = setInterval(() => {
