@@ -723,12 +723,12 @@ const FlockDetail: React.FC = () => {
             }}
             className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
               todaysDataSubmitted
-                ? 'bg-green-600 hover:bg-green-700 text-white'
+                ? 'text-gray-800'
                 : 'text-white'
             }`}
-            style={!todaysDataSubmitted ? { backgroundColor: '#ff8c42' } : {}}
-            onMouseEnter={!todaysDataSubmitted ? (e) => e.target.style.backgroundColor = '#e67a35' : undefined}
-            onMouseLeave={!todaysDataSubmitted ? (e) => e.target.style.backgroundColor = '#ff8c42' : undefined}
+            style={todaysDataSubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+            onMouseEnter={todaysDataSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#e67a35'}
+            onMouseLeave={todaysDataSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#ff8c42'}
           >
             Today's Info: {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -747,12 +747,12 @@ const FlockDetail: React.FC = () => {
               onClick={() => setIsMondayMeasuresOpen(true)}
               className={`w-full px-6 py-4 rounded-lg transition-colors text-lg font-semibold ${
                 mondayMeasuresSubmitted
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  ? 'text-gray-800'
                   : 'text-white'
               }`}
-              style={!mondayMeasuresSubmitted ? { backgroundColor: '#ff8c42' } : {}}
-              onMouseEnter={!mondayMeasuresSubmitted ? (e) => e.target.style.backgroundColor = '#e67a35' : undefined}
-              onMouseLeave={!mondayMeasuresSubmitted ? (e) => e.target.style.backgroundColor = '#ff8c42' : undefined}
+              style={mondayMeasuresSubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+              onMouseEnter={mondayMeasuresSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#e67a35'}
+              onMouseLeave={mondayMeasuresSubmitted ? undefined : (e) => e.target.style.backgroundColor = '#ff8c42'}
             >
               Monday Measures{mondayMeasuresSubmitted && ' (Submitted)'}
             </button>
@@ -884,9 +884,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleItemExpansion('culls')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Culls</span>
+                    <span className="font-medium text-white">Culls</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedItems.has('culls') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -915,9 +918,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleItemExpansion('runts')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Runts</span>
+                    <span className="font-medium text-white">Runts</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedItems.has('runts') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -946,9 +952,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleItemExpansion('deaths')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Deaths</span>
+                    <span className="font-medium text-white">Deaths</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedItems.has('deaths') ? 'rotate-180' : ''}`}
                       fill="none"
@@ -977,9 +986,12 @@ const FlockDetail: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg">
                   <button
                     onClick={() => toggleItemExpansion('feedUsed')}
-                    className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                   >
-                    <span className="font-medium text-gray-800">Feed Used</span>
+                    <span className="font-medium text-white">Feed Used</span>
                     <svg
                       className={`w-5 h-5 transition-transform ${expandedItems.has('feedUsed') ? 'rotate-180' : ''}`}
                       fill="none"
