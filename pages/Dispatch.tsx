@@ -794,12 +794,12 @@ const Dispatch: React.FC = () => {
           </div>
           
           {/* Dispatch Table */}
-          <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div className="mt-6 w-full" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             <div 
-              className="overflow-auto flex-1" 
+              className="overflow-auto flex-1 w-full" 
               style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
             >
-              <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <table className="modern-table w-full" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
                 <thead className="sticky top-0 z-10" style={{
                   backgroundColor: '#ff8c42',
                   borderRadius: '8px 8px 0 0',
