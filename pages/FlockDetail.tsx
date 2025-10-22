@@ -772,7 +772,10 @@ const FlockDetail: React.FC = () => {
                 {/* Week Header */}
                 <button
                   onClick={() => toggleWeekExpansion(week)}
-                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex justify-between items-center"
+                  className="w-full text-white px-4 py-3 rounded-lg transition-colors flex justify-between items-center"
+                  style={{ backgroundColor: '#ff8c42' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
                 >
                   <span className="font-semibold">Week {week}</span>
                   <svg

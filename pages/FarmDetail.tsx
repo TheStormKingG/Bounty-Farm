@@ -1205,8 +1205,8 @@ const FarmDetail: React.FC = () => {
         </div>
 
         {/* Incoming Dispatches Section - Different views for Admin vs Farmer */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Incoming Dispatches</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Incoming Dispatches</h2>
           
           {isFarmerView ? (
             /* Farmer View - Chicks Arriving Button */
@@ -1262,19 +1262,24 @@ const FarmDetail: React.FC = () => {
           ) : (
             /* Admin View - Table */
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+              <table className="modern-table w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
+                <thead className="sticky top-0 z-10" style={{
+                  backgroundColor: '#ff8c42',
+                  borderRadius: '8px 8px 0 0',
+                  borderBottom: 'none',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
                       Dispatch Number
                     </th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
                       Date
                     </th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
                       Trips
                     </th>
-                    <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-white uppercase tracking-wider" style={{ width: '25%' }}>
                       Dispatch Note
                     </th>
                   </tr>
@@ -1294,7 +1299,7 @@ const FarmDetail: React.FC = () => {
                     return !isConfirmed;
                   }).length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
                         <div className="flex flex-col items-center">
                           <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
                             <span className="text-gray-400 text-2xl">🚚</span>
@@ -1313,16 +1318,16 @@ const FarmDetail: React.FC = () => {
                       return !isConfirmed;
                     }).map(dispatch => (
                       <tr key={dispatch.id} className="hover:bg-gray-50">
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
                           {dispatch.dispatch_number}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
                           {dispatch.date_dispatched ? new Date(dispatch.date_dispatched).toLocaleDateString() : 'N/A'}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
                           {dispatch.trucks || 1}
                         </td>
-                        <td className="border border-gray-300 px-4 py-3 text-sm text-gray-800">
+                        <td className="px-4 py-3 text-sm text-gray-800 break-words">
                           <button
                             onClick={() => handleViewDispatch(dispatch)}
                             className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
@@ -1344,8 +1349,8 @@ const FarmDetail: React.FC = () => {
           <>
             {console.log('Received dispatches:', receivedDispatches)}
             {console.log('Dispatches:', dispatches)}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Received Dispatches</h2>
+          <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Received Dispatches</h2>
             <div className="space-y-4">
               {receivedDispatches.map((receipt, index) => {
                 const timer = dispatchTimers[receipt.id] || 0;
@@ -1353,34 +1358,43 @@ const FarmDetail: React.FC = () => {
                 const isExpanded = expandedReceivedDispatches.has(receipt.id);
                 
                 return (
-                  <div key={receipt.id} className={`border rounded-lg p-4 ${isEditable ? 'border-yellow-300 bg-yellow-50' : 'border-gray-300 bg-gray-50'}`}>
+                  <div key={receipt.id} className="mb-4">
                     {/* Header with expand/collapse button */}
-                    <div className="flex justify-between items-center mb-3">
+                    <button
+                      onClick={() => toggleExpandedReceivedDispatch(receipt.id)}
+                      className="w-full text-white px-4 py-3 rounded-lg transition-colors flex justify-between items-center"
+                      style={{ backgroundColor: '#ff8c42' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                    >
                       <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => toggleExpandedReceivedDispatch(receipt.id)}
-                          className="text-gray-600 hover:text-gray-800 transition-colors"
-                        >
-                          {isExpanded ? '▼' : '▶'}
-                        </button>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800">
+                          <h3 className="text-lg font-semibold text-white">
                             {receipt.dispatchNumber}
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-white opacity-90">
                             Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
                           </p>
                         </div>
                       </div>
-                      {isEditable && (
-                        <div className="text-right">
-                          <div className="text-sm text-gray-600 mb-1">Edit Time Remaining:</div>
-                          <div className={`text-lg font-bold ${timer < 300 ? 'text-red-600' : 'text-green-600'}`}>
-                            {formatTimer(timer)}
-                          </div>
+                      <svg
+                        className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {isEditable && (
+                      <div className="text-right mt-2">
+                        <div className="text-sm text-gray-600 mb-1">Edit Time Remaining:</div>
+                        <div className={`text-lg font-bold ${timer < 300 ? 'text-red-600' : 'text-green-600'}`}>
+                          {formatTimer(timer)}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     
                     {/* Expanded content */}
                     {isExpanded && (
