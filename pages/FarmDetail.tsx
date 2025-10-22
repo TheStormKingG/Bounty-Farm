@@ -580,10 +580,16 @@ const FarmDetail: React.FC = () => {
       updateReceipt(currentDispatch.id, { ...receiptData, editCount });
       
       // Update dispatch status in main dispatches table
-      await supabase
+      const { error: updateError } = await supabase
         .from('dispatches')
         .update({ status: 'received' })
         .eq('id', currentDispatch.id);
+      
+      if (updateError) {
+        console.error('Error updating dispatch status:', updateError);
+      } else {
+        console.log('Successfully updated dispatch status to received for:', currentDispatch.id);
+      }
       
       // Trigger refresh event for Dispatch page
       window.dispatchEvent(new CustomEvent('refreshDispatches'));
@@ -606,10 +612,16 @@ const FarmDetail: React.FC = () => {
       await saveReceivedDispatchesToDB(updatedReceivedDispatches);
       
       // Update dispatch status in main dispatches table
-      await supabase
+      const { error: updateError } = await supabase
         .from('dispatches')
         .update({ status: 'received' })
         .eq('id', currentDispatch.id);
+      
+      if (updateError) {
+        console.error('Error updating dispatch status:', updateError);
+      } else {
+        console.log('Successfully updated dispatch status to received for:', currentDispatch.id);
+      }
       
       // Trigger refresh event for Dispatch page
       window.dispatchEvent(new CustomEvent('refreshDispatches'));
@@ -1063,6 +1075,37 @@ const FarmDetail: React.FC = () => {
     
     loadDispatches();
   }, [farmInfo.farmName, isFarmerView]);
+
+  // Start timer intervals for active timers
+  useEffect(() => {
+    const intervals: { [key: string]: NodeJS.Timeout } = {};
+    
+    // Start intervals for all active timers
+    Object.keys(dispatchTimers).forEach(receiptId => {
+      if (dispatchTimers[receiptId] > 0) {
+        intervals[receiptId] = setInterval(() => {
+          setDispatchTimers(prev => {
+            const newTimers = { ...prev };
+            if (newTimers[receiptId] > 0) {
+              newTimers[receiptId]--;
+            } else {
+              // Timer expired, clear the interval
+              if (intervals[receiptId]) {
+                clearInterval(intervals[receiptId]);
+                delete intervals[receiptId];
+              }
+            }
+            return newTimers;
+          });
+        }, 1000);
+      }
+    });
+
+    // Cleanup function
+    return () => {
+      Object.values(intervals).forEach(interval => clearInterval(interval));
+    };
+  }, [dispatchTimers]);
 
   // Handle add new flock
   const handleAddFlock = async (e: React.FormEvent) => {
