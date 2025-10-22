@@ -123,6 +123,22 @@ const FlockDetail: React.FC = () => {
   const [newStatus, setNewStatus] = useState('Active');
   const [newNotes, setNewNotes] = useState('');
 
+  // Week tracking state
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
+
+  // Toggle week expansion
+  const toggleWeekExpansion = (week: number) => {
+    setExpandedWeeks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(week)) {
+        newSet.delete(week);
+      } else {
+        newSet.add(week);
+      }
+      return newSet;
+    });
+  };
+
   // Get farm info from navigation state
   useEffect(() => {
     if (location.state) {
@@ -274,7 +290,13 @@ const FlockDetail: React.FC = () => {
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
             </button>
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Flock {flockId} - {farmInfo.farmName}</h1>
+            <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">
+              {(() => {
+                // Extract flock number from flockId (e.g., "flock-0-1" -> "Flock 1")
+                const flockNumber = flockId?.split('-').pop() || '1';
+                return `Flock ${flockNumber} - ${farmInfo.farmName}`;
+              })()}
+            </h1>
           </div>
           
           {/* Farm Info Card */}
@@ -541,6 +563,310 @@ const FlockDetail: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Week-by-Week Tracking */}
+        <div className="bg-white rounded-lg shadow-md mt-6">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">Week-by-Week Tracking</h2>
+            <p className="text-sm text-gray-600 mt-1">Click on any week to expand and view detailed tracking data</p>
+          </div>
+
+          <div className="p-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((week) => (
+              <div key={week} className="mb-4">
+                {/* Week Header */}
+                <button
+                  onClick={() => toggleWeekExpansion(week)}
+                  className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors flex justify-between items-center"
+                >
+                  <span className="font-semibold">Week {week}</span>
+                  <svg
+                    className={`w-5 h-5 transition-transform ${expandedWeeks.has(week) ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Week Content */}
+                {expandedWeeks.has(week) && (
+                  <div className="mt-4 bg-gray-50 rounded-lg p-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-gray-300 text-sm">
+                        <thead>
+                          <tr className="bg-yellow-200">
+                            <th className="border border-gray-300 px-2 py-1 text-left font-semibold">MEASURE</th>
+                            <th className="border border-gray-300 px-2 py-1 text-left font-semibold">TIME/DAY TO BE DONE</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">S</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">M</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">T</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">W</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">T</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">F</th>
+                            <th className="border border-gray-300 px-2 py-1 text-center font-semibold">S</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Once Daily Section */}
+                          <tr>
+                            <td colSpan={9} className="border border-gray-300 px-2 py-1 bg-blue-100 font-semibold text-center">
+                              {'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ONCE DAILY <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'}
+                            </td>
+                          </tr>
+                          
+                          {/* Mortality */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">Mortality</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">↓Week's Deduction↓</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">C/R</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">M</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">1</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          {/* Temperature */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">Temperature (at noon)</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">1200hrs</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          {/* Feed Consumption */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">Feed Consumption</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">↓Week's Bags↓</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">2.5</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          {/* Feed Type Row */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">TYPE</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">GROWER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">STARTER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">STARTER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">FINISHER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">GROWER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">FINISHER</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">FINISHER</td>
+                          </tr>
+                          
+                          {/* Feed Bags Row */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"># BAGS</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">1</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">1</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">0.5</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">0</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">0</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">0</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">0</td>
+                          </tr>
+                          
+                          {/* Purchases Section */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">PURCHASES</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">FEED DELIVERED:</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">TYPE</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"># BAGS</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">DN #</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">DN Image</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">PURCHASES:</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">INVOICE #</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">AMOUNT</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">INVOICE IMAGE</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">Flock #</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">Docket #</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">Weight</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">Docket Image</td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">19</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">60000</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          {/* Transported to Bounty */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">Transported to Bounty (Slaughter Ready)</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50">Date</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center">07/07/2025</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-blue-50 text-center"></td>
+                          </tr>
+                          
+                          {/* Once Weekly Section */}
+                          <tr>
+                            <td colSpan={9} className="border border-gray-300 px-2 py-1 bg-green-100 font-semibold text-center">
+                              {'>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ONCE WEEKLY <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'}
+                            </td>
+                          </tr>
+                          
+                          {/* Weekly Measures */}
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Panting (Respiratory Rate)</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">{'>>>>>>>>>>>'}</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Skin Elasticity</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Dust Bathing Behavior</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">{'>>>>>>>>>>>'}</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Gait Score (Bristol)</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Weight</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">58000</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Catching Injury</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">MONDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Ammonia</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">FRIDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Nipple Flow Rate</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">FRIDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">{'>>>>>>>>'}</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Litter Moisture</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">FRIDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                          
+                          <tr>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">Lighting Intensity</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50">FRIDAY</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">{'<<<<<<<<<<<'}</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center">{'<<<<<<<<<<<'}</td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                            <td className="border border-gray-300 px-2 py-1 bg-green-50 text-center"></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
