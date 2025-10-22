@@ -195,7 +195,7 @@ const FlockDetail: React.FC = () => {
       const dateString = date.toISOString().split('T')[0];
       console.log('Loading data for date:', dateString, 'week_day_id:', weekDayId);
       
-      // Try to query by week_day_id first, fallback to date if column doesn't exist
+      // Try to query by week_day_id first
       let { data: existingData, error } = await supabase
         .from('daily_flock_data')
         .select('*')
@@ -203,9 +203,20 @@ const FlockDetail: React.FC = () => {
         .eq('week_day_id', weekDayId)
         .single();
 
-      // If week_day_id column doesn't exist (406 error), fallback to date query
-      if (error && ((error as any).status === 406 || error.message?.includes('column') || error.message?.includes('week_day_id'))) {
-        console.log('week_day_id column not found, falling back to date query. Error:', error);
+      // If week_day_id query fails (no data found or column issues), fallback to date query
+      if (error && error.code === 'PGRST116') {
+        console.log('No data found with week_day_id, trying date query');
+        const fallbackResult = await supabase
+          .from('daily_flock_data')
+          .select('*')
+          .eq('flock_id', flockId)
+          .eq('date', dateString)
+          .single();
+        
+        existingData = fallbackResult.data;
+        error = fallbackResult.error;
+      } else if (error && ((error as any).status === 406 || error.message?.includes('column') || error.message?.includes('week_day_id'))) {
+        console.log('week_day_id column issue, falling back to date query. Error:', error);
         const fallbackResult = await supabase
           .from('daily_flock_data')
           .select('*')
@@ -366,7 +377,7 @@ const FlockDetail: React.FC = () => {
       console.log('Saving data with week_day_id:', weekDayId, 'for date:', dateString);
       
       // Check if data already exists for this date
-      // Try week_day_id first, fallback to date if column doesn't exist
+      // Try week_day_id first
       let { data: existingData, error: checkError } = await supabase
         .from('daily_flock_data')
         .select('id')
@@ -374,9 +385,20 @@ const FlockDetail: React.FC = () => {
         .eq('week_day_id', weekDayId)
         .single();
 
-      // If week_day_id column doesn't exist (406 error), fallback to date query
-      if (checkError && ((checkError as any).status === 406 || checkError.message?.includes('column') || checkError.message?.includes('week_day_id'))) {
-        console.log('week_day_id column not found, falling back to date query for existing data check. Error:', checkError);
+      // If week_day_id query fails (no data found or column issues), fallback to date query
+      if (checkError && checkError.code === 'PGRST116') {
+        console.log('No existing data found with week_day_id, trying date query');
+        const fallbackResult = await supabase
+          .from('daily_flock_data')
+          .select('id')
+          .eq('flock_id', flockId)
+          .eq('date', dateString)
+          .single();
+        
+        existingData = fallbackResult.data;
+        checkError = fallbackResult.error;
+      } else if (checkError && ((checkError as any).status === 406 || checkError.message?.includes('column') || checkError.message?.includes('week_day_id'))) {
+        console.log('week_day_id column issue, falling back to date query for existing data check. Error:', checkError);
         const fallbackResult = await supabase
           .from('daily_flock_data')
           .select('id')
@@ -398,6 +420,7 @@ const FlockDetail: React.FC = () => {
         flock_id: flockId,
         farm_name: farmInfo.farmName,
         date: dateString,
+        week_day_id: weekDayId,
         culls: todaysData.culls,
         runts: todaysData.runts,
         deaths: todaysData.deaths,
@@ -407,8 +430,7 @@ const FlockDetail: React.FC = () => {
         updated_by: 'farmer'
       };
 
-      // Only add week_day_id if the column exists (we'll detect this by trying to save it)
-      // For now, we'll try without it and let the database handle it
+      // Include week_day_id in the data to save
       if (existingData) {
         // Update existing record
         const { error } = await supabase
@@ -1001,14 +1023,17 @@ const FlockDetail: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
                     <button
-                  onClick={() => setIsTodaysInfoOpen(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => setIsTodaysInfoOpen(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
                     <button
-                  onClick={saveTodaysData}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      onClick={saveTodaysData}
+                      className="px-4 py-2 text-white rounded-lg transition-colors"
+                      style={{ backgroundColor: '#FFB343' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#E6A23C'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#FFB343'}
                     >
                   Save Data
                     </button>
@@ -1525,14 +1550,17 @@ const FlockDetail: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
                     <button
-                  onClick={() => setIsMondayMeasuresOpen(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => setIsMondayMeasuresOpen(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
                     <button
-                  onClick={saveMondayMeasuresData}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      onClick={saveMondayMeasuresData}
+                      className="px-4 py-2 text-white rounded-lg transition-colors"
+                      style={{ backgroundColor: '#FFB343' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#E6A23C'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#FFB343'}
                     >
                   Save Data
                     </button>
