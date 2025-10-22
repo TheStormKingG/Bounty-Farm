@@ -192,9 +192,18 @@ const FlockDetail: React.FC = () => {
     // Use flock start date if available, otherwise default to current date
     const startDate = flockStartDate || new Date();
     
-    // Calculate the start date for the requested week
-    const weekStart = new Date(startDate);
-    weekStart.setDate(startDate.getDate() + (week - 1) * 7);
+    // For week 1, start from the actual flock start date
+    // For subsequent weeks, calculate from the start date
+    let weekStart: Date;
+    
+    if (week === 1) {
+      // Week 1 starts on the actual flock start date
+      weekStart = new Date(startDate);
+    } else {
+      // For weeks 2+, calculate from the start date
+      weekStart = new Date(startDate);
+      weekStart.setDate(startDate.getDate() + (week - 1) * 7);
+    }
     
     const dates = [];
     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -202,8 +211,13 @@ const FlockDetail: React.FC = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
+      
+      // Get the actual day of the week for this date
+      const actualDayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const dayName = dayNames[actualDayOfWeek];
+      
       dates.push({
-        dayName: dayNames[i],
+        dayName: dayName,
         dayNumber: date.getDate().toString().padStart(2, '0'),
         fullDate: date,
         monthName: date.toLocaleDateString('en-US', { month: 'long' }),
@@ -547,7 +561,7 @@ const FlockDetail: React.FC = () => {
                     </div>
                     </div>
                   )}
-                </div>
+                    </div>
 
                   </div>
 
@@ -559,12 +573,12 @@ const FlockDetail: React.FC = () => {
                     >
                       Cancel
                     </button>
-                <button
+                    <button
                   onClick={saveTodaysData}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
+                    >
                   Save Data
-                </button>
+                    </button>
               </div>
             </div>
           </div>
