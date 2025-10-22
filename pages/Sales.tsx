@@ -658,12 +658,12 @@ const Sales: React.FC = () => {
       if (type === 'invoice') {
         const invoice = invoices.find(inv => inv.id === id);
         if (invoice) {
-          const newStatus = invoice.status === 'paid' ? 'pending' : 'paid';
+          const newStatus = invoice.payment_status === 'paid' ? 'pending' : 'paid';
           
-          // Update invoice status
+          // Update invoice payment_status
           await supabase
             .from('invoices')
-            .update({ status: newStatus })
+            .update({ payment_status: newStatus })
             .eq('id', id);
           
           // If changing to paid, create a dispatch
@@ -694,7 +694,7 @@ const Sales: React.FC = () => {
           }
           
           setInvoices(prev => prev.map(inv => 
-            inv.id === id ? { ...inv, status: newStatus } : inv
+            inv.id === id ? { ...inv, payment_status: newStatus } : inv
           ));
         }
       }
@@ -1308,12 +1308,12 @@ const Sales: React.FC = () => {
                       <button
                         onClick={() => handleStatusToggle(invoice.id, 'invoice')}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                          invoice.status === 'paid' 
+                          invoice.payment_status === 'paid' 
                             ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                             : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
                         }`}
                       >
-                        {invoice.status === 'paid' ? 'Paid' : 'Pending'}
+                        {invoice.payment_status === 'paid' ? 'Paid' : 'Pending'}
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">

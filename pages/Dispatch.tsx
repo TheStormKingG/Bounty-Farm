@@ -19,7 +19,7 @@ interface Dispatch {
   type_locked?: boolean;
   invoices?: {
     id: string;
-    status: string;
+    payment_status: string;
   };
 }
 
@@ -62,11 +62,11 @@ const Dispatch: React.FC = () => {
           *,
           invoices!inner(
             id,
-            status
+            payment_status
           )
         `)
         .eq('type', 'Pick Up')
-        .eq('invoices.status', 'paid')
+        .eq('invoices.payment_status', 'paid')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -99,11 +99,11 @@ const Dispatch: React.FC = () => {
         return;
       }
       
-      // Update the corresponding invoice status instead of dispatch payment_status
+      // Update the corresponding invoice payment_status instead of dispatch payment_status
       const { error } = await supabase
         .from('invoices')
         .update({ 
-          status: newStatus,
+          payment_status: newStatus,
           updated_at: new Date().toISOString(),
           updated_by: 'admin'
         })
@@ -885,14 +885,14 @@ const Dispatch: React.FC = () => {
                       <td className="px-4 py-3 text-sm">{dispatch.trucks || 1}</td>
                       <td className="px-4 py-3 text-sm">
                         <button 
-                          onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.invoices?.status || 'pending')}
+                          onClick={() => handlePaymentStatusToggle(dispatch.id, dispatch.invoices?.payment_status || 'pending')}
                           className={`px-2 py-1 rounded-full text-xs cursor-pointer hover:opacity-80 ${
-                            (dispatch.invoices?.status || 'pending') === 'pending' 
+                            (dispatch.invoices?.payment_status || 'pending') === 'pending' 
                               ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' 
                               : 'bg-green-100 text-green-800 hover:bg-green-200'
                           }`}
                         >
-                          {dispatch.invoices?.status || 'pending'}
+                          {dispatch.invoices?.payment_status || 'pending'}
                         </button>
                       </td>
                       <td className="px-4 py-3 text-sm">
