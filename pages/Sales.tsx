@@ -654,8 +654,53 @@ const Sales: React.FC = () => {
 
   // Handler functions for new functionality
   const handleStatusToggle = async (id: string, type: 'invoice') => {
-    console.log('Payment status toggle not available - payment_status column does not exist in invoices table');
-    alert('Payment status functionality is not available - the invoices table does not have a payment_status column');
+    try {
+      if (type === 'invoice') {
+        const invoice = invoices.find(inv => inv.id === id);
+        if (invoice) {
+          const newStatus = invoice.status === 'paid' ? 'pending' : 'paid';
+          
+          // Update invoice status
+          await supabase
+            .from('invoices')
+            .update({ status: newStatus })
+            .eq('id', id);
+          
+          // If changing to paid, create a dispatch
+          if (newStatus === 'paid') {
+            // Find the corresponding sales_dispatch record
+            const poNumber = invoice.invoice_number.replace('-INV', '-PO');
+            const { data: salesData } = await supabase
+              .from('sales_dispatch')
+              .select('*')
+              .eq('po_number', poNumber)
+              .single();
+            
+            if (salesData) {
+              // Create dispatch
+              const dispatchNumber = poNumber.replace('-PO', '-DISP');
+              await supabase
+                .from('dispatches')
+                .insert({
+                  dispatch_number: dispatchNumber,
+                  invoice_id: invoice.id,
+                  date_dispatched: new Date().toISOString().split('T')[0],
+                  type: 'Pick Up',
+                  trucks: salesData.trucks_required || 1,
+                  created_by: 'admin',
+                  updated_by: 'admin'
+                });
+            }
+          }
+          
+          setInvoices(prev => prev.map(inv => 
+            inv.id === id ? { ...inv, status: newStatus } : inv
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
   };
 
   const handleDeleteInvoice = async (id: string) => {
@@ -1260,9 +1305,16 @@ const Sales: React.FC = () => {
                       />
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        N/A
-                      </span>
+                      <button
+                        onClick={() => handleStatusToggle(invoice.id, 'invoice')}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          invoice.status === 'paid' 
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        }`}
+                      >
+                        {invoice.status === 'paid' ? 'Paid' : 'Pending'}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-sm space-x-2">
                       <button 
