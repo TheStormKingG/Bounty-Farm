@@ -67,6 +67,7 @@ const FlockDetail: React.FC = () => {
   // Today's Info popup state
   const [isTodaysInfoOpen, setIsTodaysInfoOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [flockStartDate, setFlockStartDate] = useState<Date | null>(null);
   const [todaysData, setTodaysData] = useState({
     culls: 0,
     runts: 0,
@@ -115,12 +116,18 @@ const FlockDetail: React.FC = () => {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
       
       // Check if data already exists for today
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from('daily_flock_data')
         .select('id')
         .eq('flock_id', flockId)
         .eq('date', today)
         .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking existing data:', checkError);
+        alert('Error checking existing data. Please try again.');
+        return;
+      }
 
       const dataToSave = {
         flock_id: flockId,
@@ -155,6 +162,7 @@ const FlockDetail: React.FC = () => {
 
         if (error) {
           console.error('Error inserting daily flock data:', error);
+          console.error('Error details:', error.message, error.code, error.details);
           alert('Error saving data. Please try again.');
           return;
         }
@@ -179,18 +187,14 @@ const FlockDetail: React.FC = () => {
     }
   };
 
-  // Calculate dates for a given week based on actual current year
+  // Calculate dates for a given week based on flock start date
   const getWeekDates = (week: number) => {
-    // Get current year
-    const currentYear = new Date().getFullYear();
-    
-    // Calculate the start date for week 1 (assuming flock starts at beginning of year)
-    // In a real implementation, this would be based on the actual flock start date
-    const yearStart = new Date(currentYear, 0, 1); // January 1st of current year
+    // Use flock start date if available, otherwise default to current date
+    const startDate = flockStartDate || new Date();
     
     // Calculate the start date for the requested week
-    const weekStart = new Date(yearStart);
-    weekStart.setDate(yearStart.getDate() + (week - 1) * 7);
+    const weekStart = new Date(startDate);
+    weekStart.setDate(startDate.getDate() + (week - 1) * 7);
     
     const dates = [];
     const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -223,6 +227,33 @@ const FlockDetail: React.FC = () => {
     // Set loading to false after farm info is processed
     setLoading(false);
   }, [location.state]);
+
+  // Fetch flock start date from received dispatches
+  useEffect(() => {
+    const fetchFlockStartDate = async () => {
+      if (!farmInfo.farmName) return;
+      
+      try {
+        // Get received dispatches for this farm
+        const { data: receivedDispatches } = await supabase
+          .from('received_dispatches')
+          .select('confirmed_at')
+          .eq('farm_name', farmInfo.farmName)
+          .order('confirmed_at', { ascending: true })
+          .limit(1);
+
+        if (receivedDispatches && receivedDispatches.length > 0) {
+          const startDate = new Date(receivedDispatches[0].confirmed_at);
+          setFlockStartDate(startDate);
+          console.log('Flock start date set to:', startDate);
+        }
+      } catch (error) {
+        console.error('Error fetching flock start date:', error);
+      }
+    };
+
+    fetchFlockStartDate();
+  }, [farmInfo.farmName]);
 
   if (loading) {
     return (
