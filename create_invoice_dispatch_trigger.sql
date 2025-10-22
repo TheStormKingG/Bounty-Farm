@@ -44,7 +44,6 @@ BEGIN
     INSERT INTO dispatches (
         dispatch_number,
         invoice_id,
-        sales_dispatch_id,
         date_dispatched,
         type,
         trucks,
@@ -53,7 +52,6 @@ BEGIN
     ) VALUES (
         dispatch_number,
         invoice_id,
-        NEW.id,
         NEW.date_ordered,
         dispatch_type,
         NEW.trucks_required,
