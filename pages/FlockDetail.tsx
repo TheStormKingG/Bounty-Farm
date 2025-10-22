@@ -67,6 +67,7 @@ const FlockDetail: React.FC = () => {
   // Today's Info popup state
   const [isTodaysInfoOpen, setIsTodaysInfoOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [currentEditingDate, setCurrentEditingDate] = useState<Date | null>(null);
   const [flockStartDate, setFlockStartDate] = useState<Date | null>(null);
   const [submittedDates, setSubmittedDates] = useState<Set<string>>(new Set());
   const [todaysDataSubmitted, setTodaysDataSubmitted] = useState(false);
@@ -172,32 +173,63 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
-  // Load existing Today's Info data when opening popup
-  const loadTodaysData = async () => {
-    if (!todaysDataSubmitted) return; // Only load if data was submitted
+  // Generate week_day_id for a specific date
+  const generateWeekDayId = (date: Date) => {
+    const weekNumber = Math.ceil((date.getDate() - 1) / 7) + 1; // Week within month
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const dayNumber = date.getDate();
+    const dayName = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][dayOfWeek];
+    const monthName = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
     
+    return `W${weekNumber}D${dayOfWeek + 1}${dayName}${dayNumber.toString().padStart(2, '0')}${monthName}`;
+  };
+
+  // Load existing data for a specific date
+  const loadDataForDate = async (date: Date) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const weekDayId = generateWeekDayId(date);
+      console.log('Loading data for week_day_id:', weekDayId);
+      
       const { data: existingData, error } = await supabase
         .from('daily_flock_data')
         .select('*')
         .eq('flock_id', flockId)
-        .eq('date', today)
+        .eq('week_day_id', weekDayId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading Today\'s Info data:', error);
-        return;
+        console.error('Error loading data for date:', error);
+        return null;
       }
 
       if (existingData) {
-        setTodaysData({
+        console.log('Loaded existing data for', weekDayId, ':', existingData);
+        return {
           culls: existingData.culls || 0,
           runts: existingData.runts || 0,
           deaths: existingData.deaths || 0,
           feedType: existingData.feed_type || 'Starter',
           feedUsed: existingData.feed_used || 0
-        });
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error loading data for date:', error);
+      return null;
+    }
+  };
+
+  // Load existing Today's Info data when opening popup
+  const loadTodaysData = async () => {
+    if (!todaysDataSubmitted) return; // Only load if data was submitted
+    
+    try {
+      const today = new Date();
+      const existingData = await loadDataForDate(today);
+      
+      if (existingData) {
+        setTodaysData(existingData);
         console.log('Loaded existing Today\'s Info data:', existingData);
       }
     } catch (error) {
@@ -301,15 +333,24 @@ const FlockDetail: React.FC = () => {
 
   // Save today's data to Supabase
   const saveTodaysData = async () => {
+    const dateToSave = currentEditingDate || new Date();
+    await saveDataForDate(dateToSave);
+  };
+
+  // Save data for a specific date
+  const saveDataForDate = async (date: Date) => {
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      const weekDayId = generateWeekDayId(date);
+      const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
       
-      // Check if data already exists for today
+      console.log('Saving data with week_day_id:', weekDayId, 'for date:', dateString);
+      
+      // Check if data already exists for this date
       const { data: existingData, error: checkError } = await supabase
         .from('daily_flock_data')
         .select('id')
         .eq('flock_id', flockId)
-        .eq('date', today)
+        .eq('week_day_id', weekDayId)
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -321,7 +362,8 @@ const FlockDetail: React.FC = () => {
       const dataToSave = {
         flock_id: flockId,
         farm_name: farmInfo.farmName,
-        date: today,
+        date: dateString,
+        week_day_id: weekDayId,
         culls: todaysData.culls,
         runts: todaysData.runts,
         deaths: todaysData.deaths,
@@ -357,20 +399,23 @@ const FlockDetail: React.FC = () => {
         }
       }
 
-      console.log('Successfully saved today\'s data:', dataToSave);
+      console.log('Successfully saved data:', dataToSave);
       alert('Data saved successfully!');
       setIsTodaysInfoOpen(false);
       
-      // Add today's date to submitted dates
+      // Add date to submitted dates
       setSubmittedDates(prev => {
-        const newSet = new Set([...prev, today]);
+        const newSet = new Set([...prev, dateString]);
         console.log('Updated submittedDates:', Array.from(newSet));
         return newSet;
       });
       
-      // Mark today's data as submitted
-      setTodaysDataSubmitted(true);
-      console.log('Today\'s data marked as submitted');
+      // If it's today's data, mark today's data as submitted
+      const today = new Date().toISOString().split('T')[0];
+      if (dateString === today) {
+        setTodaysDataSubmitted(true);
+        console.log('Today\'s data marked as submitted');
+      }
       
       // Reset form data
       setTodaysData({
@@ -386,8 +431,6 @@ const FlockDetail: React.FC = () => {
       alert('An unexpected error occurred. Please try again.');
     }
   };
-
-  // Calculate dates for a given week based on flock start date
   const getWeekDates = (week: number) => {
     // Use flock start date if available, otherwise default to current date
     const startDate = flockStartDate || new Date();
@@ -614,6 +657,7 @@ const FlockDetail: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md mt-6 p-6">
           <button 
             onClick={() => {
+              setCurrentEditingDate(new Date()); // Set to today's date
               setIsTodaysInfoOpen(true);
               loadTodaysData(); // Load existing data if submitted
             }}
@@ -711,11 +755,20 @@ const FlockDetail: React.FC = () => {
                                   : `${date.dayName}-${date.dayNumber} - Click to submit data`
                                 : `${date.dayName}-${date.dayNumber} - No data entered`
                             }
-                            onClick={() => {
+                            onClick={async () => {
                               if (isEnabled) {
+                                // Set the current editing date
+                                setCurrentEditingDate(date.fullDate);
                                 // Open Today's Info popup for this specific date
                                 setIsTodaysInfoOpen(true);
-                                // TODO: Load existing data for this date if available
+                                // Load existing data for this specific date
+                                const existingData = await loadDataForDate(date.fullDate);
+                                if (existingData) {
+                                  setTodaysData(existingData);
+                                } else {
+                                  // Reset to default values for new entry
+                                  setTodaysData({ culls: 0, runts: 0, deaths: 0, feedType: 'Starter', feedUsed: 0 });
+                                }
                               }
                             }}
                           >
