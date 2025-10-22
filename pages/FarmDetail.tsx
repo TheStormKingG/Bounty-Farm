@@ -1899,6 +1899,7 @@ const FarmDetail: React.FC = () => {
                                           updateNaValue(trip.tripId, maxDoa - value);
                                         }
                                       }}
+                                      onFocus={(e) => e.target.select()}
                                       className="w-full px-1 sm:px-2 py-1 border border-gray-300 rounded text-xs sm:text-sm"
                                       min="0"
                                       max={Math.abs(difference)}
