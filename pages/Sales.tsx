@@ -197,15 +197,10 @@ const Sales: React.FC = () => {
 
       const farmCustomerNames = farmCustomers?.map(fc => fc.farm_name) || [];
 
-      // Fetch invoices and join with sales_dispatch to get customer info
+      // Fetch all invoices
       const { data, error } = await supabase
         .from('invoices')
-        .select(`
-          *,
-          sales_dispatch!inner(
-            customer
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -213,9 +208,22 @@ const Sales: React.FC = () => {
         return;
       }
 
+      // Get all sales_dispatch records to match with invoices
+      const { data: salesDispatchData } = await supabase
+        .from('sales_dispatch')
+        .select('po_number, customer');
+
+      // Create a map of PO numbers to customers
+      const poToCustomerMap = new Map();
+      salesDispatchData?.forEach(sd => {
+        poToCustomerMap.set(sd.po_number, sd.customer);
+      });
+
       // Filter out farm customer invoices
       const individualInvoices = data?.filter(invoice => {
-        const customer = invoice.sales_dispatch?.customer;
+        // Convert invoice number to PO number to find the customer
+        const poNumber = invoice.invoice_number.replace('-INV', '-PO');
+        const customer = poToCustomerMap.get(poNumber);
         return customer && !farmCustomerNames.includes(customer);
       }) || [];
 
