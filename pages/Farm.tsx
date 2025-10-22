@@ -174,8 +174,8 @@ const Farm: React.FC = () => {
                   onClick={() => handleFarmClick(farm)}
                   className="w-full bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#e67e22] cursor-pointer"
                 >
-                  <span className="font-bold text-black">{farm.farmName}</span>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black">
+                  <span className="font-bold text-white uppercase text-sm tracking-wider">{farm.farmName}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </button>
