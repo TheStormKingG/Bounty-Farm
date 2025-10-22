@@ -148,6 +148,8 @@ const FlockDetail: React.FC = () => {
         contactNumber: location.state.contactNumber || ''
       });
     }
+    // Set loading to false after farm info is processed
+    setLoading(false);
   }, [location.state]);
 
   if (loading) {
