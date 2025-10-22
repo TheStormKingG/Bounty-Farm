@@ -174,6 +174,96 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
+  // Save Monday Measures data to database
+  const saveMondayMeasuresData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check for existing data
+      const { data: existingData, error: checkError } = await supabase
+        .from('monday_measures')
+        .select('id')
+        .eq('flock_id', flockId)
+        .eq('date', today)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking existing Monday Measures data:', checkError);
+        alert('Error checking existing data. Please try again.');
+        return;
+      }
+
+      const dataToSave = {
+        flock_id: flockId,
+        farm_name: farmInfo.farmName,
+        date: today,
+        bird1_weight: mondayMeasuresData.bird1.weight,
+        bird1_gait_score: mondayMeasuresData.bird1.gaitScore,
+        bird1_dust_bathing: mondayMeasuresData.bird1.dustBathing,
+        bird1_panting: mondayMeasuresData.bird1.panting,
+        bird2_weight: mondayMeasuresData.bird2.weight,
+        bird2_gait_score: mondayMeasuresData.bird2.gaitScore,
+        bird2_dust_bathing: mondayMeasuresData.bird2.dustBathing,
+        bird2_panting: mondayMeasuresData.bird2.panting,
+        bird3_weight: mondayMeasuresData.bird3.weight,
+        bird3_gait_score: mondayMeasuresData.bird3.gaitScore,
+        bird3_dust_bathing: mondayMeasuresData.bird3.dustBathing,
+        bird3_panting: mondayMeasuresData.bird3.panting,
+        bird4_weight: mondayMeasuresData.bird4.weight,
+        bird4_gait_score: mondayMeasuresData.bird4.gaitScore,
+        bird4_dust_bathing: mondayMeasuresData.bird4.dustBathing,
+        bird4_panting: mondayMeasuresData.bird4.panting,
+        bird5_weight: mondayMeasuresData.bird5.weight,
+        bird5_gait_score: mondayMeasuresData.bird5.gaitScore,
+        bird5_dust_bathing: mondayMeasuresData.bird5.dustBathing,
+        bird5_panting: mondayMeasuresData.bird5.panting
+      };
+
+      if (existingData) {
+        // Update existing record
+        const { error } = await supabase
+          .from('monday_measures')
+          .update(dataToSave)
+          .eq('id', existingData.id);
+        
+        if (error) {
+          console.error('Error updating Monday Measures data:', error);
+          alert('Error updating data. Please try again.');
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('monday_measures')
+          .insert(dataToSave);
+        
+        if (error) {
+          console.error('Error inserting Monday Measures data:', error);
+          console.error('Error details:', error.message, error.code, error.details);
+          alert('Error saving data. Please try again.');
+          return;
+        }
+      }
+
+      console.log('Successfully saved Monday Measures data:', dataToSave);
+      alert('Monday Measures data saved successfully!');
+      setIsMondayMeasuresOpen(false);
+      
+      // Reset form data
+      setMondayMeasuresData({
+        bird1: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+        bird2: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+        bird3: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+        bird4: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' },
+        bird5: { weight: 0, gaitScore: 0, dustBathing: 'no', panting: 'no' }
+      });
+      
+    } catch (error) {
+      console.error('Unexpected error saving Monday Measures data:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
   // Save today's data to Supabase
   const saveTodaysData = async () => {
     try {
@@ -350,21 +440,34 @@ const FlockDetail: React.FC = () => {
       if (!flockId) return;
       
       try {
-        const { data: existingData } = await supabase
+        console.log('Loading submitted dates for flock:', flockId);
+        const { data: existingData, error } = await supabase
           .from('daily_flock_data')
           .select('date')
           .eq('flock_id', flockId);
 
-        if (existingData) {
+        if (error) {
+          console.error('Error fetching submitted dates:', error);
+          return;
+        }
+
+        console.log('Raw data from database:', existingData);
+
+        if (existingData && existingData.length > 0) {
           const dates = existingData.map(record => record.date);
           setSubmittedDates(new Set(dates));
           console.log('Loaded submitted dates:', dates);
+          console.log('Submitted dates Set:', Array.from(new Set(dates)));
           
           // Check if today's data has been submitted
           const today = new Date().toISOString().split('T')[0];
+          console.log('Today\'s date:', today);
           if (dates.includes(today)) {
             setTodaysDataSubmitted(true);
+            console.log('Today\'s data already submitted');
           }
+        } else {
+          console.log('No existing data found for flock:', flockId);
         }
       } catch (error) {
         console.error('Error loading submitted dates:', error);
@@ -449,7 +552,7 @@ const FlockDetail: React.FC = () => {
             })}
             {todaysDataSubmitted && ' (Submitted)'}
           </button>
-        </div>
+                </div>
 
         {/* Monday Measures Button - Only show on Mondays */}
         {isTodayMonday() && (
@@ -460,7 +563,7 @@ const FlockDetail: React.FC = () => {
             >
               Monday Measures
             </button>
-          </div>
+                </div>
         )}
 
         {/* Week-by-Week Tracking */}
@@ -468,7 +571,7 @@ const FlockDetail: React.FC = () => {
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800">Week-by-Week Tracking</h2>
             <p className="text-sm text-gray-600 mt-1">Click on any week to expand and view detailed tracking data</p>
-          </div>
+              </div>
 
           <div className="p-6">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((week) => (
@@ -496,7 +599,7 @@ const FlockDetail: React.FC = () => {
                       <h3 className="text-lg font-semibold text-gray-800 mb-2">
                         Week {week} - {getWeekDates(week)[0].monthName} {getWeekDates(week)[0].year}
                       </h3>
-                    </div>
+              </div>
                     <div className="grid grid-cols-7 gap-2">
                       {getWeekDates(week).map((date, index) => {
                         const isEnabled = isDateEnabled(date.fullDate);
@@ -534,16 +637,16 @@ const FlockDetail: React.FC = () => {
                           </button>
                         );
                       })}
-                    </div>
+                </div>
                     <div className="mt-3 text-xs text-gray-500 text-center">
                       Blue buttons: Submit data | Green buttons: Data submitted (click to edit) | Gray buttons: Future dates
-                        </div>
-                      </div>
+                </div>
+                </div>
                 )}
               </div>
             ))}
-          </div>
-        </div>
+              </div>
+            </div>
 
         {/* Today's Info Popup Modal */}
         {isTodaysInfoOpen && (
@@ -564,7 +667,7 @@ const FlockDetail: React.FC = () => {
                 >
                   ×
                 </button>
-              </div>
+                </div>
               
               <div className="p-6 space-y-4">
                 {/* Culls */}
@@ -593,7 +696,7 @@ const FlockDetail: React.FC = () => {
                         placeholder="Enter number of culls"
                         min="0"
                       />
-                    </div>
+                </div>
                   )}
                 </div>
 
@@ -623,9 +726,9 @@ const FlockDetail: React.FC = () => {
                         placeholder="Enter number of runts"
                         min="0"
                       />
-                    </div>
+              </div>
                   )}
-                </div>
+            </div>
 
                 {/* Deaths */}
                 <div className="border border-gray-200 rounded-lg">
@@ -653,7 +756,7 @@ const FlockDetail: React.FC = () => {
                         placeholder="Enter number of deaths"
                         min="0"
                       />
-                    </div>
+                </div>
                   )}
                 </div>
 
@@ -676,7 +779,7 @@ const FlockDetail: React.FC = () => {
                   {expandedItems.has('feedUsed') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Feed Type Radio Options */}
-                    <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
                         <div className="space-y-2">
                           {['Starter', 'Grower', 'Finisher'].map((type) => (
@@ -692,11 +795,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700">{type}</span>
                       </label>
                           ))}
-                        </div>
-                      </div>
+                </div>
+                </div>
                       
                       {/* Feed Amount */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Amount Used:</label>
                       <input
                           type="number"
@@ -705,14 +808,14 @@ const FlockDetail: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                           placeholder="Enter amount of feed used"
                           min="0"
-                          step="0.1"
+                          step="1"
                       />
-                    </div>
-                    </div>
+                </div>
+                </div>
                   )}
-                    </div>
+                </div>
 
-                  </div>
+                </div>
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
@@ -728,9 +831,9 @@ const FlockDetail: React.FC = () => {
                     >
                   Save Data
                     </button>
+                </div>
+                </div>
               </div>
-            </div>
-          </div>
         )}
 
         {/* Monday Measures Popup Modal */}
@@ -754,7 +857,7 @@ const FlockDetail: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
+            </div>
 
               <div className="p-6 space-y-4">
                 {/* Bird 1: From corner 1 */}
@@ -776,7 +879,7 @@ const FlockDetail: React.FC = () => {
                   {expandedBirds.has('bird1') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
                         <input
                           type="number"
@@ -785,31 +888,31 @@ const FlockDetail: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           placeholder="Enter weight"
                           min="0"
-                          step="0.1"
+                          step="1"
                         />
-                      </div>
+                </div>
                       
                       {/* Gait Score */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
                         <input
                           type="range"
                           min="0"
                           max="5"
-                          step="0.1"
+                          step="1"
                           value={mondayMeasuresData.bird1.gaitScore}
-                          onChange={(e) => handleMondayMeasuresChange('bird1', 'gaitScore', parseFloat(e.target.value))}
+                          onChange={(e) => handleMondayMeasuresChange('bird1', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0</span>
                           <span className="font-medium">{mondayMeasuresData.bird1.gaitScore}</span>
                           <span>5</span>
-                        </div>
-                      </div>
+                </div>
+                </div>
                       
                       {/* Dust Bathing */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -825,11 +928,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
+                </div>
+                </div>
                       
                       {/* Panting */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -845,11 +948,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
+                </div>
+                </div>
+                  )}
+            </div>
 
                 {/* Bird 2: From corner 2 */}
                 <div className="border border-gray-200 rounded-lg">
@@ -870,7 +973,7 @@ const FlockDetail: React.FC = () => {
                   {expandedBirds.has('bird2') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
                         <input
                           type="number"
@@ -879,31 +982,31 @@ const FlockDetail: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           placeholder="Enter weight"
                           min="0"
-                          step="0.1"
+                          step="1"
                         />
-                      </div>
+                </div>
                       
                       {/* Gait Score */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
                         <input
                           type="range"
                           min="0"
                           max="5"
-                          step="0.1"
+                          step="1"
                           value={mondayMeasuresData.bird2.gaitScore}
-                          onChange={(e) => handleMondayMeasuresChange('bird2', 'gaitScore', parseFloat(e.target.value))}
+                          onChange={(e) => handleMondayMeasuresChange('bird2', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0</span>
                           <span className="font-medium">{mondayMeasuresData.bird2.gaitScore}</span>
                           <span>5</span>
-                        </div>
+                </div>
                       </div>
                       
                       {/* Dust Bathing */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -919,11 +1022,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
+                </div>
                       </div>
                       
                       {/* Panting */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -939,11 +1042,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
+                </div>
+              </div>
                     </div>
                   )}
-                </div>
+            </div>
 
                 {/* Bird 3: From corner 3 */}
                 <div className="border border-gray-200 rounded-lg">
@@ -964,7 +1067,7 @@ const FlockDetail: React.FC = () => {
                   {expandedBirds.has('bird3') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
                         <input
                           type="number"
@@ -973,31 +1076,31 @@ const FlockDetail: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           placeholder="Enter weight"
                           min="0"
-                          step="0.1"
+                          step="1"
                         />
-                      </div>
+                </div>
                       
                       {/* Gait Score */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
                         <input
                           type="range"
                           min="0"
                           max="5"
-                          step="0.1"
+                          step="1"
                           value={mondayMeasuresData.bird3.gaitScore}
-                          onChange={(e) => handleMondayMeasuresChange('bird3', 'gaitScore', parseFloat(e.target.value))}
+                          onChange={(e) => handleMondayMeasuresChange('bird3', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0</span>
                           <span className="font-medium">{mondayMeasuresData.bird3.gaitScore}</span>
                           <span>5</span>
-                        </div>
+                </div>
                       </div>
                       
                       {/* Dust Bathing */}
-                      <div>
+                <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -1013,8 +1116,8 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
+                </div>
+              </div>
                       
                       {/* Panting */}
                       <div>
@@ -1033,15 +1136,15 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
+            </div>
+          </div>
                     </div>
                   )}
-                </div>
+        </div>
 
                 {/* Bird 4: From corner 4 */}
                 <div className="border border-gray-200 rounded-lg">
-                  <button
+              <button
                     onClick={() => toggleBirdExpansion('bird4')}
                     className="w-full px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 rounded-lg flex justify-between items-center"
                   >
@@ -1054,7 +1157,7 @@ const FlockDetail: React.FC = () => {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+              </button>
                   {expandedBirds.has('bird4') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
@@ -1067,10 +1170,10 @@ const FlockDetail: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           placeholder="Enter weight"
                           min="0"
-                          step="0.1"
+                          step="1"
                         />
-                      </div>
-                      
+          </div>
+
                       {/* Gait Score */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
@@ -1078,25 +1181,25 @@ const FlockDetail: React.FC = () => {
                           type="range"
                           min="0"
                           max="5"
-                          step="0.1"
+                          step="1"
                           value={mondayMeasuresData.bird4.gaitScore}
-                          onChange={(e) => handleMondayMeasuresChange('bird4', 'gaitScore', parseFloat(e.target.value))}
+                          onChange={(e) => handleMondayMeasuresChange('bird4', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0</span>
                           <span className="font-medium">{mondayMeasuresData.bird4.gaitScore}</span>
                           <span>5</span>
-                        </div>
-                      </div>
-                      
+          </div>
+        </div>
+
                       {/* Dust Bathing */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
                             <label key={option} className="flex items-center">
-                              <input
+                      <input
                                 type="radio"
                                 name="bird4-dustBathing"
                                 value={option}
@@ -1107,11 +1210,11 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
+                    </div>
                       </div>
                       
                       {/* Panting */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -1125,9 +1228,9 @@ const FlockDetail: React.FC = () => {
                                 className="mr-2 text-purple-600 focus:ring-purple-500"
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
-                            </label>
+                      </label>
                           ))}
-                        </div>
+                    </div>
                       </div>
                     </div>
                   )}
@@ -1152,45 +1255,45 @@ const FlockDetail: React.FC = () => {
                   {expandedBirds.has('bird5') && (
                     <div className="p-4 border-t border-gray-200 space-y-4">
                       {/* Weight */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Weight:</label>
-                        <input
-                          type="number"
+                      <input
+                        type="number"
                           value={mondayMeasuresData.bird5.weight}
                           onChange={(e) => handleMondayMeasuresChange('bird5', 'weight', parseFloat(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                           placeholder="Enter weight"
                           min="0"
-                          step="0.1"
-                        />
-                      </div>
+                          step="1"
+                      />
+                    </div>
                       
                       {/* Gait Score */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Gait Score (0-5):</label>
-                        <input
+                      <input
                           type="range"
                           min="0"
                           max="5"
-                          step="0.1"
+                          step="1"
                           value={mondayMeasuresData.bird5.gaitScore}
-                          onChange={(e) => handleMondayMeasuresChange('bird5', 'gaitScore', parseFloat(e.target.value))}
+                          onChange={(e) => handleMondayMeasuresChange('bird5', 'gaitScore', parseInt(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                         />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0</span>
                           <span className="font-medium">{mondayMeasuresData.bird5.gaitScore}</span>
                           <span>5</span>
-                        </div>
+                    </div>
                       </div>
                       
                       {/* Dust Bathing */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Dust Bathing:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
                             <label key={option} className="flex items-center">
-                              <input
+                      <input
                                 type="radio"
                                 name="bird5-dustBathing"
                                 value={option}
@@ -1199,13 +1302,13 @@ const FlockDetail: React.FC = () => {
                                 className="mr-2 text-purple-600 focus:ring-purple-500"
                               />
                               <span className="text-gray-700 capitalize">{option}</span>
-                            </label>
+                      </label>
                           ))}
-                        </div>
+                    </div>
                       </div>
                       
                       {/* Panting */}
-                      <div>
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Panting:</label>
                         <div className="space-y-2">
                           {['yes', 'no'].map((option) => (
@@ -1221,8 +1324,8 @@ const FlockDetail: React.FC = () => {
                               <span className="text-gray-700 capitalize">{option}</span>
                             </label>
                           ))}
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                     </div>
                   )}
                 </div>
@@ -1230,18 +1333,14 @@ const FlockDetail: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
-                <button
+                    <button
                   onClick={() => setIsMondayMeasuresOpen(false)}
                   className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
+                    >
+                      Cancel
+                    </button>
                 <button
-                  onClick={() => {
-                    // TODO: Save Monday Measures data
-                    alert('Monday Measures data saved successfully!');
-                    setIsMondayMeasuresOpen(false);
-                  }}
+                  onClick={saveMondayMeasuresData}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
                   Save Data
