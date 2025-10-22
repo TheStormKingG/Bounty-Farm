@@ -68,6 +68,7 @@ const FlockDetail: React.FC = () => {
   const [isTodaysInfoOpen, setIsTodaysInfoOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [flockStartDate, setFlockStartDate] = useState<Date | null>(null);
+  const [submittedDates, setSubmittedDates] = useState<Set<string>>(new Set());
   const [todaysData, setTodaysData] = useState({
     culls: 0,
     runts: 0,
@@ -100,6 +101,24 @@ const FlockDetail: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  // Check if a date button should be enabled
+  const isDateEnabled = (date: Date) => {
+    const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Enable if data has been submitted for this date
+    if (submittedDates.has(dateString)) {
+      return true;
+    }
+    
+    // Enable if the date has passed (including today)
+    if (dateString <= today) {
+      return true;
+    }
+    
+    return false;
   };
 
   // Handle Today's Info data changes
@@ -171,6 +190,9 @@ const FlockDetail: React.FC = () => {
       console.log('Successfully saved today\'s data:', dataToSave);
       alert('Data saved successfully!');
       setIsTodaysInfoOpen(false);
+      
+      // Add today's date to submitted dates
+      setSubmittedDates(prev => new Set([...prev, today]));
       
       // Reset form data
       setTodaysData({
@@ -268,6 +290,30 @@ const FlockDetail: React.FC = () => {
 
     fetchFlockStartDate();
   }, [farmInfo.farmName]);
+
+  // Load existing submitted dates from database
+  useEffect(() => {
+    const loadSubmittedDates = async () => {
+      if (!flockId) return;
+      
+      try {
+        const { data: existingData } = await supabase
+          .from('daily_flock_data')
+          .select('date')
+          .eq('flock_id', flockId);
+
+        if (existingData) {
+          const dates = existingData.map(record => record.date);
+          setSubmittedDates(new Set(dates));
+          console.log('Loaded submitted dates:', dates);
+        }
+      } catch (error) {
+        console.error('Error loading submitted dates:', error);
+      }
+    };
+
+    loadSubmittedDates();
+  }, [flockId]);
 
   if (loading) {
     return (
@@ -375,20 +421,44 @@ const FlockDetail: React.FC = () => {
                       </h3>
                     </div>
                     <div className="grid grid-cols-7 gap-2">
-                      {getWeekDates(week).map((date, index) => (
-                        <button
-                          key={index}
-                          disabled
-                          className="bg-gray-300 text-gray-500 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed"
-                          title={`${date.dayName}-${date.dayNumber} - No data entered`}
-                        >
-                          {date.dayName}-{date.dayNumber}
-                        </button>
-                      ))}
+                      {getWeekDates(week).map((date, index) => {
+                        const isEnabled = isDateEnabled(date.fullDate);
+                        const hasData = submittedDates.has(date.fullDate.toISOString().split('T')[0]);
+                        
+                        return (
+                          <button
+                            key={index}
+                            disabled={!isEnabled}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                              isEnabled
+                                ? hasData
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer'
+                                  : 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            }`}
+                            title={
+                              isEnabled
+                                ? hasData
+                                  ? `${date.dayName}-${date.dayNumber} - Data submitted (click to edit)`
+                                  : `${date.dayName}-${date.dayNumber} - Click to submit data`
+                                : `${date.dayName}-${date.dayNumber} - No data entered`
+                            }
+                            onClick={() => {
+                              if (isEnabled) {
+                                // Open Today's Info popup for this specific date
+                                setIsTodaysInfoOpen(true);
+                                // TODO: Load existing data for this date if available
+                              }
+                            }}
+                          >
+                            {date.dayName}-{date.dayNumber}
+                          </button>
+                        );
+                      })}
                     </div>
                     <div className="mt-3 text-xs text-gray-500 text-center">
-                      Buttons will be enabled when data is entered for each day
-                        </div>
+                      Blue buttons: Submit data | Green buttons: Data submitted (click to edit) | Gray buttons: Future dates
+                    </div>
                       </div>
                 )}
               </div>
