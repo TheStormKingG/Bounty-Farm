@@ -634,7 +634,8 @@ const FarmDetail: React.FC = () => {
           pen_flock_summary: receipt.penFlockSummary,
           confirmed_by: receipt.confirmedBy,
           edit_count: receipt.editCount || 0,
-          updated_at: receipt.updatedAt || receipt.confirmedAt
+          updated_at: receipt.updatedAt || receipt.confirmedAt,
+          status: receipt.status || 'Confirmed'
         }));
 
         const { error } = await supabase
@@ -643,6 +644,8 @@ const FarmDetail: React.FC = () => {
 
         if (error) {
           console.error('Error saving received dispatches to DB:', error);
+          console.error('Error details:', error.message, error.code, error.details);
+          console.error('Records being inserted:', records);
         }
       }
     } catch (error) {
@@ -653,6 +656,7 @@ const FarmDetail: React.FC = () => {
   // Load received dispatches from database
   const loadReceivedDispatchesFromDB = async () => {
     try {
+      console.log('Loading received dispatches for farm:', farmInfo.farmName);
       const { data, error } = await supabase
         .from('received_dispatches')
         .select('*')
@@ -664,8 +668,10 @@ const FarmDetail: React.FC = () => {
         return [];
       }
 
-      return data.map(record => ({
+      console.log('Loaded received dispatches from DB:', data);
+      const mappedData = data.map(record => ({
         id: record.dispatch_id,
+        dispatch_id: record.dispatch_id, // Add this for consistency
         dispatchNumber: record.dispatch_number,
         confirmedAt: record.confirmed_at,
         tripDistribution: record.trip_distribution,
@@ -676,6 +682,9 @@ const FarmDetail: React.FC = () => {
         updatedAt: record.updated_at,
         status: record.status || 'Confirmed' // Ensure status is set
       }));
+      
+      console.log('Mapped received dispatches:', mappedData);
+      return mappedData;
     } catch (error) {
       console.error('Error in loadReceivedDispatchesFromDB:', error);
       return [];
