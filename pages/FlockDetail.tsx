@@ -72,8 +72,11 @@ const FlockDetail: React.FC = () => {
   const [submittedDates, setSubmittedDates] = useState<Set<string>>(new Set());
   const [todaysDataSubmitted, setTodaysDataSubmitted] = useState(false);
   const [mondayMeasuresSubmitted, setMondayMeasuresSubmitted] = useState(false);
+  const [testingThursdaysSubmitted, setTestingThursdaysSubmitted] = useState(false);
   const [isMondayMeasuresOpen, setIsMondayMeasuresOpen] = useState(false);
+  const [isTestingThursdaysOpen, setIsTestingThursdaysOpen] = useState(false);
   const [expandedBirds, setExpandedBirds] = useState<Set<string>>(new Set());
+  const [expandedTestingItems, setExpandedTestingItems] = useState<Set<string>>(new Set());
   const [mondayMeasuresData, setMondayMeasuresData] = useState({
     bird1: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
     bird2: { weight: 0, gaitScore: 0, dustBathing: 'yes', panting: 'no' },
@@ -87,6 +90,12 @@ const FlockDetail: React.FC = () => {
     deaths: 0,
     feedType: 'Starter',
     feedUsed: 0
+  });
+  const [testingThursdaysData, setTestingThursdaysData] = useState({
+    ammoniaLevelsPpm: 0,
+    drinkersFlowRateMlMin: 0,
+    litterMoisture: 'Dry-Dusty',
+    lightIntensityLx: 0
   });
 
   // Toggle week expansion
@@ -128,6 +137,19 @@ const FlockDetail: React.FC = () => {
     });
   };
 
+  // Toggle Testing Thursdays item expansion
+  const toggleTestingItemExpansion = (item: string) => {
+    setExpandedTestingItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(item)) {
+        newSet.delete(item);
+      } else {
+        newSet.add(item);
+      }
+      return newSet;
+    });
+  };
+
   // Handle Monday Measures data changes
   const handleMondayMeasuresChange = (bird: string, field: string, value: any) => {
     setMondayMeasuresData(prev => ({
@@ -139,12 +161,28 @@ const FlockDetail: React.FC = () => {
     }));
   };
 
+  // Handle Testing Thursdays data changes
+  const handleTestingThursdaysChange = (field: string, value: any) => {
+    setTestingThursdaysData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   // Check if today is Monday (TEMPORARILY ALWAYS TRUE FOR TESTING)
   const isTodayMonday = () => {
     // TODO: Revert this to only show on Mondays
     return true; // Temporarily always true for testing
     // const today = new Date();
     // return today.getDay() === 1; // 1 = Monday
+  };
+
+  // Check if today is Thursday (TEMPORARILY ALWAYS TRUE FOR TESTING)
+  const isTodayThursday = () => {
+    // TODO: Revert this to only show on Thursdays
+    return true; // Temporarily always true for testing
+    // const today = new Date();
+    // return today.getDay() === 4; // 4 = Thursday
   };
 
   // Check if a date button should be enabled
@@ -368,6 +406,83 @@ const FlockDetail: React.FC = () => {
       
     } catch (error) {
       console.error('Unexpected error saving Monday Measures data:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  // Save Testing Thursdays data to database
+  const saveTestingThursdaysData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check for existing data
+      const { data: existingData, error: checkError } = await supabase
+        .from('testing_thursdays')
+        .select('id')
+        .eq('flock_id', flockId)
+        .eq('date', today)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking existing Testing Thursdays data:', checkError);
+        alert('Error checking existing data. Please try again.');
+        return;
+      }
+
+      const dataToSave = {
+        flock_id: flockId,
+        farm_name: farmInfo.farmName,
+        date: today,
+        ammonia_levels_ppm: testingThursdaysData.ammoniaLevelsPpm,
+        drinkers_flow_rate_ml_min: testingThursdaysData.drinkersFlowRateMlMin,
+        litter_moisture: testingThursdaysData.litterMoisture,
+        light_intensity_lx: testingThursdaysData.lightIntensityLx
+      };
+
+      if (existingData) {
+        // Update existing record
+        const { error } = await supabase
+          .from('testing_thursdays')
+          .update(dataToSave)
+          .eq('id', existingData.id);
+        
+        if (error) {
+          console.error('Error updating Testing Thursdays data:', error);
+          alert('Error updating data. Please try again.');
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error } = await supabase
+          .from('testing_thursdays')
+          .insert(dataToSave);
+        
+        if (error) {
+          console.error('Error inserting Testing Thursdays data:', error);
+          console.error('Error details:', error.message, error.code, error.details);
+          alert('Error saving data. Please try again.');
+          return;
+        }
+      }
+
+      console.log('Successfully saved Testing Thursdays data:', dataToSave);
+      alert('Testing Thursdays data saved successfully!');
+      setIsTestingThursdaysOpen(false);
+      
+      // Mark Testing Thursdays as submitted
+      setTestingThursdaysSubmitted(true);
+      console.log('Testing Thursdays marked as submitted');
+      
+      // Reset form data
+      setTestingThursdaysData({
+        ammoniaLevelsPpm: 0,
+        drinkersFlowRateMlMin: 0,
+        litterMoisture: 'Dry-Dusty',
+        lightIntensityLx: 0
+      });
+      
+    } catch (error) {
+      console.error('Unexpected error saving Testing Thursdays data:', error);
       alert('An unexpected error occurred. Please try again.');
     }
   };
@@ -657,6 +772,41 @@ const FlockDetail: React.FC = () => {
     loadMondayMeasuresStatus();
   }, [flockId]);
 
+  // Load existing Testing Thursdays data from database
+  useEffect(() => {
+    const loadTestingThursdaysStatus = async () => {
+      if (!flockId) return;
+      
+      try {
+        console.log('Loading Testing Thursdays status for flock:', flockId);
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data: existingData, error } = await supabase
+          .from('testing_thursdays')
+          .select('id')
+          .eq('flock_id', flockId)
+          .eq('date', today)
+          .single();
+
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.error('Error fetching Testing Thursdays status:', error);
+          return;
+        }
+
+        if (existingData) {
+          setTestingThursdaysSubmitted(true);
+          console.log('Testing Thursdays already submitted for today');
+        } else {
+          console.log('No Testing Thursdays data found for today');
+        }
+      } catch (error) {
+        console.error('Error loading Testing Thursdays status:', error);
+      }
+    };
+
+    loadTestingThursdaysStatus();
+  }, [flockId]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -767,6 +917,31 @@ const FlockDetail: React.FC = () => {
               } : (e) => e.target.style.backgroundColor = '#ff8c42'}
             >
               Monday Measures{mondayMeasuresSubmitted && ' (Submitted)'}
+            </button>
+          </div>
+        )}
+
+        {/* Testing Thursdays Button - Only show on Thursdays */}
+        {isTodayThursday() && (
+          <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+            <button
+              onClick={() => setIsTestingThursdaysOpen(true)}
+              className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
+                testingThursdaysSubmitted
+                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
+                  : 'text-white'
+              }`}
+              style={testingThursdaysSubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+              onMouseEnter={testingThursdaysSubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              onMouseLeave={testingThursdaysSubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            >
+              Testing Thursdays{testingThursdaysSubmitted && ' (Submitted)'}
             </button>
           </div>
         )}
@@ -1664,6 +1839,196 @@ const FlockDetail: React.FC = () => {
                     >
                   Save Data
                     </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Testing Thursdays Popup Modal */}
+        {isTestingThursdaysOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Testing Thursdays - {new Date().toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </h3>
+                <button
+                  onClick={() => setIsTestingThursdaysOpen(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                {/* Ammonia Levels */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleTestingItemExpansion('ammoniaLevels')}
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                  >
+                    <span className="font-medium text-white">Ammonia Levels (PPM)</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('ammoniaLevels') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedTestingItems.has('ammoniaLevels') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={testingThursdaysData.ammoniaLevelsPpm}
+                        onChange={(e) => handleTestingThursdaysChange('ammoniaLevelsPpm', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter ammonia levels in PPM"
+                        min="0"
+                        onFocus={(e) => e.target.select()}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Drinkers Flow Rate */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleTestingItemExpansion('drinkersFlowRate')}
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                  >
+                    <span className="font-medium text-white">Drinkers Flow Rate (ml/min)</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('drinkersFlowRate') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedTestingItems.has('drinkersFlowRate') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={testingThursdaysData.drinkersFlowRateMlMin}
+                        onChange={(e) => handleTestingThursdaysChange('drinkersFlowRateMlMin', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter flow rate in ml/min"
+                        min="0"
+                        onFocus={(e) => e.target.select()}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Litter Moisture */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleTestingItemExpansion('litterMoisture')}
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                  >
+                    <span className="font-medium text-white">Litter Moisture</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('litterMoisture') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedTestingItems.has('litterMoisture') && (
+                    <div className="p-4 border-t border-gray-200 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Moisture Level:</label>
+                        <div className="space-y-2">
+                          {['Dry-Dusty', 'Damp-Clumpy', 'Wet-Sticky'].map((level) => (
+                            <label key={level} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="litterMoisture"
+                                value={level}
+                                checked={testingThursdaysData.litterMoisture === level}
+                                onChange={(e) => handleTestingThursdaysChange('litterMoisture', e.target.value)}
+                                className="mr-2 text-green-600 focus:ring-green-500"
+                              />
+                              <span className="text-gray-700">{level}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Light Intensity */}
+                <div className="border border-gray-200 rounded-lg">
+                  <button
+                    onClick={() => toggleTestingItemExpansion('lightIntensity')}
+                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
+                    style={{ backgroundColor: '#ff8c42' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                  >
+                    <span className="font-medium text-white">Light Intensity (lx)</span>
+                    <svg
+                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('lightIntensity') ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedTestingItems.has('lightIntensity') && (
+                    <div className="p-4 border-t border-gray-200">
+                      <input
+                        type="number"
+                        value={testingThursdaysData.lightIntensityLx}
+                        onChange={(e) => handleTestingThursdaysChange('lightIntensityLx', parseInt(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        placeholder="Enter light intensity in lux"
+                        min="0"
+                        onFocus={(e) => e.target.select()}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 p-6 border-t">
+                <button
+                  onClick={() => setIsTestingThursdaysOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveTestingThursdaysData}
+                  className="px-4 py-2 text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: '#ff8c42' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                >
+                  Save Data
+                </button>
               </div>
             </div>
           </div>
