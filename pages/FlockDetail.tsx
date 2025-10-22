@@ -175,7 +175,11 @@ const FlockDetail: React.FC = () => {
 
   // Generate week_day_id for a specific date
   const generateWeekDayId = (date: Date) => {
-    const weekNumber = Math.ceil((date.getDate() - 1) / 7) + 1; // Week within month
+    // Calculate week number based on flock start date
+    const startDate = flockStartDate || new Date();
+    const daysDiff = Math.floor((date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const weekNumber = Math.floor(daysDiff / 7) + 1; // Week 1, 2, 3, etc.
+    
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const dayNumber = date.getDate();
     const dayName = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'][dayOfWeek];
@@ -200,8 +204,8 @@ const FlockDetail: React.FC = () => {
         .single();
 
       // If week_day_id column doesn't exist (406 error), fallback to date query
-      if (error && (error as any).status === 406) {
-        console.log('week_day_id column not found, falling back to date query');
+      if (error && ((error as any).status === 406 || error.message?.includes('column') || error.message?.includes('week_day_id'))) {
+        console.log('week_day_id column not found, falling back to date query. Error:', error);
         const fallbackResult = await supabase
           .from('daily_flock_data')
           .select('*')
@@ -371,8 +375,8 @@ const FlockDetail: React.FC = () => {
         .single();
 
       // If week_day_id column doesn't exist (406 error), fallback to date query
-      if (checkError && (checkError as any).status === 406) {
-        console.log('week_day_id column not found, falling back to date query for existing data check');
+      if (checkError && ((checkError as any).status === 406 || checkError.message?.includes('column') || checkError.message?.includes('week_day_id'))) {
+        console.log('week_day_id column not found, falling back to date query for existing data check. Error:', checkError);
         const fallbackResult = await supabase
           .from('daily_flock_data')
           .select('id')
