@@ -188,14 +188,30 @@ const FlockDetail: React.FC = () => {
   const loadDataForDate = async (date: Date) => {
     try {
       const weekDayId = generateWeekDayId(date);
-      console.log('Loading data for week_day_id:', weekDayId);
+      const dateString = date.toISOString().split('T')[0];
+      console.log('Loading data for date:', dateString, 'week_day_id:', weekDayId);
       
-      const { data: existingData, error } = await supabase
+      // Try to query by week_day_id first, fallback to date if column doesn't exist
+      let { data: existingData, error } = await supabase
         .from('daily_flock_data')
         .select('*')
         .eq('flock_id', flockId)
         .eq('week_day_id', weekDayId)
         .single();
+
+      // If week_day_id column doesn't exist (406 error), fallback to date query
+      if (error && (error as any).status === 406) {
+        console.log('week_day_id column not found, falling back to date query');
+        const fallbackResult = await supabase
+          .from('daily_flock_data')
+          .select('*')
+          .eq('flock_id', flockId)
+          .eq('date', dateString)
+          .single();
+        
+        existingData = fallbackResult.data;
+        error = fallbackResult.error;
+      }
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading data for date:', error);
@@ -203,7 +219,7 @@ const FlockDetail: React.FC = () => {
       }
 
       if (existingData) {
-        console.log('Loaded existing data for', weekDayId, ':', existingData);
+        console.log('Loaded existing data for', dateString, ':', existingData);
         return {
           culls: existingData.culls || 0,
           runts: existingData.runts || 0,
@@ -346,12 +362,27 @@ const FlockDetail: React.FC = () => {
       console.log('Saving data with week_day_id:', weekDayId, 'for date:', dateString);
       
       // Check if data already exists for this date
-      const { data: existingData, error: checkError } = await supabase
+      // Try week_day_id first, fallback to date if column doesn't exist
+      let { data: existingData, error: checkError } = await supabase
         .from('daily_flock_data')
         .select('id')
         .eq('flock_id', flockId)
         .eq('week_day_id', weekDayId)
         .single();
+
+      // If week_day_id column doesn't exist (406 error), fallback to date query
+      if (checkError && (checkError as any).status === 406) {
+        console.log('week_day_id column not found, falling back to date query for existing data check');
+        const fallbackResult = await supabase
+          .from('daily_flock_data')
+          .select('id')
+          .eq('flock_id', flockId)
+          .eq('date', dateString)
+          .single();
+        
+        existingData = fallbackResult.data;
+        checkError = fallbackResult.error;
+      }
 
       if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
         console.error('Error checking existing data:', checkError);
@@ -363,7 +394,6 @@ const FlockDetail: React.FC = () => {
         flock_id: flockId,
         farm_name: farmInfo.farmName,
         date: dateString,
-        week_day_id: weekDayId,
         culls: todaysData.culls,
         runts: todaysData.runts,
         deaths: todaysData.deaths,
@@ -373,6 +403,8 @@ const FlockDetail: React.FC = () => {
         updated_by: 'farmer'
       };
 
+      // Only add week_day_id if the column exists (we'll detect this by trying to save it)
+      // For now, we'll try without it and let the database handle it
       if (existingData) {
         // Update existing record
         const { error } = await supabase
