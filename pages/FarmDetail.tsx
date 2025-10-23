@@ -93,6 +93,7 @@ const FarmDetail: React.FC = () => {
   useEffect(() => {
     const fetchFarmInfo = async () => {
       try {
+        console.log('Fetching farm info for farmName:', farmName);
         setLoading(true);
         setError(null);
         
@@ -110,17 +111,22 @@ const FarmDetail: React.FC = () => {
           }
 
           if (farmData) {
+            console.log('Farm data found:', farmData);
             setFarmInfo({
               farmName: farmData.farm_name || '',
               farmAddress: farmData.farm_address || '',
               contactPerson: farmData.contact_person || '',
               contactNumber: farmData.contact_number || ''
             });
+          } else {
+            console.log('No farm data found');
           }
         }
       } catch (err) {
         console.error('Unexpected error fetching farm info:', err);
         setError('An unexpected error occurred while fetching farm information');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -152,18 +158,22 @@ const FarmDetail: React.FC = () => {
         ];
         
         setFlocks(sampleFlocks);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('An unexpected error occurred.');
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('An unexpected error occurred.');
         setFlocks([]);
       } finally {
         setLoading(false);
       }
     };
     
+    console.log('farmInfo.farmName:', farmInfo.farmName);
     if (farmInfo.farmName) {
+      console.log('Fetching flocks and pen details...');
       fetchFlocks();
       fetchPenDetails();
+    } else {
+      console.log('No farm name, skipping flock fetch');
     }
   }, [farmInfo.farmName, farmId]);
 
