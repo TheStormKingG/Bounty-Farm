@@ -1352,8 +1352,8 @@ const FarmDetail: React.FC = () => {
           )}
         </div>
 
-        {/* Received Dispatches Section */}
-        {receivedDispatches.length > 0 && (
+        {/* Received Dispatches Section - Admin Only */}
+        {user?.role === Role.Admin && receivedDispatches.length > 0 && (
           <>
             {console.log('Received dispatches:', receivedDispatches)}
             {console.log('Dispatches:', dispatches)}
@@ -1556,42 +1556,14 @@ const FarmDetail: React.FC = () => {
 
           {/* Pen Cards Grid */}
           <div className="p-6">
-            <div className="text-center py-12">
-              <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-400 text-4xl">🏠</span>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-600 mb-2">Pen Management</h3>
-              <p className="text-gray-500 mb-6">
-                Manage and track individual pens within this farm.
-              </p>
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg max-w-md mx-auto">
-                <p className="text-blue-800 font-semibold mb-2">Coming Soon...</p>
-                <p className="text-blue-700">
-                  Pen management features will be available in the next update.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Flock Management */}
-        <div className="bg-white rounded-lg shadow-md">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-800">Flock Management</h2>
-            </div>
-          </div>
-
-          {/* Flock Cards Grid */}
-          <div className="p-6">
             {flocks.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
                   <span className="text-gray-400 text-4xl">🐔</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Flocks Found</h3>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Pens Found</h3>
                 <p className="text-gray-500 mb-6">
-                  Add your first flock to start tracking poultry operations.
+                  Add your first pen to start tracking poultry operations.
                 </p>
               </div>
             ) : (
@@ -1603,7 +1575,7 @@ const FarmDetail: React.FC = () => {
                       onClick={() => handleFlockClick(flock)}
                       className="w-full bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#e67e22] cursor-pointer"
                     >
-                      <span className="font-bold text-white uppercase text-sm tracking-wider">{flock.flockName}</span>
+                      <span className="font-bold text-white uppercase text-sm tracking-wider">Pen {flock.flockNumber}</span>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                         <path d="M9 18l6-6-6-6"/>
                       </svg>
