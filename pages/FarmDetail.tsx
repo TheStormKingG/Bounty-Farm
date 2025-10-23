@@ -72,6 +72,17 @@ const FarmDetail: React.FC = () => {
   });
   const [purchaseDeliverySubmitted, setPurchaseDeliverySubmitted] = useState(false);
 
+  // Edit/Delete states
+  const [isEditFarmOpen, setIsEditFarmOpen] = useState(false);
+  const [isAddPenOpen, setIsAddPenOpen] = useState(false);
+  const [isEditPenOpen, setIsEditPenOpen] = useState(false);
+  const [editingPen, setEditingPen] = useState<PenDetail | null>(null);
+  const [newPenData, setNewPenData] = useState({
+    penNumber: 1,
+    lengthMeters: 0,
+    widthMeters: 0
+  });
+
   // Fetch farm information
   useEffect(() => {
     const fetchFarmInfo = async () => {
@@ -416,6 +427,83 @@ const FarmDetail: React.FC = () => {
     });
   };
 
+  // Edit/Delete handlers
+  const handleEditFarm = () => {
+    setIsEditFarmOpen(true);
+  };
+
+  const handleAddPen = () => {
+    setNewPenData({ penNumber: penDetails.length + 1, lengthMeters: 0, widthMeters: 0 });
+    setIsAddPenOpen(true);
+  };
+
+  const handleEditPen = (pen: PenDetail) => {
+    setEditingPen(pen);
+    setIsEditPenOpen(true);
+  };
+
+  const handleDeletePen = async (penId: string) => {
+    if (window.confirm('Are you sure you want to delete this pen? This action cannot be undone.')) {
+      try {
+        const { error } = await supabase
+          .from('farm_pens')
+          .delete()
+          .eq('id', penId);
+
+        if (error) {
+          console.error('Error deleting pen:', error);
+          alert('Error deleting pen. Please try again.');
+          return;
+        }
+
+        // Refresh pen details
+        await fetchPenDetails();
+        alert('Pen deleted successfully!');
+      } catch (error) {
+        console.error('Unexpected error deleting pen:', error);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
+  };
+
+  const handleAddPenSubmit = async () => {
+    try {
+      const areaSquareMeters = newPenData.lengthMeters * newPenData.widthMeters;
+      const minBirds = Math.floor(areaSquareMeters * 0.090918367);
+      const maxBirds = Math.floor(areaSquareMeters * 0.83326531);
+
+      const dataToSave = {
+        farm_id: farmId,
+        pen_number: newPenData.penNumber,
+        length_meters: newPenData.lengthMeters,
+        width_meters: newPenData.widthMeters,
+        area_square_meters: areaSquareMeters,
+        min_birds: minBirds,
+        max_birds: maxBirds,
+        created_by: user?.name || 'admin',
+        updated_by: user?.name || 'admin'
+      };
+
+      const { error } = await supabase
+        .from('farm_pens')
+        .insert([dataToSave]);
+
+      if (error) {
+        console.error('Error adding pen:', error);
+        alert('Error adding pen. Please try again.');
+        return;
+      }
+
+      alert('Pen added successfully!');
+      setIsAddPenOpen(false);
+      setNewPenData({ penNumber: 1, lengthMeters: 0, widthMeters: 0 });
+      await fetchPenDetails();
+    } catch (error) {
+      console.error('Unexpected error adding pen:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -515,6 +603,7 @@ const FarmDetail: React.FC = () => {
                         <td className="px-4 py-3 text-sm break-words">{farmInfo.contactNumber}</td>
                         <td className="px-4 py-3 text-sm space-x-2">
                           <button
+                            onClick={handleEditFarm}
                             className="text-[#5C3A6B] hover:underline font-medium"
                           >
                             Edit
@@ -532,6 +621,7 @@ const FarmDetail: React.FC = () => {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">Pen Details</h2>
                     <button
+                  onClick={handleAddPen}
                   className="bg-[#ff8c42] hover:bg-[#e67e22] text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Add Pen
@@ -580,11 +670,13 @@ const FarmDetail: React.FC = () => {
                             <td className="px-4 py-3 text-sm break-words">Upto {pen.max_birds} birds</td>
                             <td className="px-4 py-3 text-sm space-x-2">
                               <button 
+                                onClick={() => handleEditPen(pen)}
                                 className="text-[#5C3A6B] hover:underline font-medium"
                               >
                                 Edit
                               </button>
                               <button 
+                                onClick={() => handleDeletePen(pen.id)}
                                 className="text-red-600 hover:underline font-medium"
                               >
                                 Delete
@@ -856,6 +948,91 @@ const FarmDetail: React.FC = () => {
               >
                 Save
                     </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Pen Modal */}
+      {isAddPenOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Add New Pen</h3>
+              <button
+                onClick={() => setIsAddPenOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Pen Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pen Number:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newPenData.penNumber}
+                  onChange={(e) => setNewPenData(prev => ({ ...prev, penNumber: parseInt(e.target.value) || 1 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter pen number"
+                />
+              </div>
+
+              {/* Length */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Length (meters):</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={newPenData.lengthMeters}
+                  onChange={(e) => setNewPenData(prev => ({ ...prev, lengthMeters: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter length in meters"
+                />
+              </div>
+
+              {/* Width */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Width (meters):</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={newPenData.widthMeters}
+                  onChange={(e) => setNewPenData(prev => ({ ...prev, widthMeters: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter width in meters"
+                />
+              </div>
+
+              {/* Preview */}
+              {newPenData.lengthMeters > 0 && newPenData.widthMeters > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Pen Preview:</h4>
+                  <div className="text-sm text-gray-600">
+                    <div>Dimensions: {newPenData.lengthMeters}m × {newPenData.widthMeters}m</div>
+                    <div>Area: {(newPenData.lengthMeters * newPenData.widthMeters).toFixed(1)}m²</div>
+                    <div>Capacity: Upto {Math.floor(newPenData.lengthMeters * newPenData.widthMeters * 0.83326531)} birds</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleAddPenSubmit}
+                  disabled={newPenData.lengthMeters <= 0 || newPenData.widthMeters <= 0}
+                  className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                >
+                  Add Pen
+                </button>
+              </div>
             </div>
           </div>
         </div>
