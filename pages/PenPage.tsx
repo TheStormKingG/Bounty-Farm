@@ -266,34 +266,13 @@ const PenPage: React.FC = () => {
 
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Pen {penNumber}</h1>
-              <p className="text-gray-600 mt-1">{farmInfo.farmName}</p>
-              {penDetails && (
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <div className="font-semibold text-gray-700">Dimensions</div>
-                    <div className="text-gray-600">{penDetails.length_meters}m × {penDetails.width_meters}m</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <div className="font-semibold text-gray-700">Surface Area</div>
-                    <div className="text-gray-600">{penDetails.area_square_meters}m²</div>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <div className="font-semibold text-gray-700">Max Birds</div>
-                    <div className="text-gray-600">{penDetails.min_birds} to {penDetails.max_birds} birds</div>
-                  </div>
-                </div>
-              )}
+          {penDetails && (
+            <div className="text-center">
+              <div className="text-lg text-gray-600">
+                {penDetails.length_meters}m × {penDetails.width_meters}m • {penDetails.area_square_meters}m² • Upto {penDetails.max_birds} Birds
+              </div>
             </div>
-            <button
-              onClick={() => navigate(`/farm/${farmId}`)}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              ← Back to Farm
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Flocks */}
