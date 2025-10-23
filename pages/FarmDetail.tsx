@@ -76,15 +76,34 @@ const FarmDetail: React.FC = () => {
   // Get user info
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        console.log('Fetched user profile:', profile);
-        setUser(profile);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        console.log('Auth user:', user);
+        if (user) {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+        .select('*')
+            .eq('id', user.id)
+        .single();
+
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            // If profile doesn't exist, create a basic one from auth user
+            const basicProfile = {
+              id: user.id,
+              email: user.email,
+              role: 'Admin', // Default to Admin for now
+              name: user.email?.split('@')[0] || 'User'
+            };
+            console.log('Using basic profile:', basicProfile);
+            setUser(basicProfile);
+      } else {
+            console.log('Fetched user profile:', profile);
+            setUser(profile);
+          }
+      }
+    } catch (error) {
+        console.error('Error in getUser:', error);
       }
     };
     getUser();
