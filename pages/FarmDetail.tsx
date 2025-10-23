@@ -489,49 +489,63 @@ const FarmDetail: React.FC = () => {
                   style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto', width: '100%' }}
                 >
                   <table className="modern-table w-full" style={{ tableLayout: 'auto', width: '100%', minWidth: '100%' }}>
-                    <thead className="sticky top-0 z-10" style={{
-                      backgroundColor: '#ff8c42',
-                      borderRadius: '8px 8px 0 0',
-                      borderBottom: 'none',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}>
-                      <tr>
-                        {['Name', 'Address', 'Contact', 'Phone'].map((header, index) => (
-                          <th
-                            key={header}
-                            className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                            style={{ 
-                              width: '25%', 
-                              minWidth: '25%',
-                              backgroundColor: '#ff8c42',
-                              color: 'white',
-                              fontWeight: '600',
-                              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                            }}
-                          >
-                            <div className="flex items-center">
-                              <span className="text-white font-medium text-xs">{header}</span>
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+              <thead className="sticky top-0 z-10" style={{
+                backgroundColor: '#ff8c42',
+                borderRadius: '8px 8px 0 0',
+                borderBottom: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <tr>
+                        {['Name', 'Address', 'Contact', 'Phone', 'Actions'].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                              width: header === 'Actions' ? '15%' : '21.25%', 
+                              minWidth: header === 'Actions' ? '15%' : '21.25%',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+                <tbody>
                       <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B] break-words">{farmInfo.farmName}</td>
                         <td className="px-4 py-3 text-sm break-words">{farmInfo.farmAddress}</td>
                         <td className="px-4 py-3 text-sm break-words">{farmInfo.contactPerson}</td>
                         <td className="px-4 py-3 text-sm break-words">{farmInfo.contactNumber}</td>
+                        <td className="px-4 py-3 text-sm space-x-2">
+                          <button
+                            className="text-[#5C3A6B] hover:underline font-medium"
+                          >
+                            Edit
+                          </button>
+                        </td>
                       </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
-                    
+              </div>
+        </div>
+
             {/* Pen Details Table */}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pen Details</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">Pen Details</h2>
+                    <button
+                  className="bg-[#ff8c42] hover:bg-[#e67e22] text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Add Pen
+                </button>
+                      </div>
               <div className="mt-6 w-full" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
                 <div 
                   className="overflow-auto flex-1 w-full" 
@@ -545,13 +559,13 @@ const FarmDetail: React.FC = () => {
                       boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                     }}>
                       <tr>
-                        {['Pen #', 'Length', 'Width', 'Capacity'].map((header, index) => (
+                        {['Pen #', 'Length', 'Width', 'Capacity', 'Actions'].map((header, index) => (
                           <th
                             key={header}
                             className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
                             style={{ 
-                              width: '25%', 
-                              minWidth: '25%',
+                              width: header === 'Actions' ? '15%' : '21.25%', 
+                              minWidth: header === 'Actions' ? '15%' : '21.25%',
                               backgroundColor: '#ff8c42',
                               color: 'white',
                               fontWeight: '600',
@@ -560,12 +574,12 @@ const FarmDetail: React.FC = () => {
                           >
                             <div className="flex items-center">
                               <span className="text-white font-medium text-xs">{header}</span>
-                            </div>
+                      </div>
                           </th>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+                            </tr>
+                          </thead>
+                          <tbody>
                       {penDetails.length > 0 ? (
                         penDetails.map((pen) => (
                           <tr key={pen.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
@@ -573,18 +587,30 @@ const FarmDetail: React.FC = () => {
                             <td className="px-4 py-3 text-sm break-words">{pen.length_meters}</td>
                             <td className="px-4 py-3 text-sm break-words">{pen.width_meters}</td>
                             <td className="px-4 py-3 text-sm break-words">Upto {pen.max_birds} birds</td>
+                            <td className="px-4 py-3 text-sm space-x-2">
+                              <button 
+                                className="text-[#5C3A6B] hover:underline font-medium"
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                className="text-red-600 hover:underline font-medium"
+                              >
+                                Delete
+                              </button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={4} className="px-4 py-3 text-center text-sm text-gray-500">No pen details available</td>
+                          <td colSpan={5} className="px-4 py-3 text-center text-sm text-gray-500">No pen details available</td>
                         </tr>
                       )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
+                          </div>
           </>
         ) : (
           <>
@@ -671,9 +697,9 @@ const FarmDetail: React.FC = () => {
                                   <div>• {penDetail.length_meters}m × {penDetail.width_meters}m</div>
                                   <div>• {penDetail.area_square_meters}m²</div>
                                   <div>• {penDetail.max_birds} Birds</div>
-                                </div>
+                      </div>
                               )}
-                            </div>
+                      </div>
                           </button>
                         );
                       })}
