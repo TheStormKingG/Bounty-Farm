@@ -9,10 +9,21 @@ interface FarmCustomer {
   farmAddress: string;
   contactPerson: string;
   contactNumber: string;
+  numberOfPens?: number;
+  penDetails?: PenDetail[];
   createdBy: string;
   createdAt: string;
   updatedBy?: string;
   updatedAt?: string;
+}
+
+interface PenDetail {
+  penNumber: number;
+  length: number;
+  width: number;
+  area: number;
+  minBirds: number;
+  maxBirds: number;
 }
 
 interface IndividualCustomer {
@@ -865,10 +876,137 @@ const Customers: React.FC = () => {
                   value={newFarmData.contactNumber || ''}
                   onChange={handleFarmFormChange}
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
-                  placeholder="Enter contact number"
                   required
                 />
               </div>
+              
+              {/* Number of Pens */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Number of Pens</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  name="numberOfPens"
+                  value={newFarmData.numberOfPens || ''}
+                  onChange={(e) => {
+                    const numPens = parseInt(e.target.value) || 0;
+                    setNewFarmData(prev => ({
+                      ...prev,
+                      numberOfPens: numPens,
+                      penDetails: Array(numPens).fill(null).map((_, index) => ({
+                        penNumber: index + 1,
+                        length: 0,
+                        width: 0,
+                        area: 0,
+                        minBirds: 0,
+                        maxBirds: 0
+                      }))
+                    }));
+                  }}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                  placeholder="Enter number of pens"
+                  required
+                />
+              </div>
+
+              {/* Dynamic Pen Size Fields */}
+              {newFarmData.numberOfPens && newFarmData.numberOfPens > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-lg font-medium text-gray-700">Pen Dimensions</h4>
+                  {Array.from({ length: newFarmData.numberOfPens }, (_, index) => {
+                    const penDetail = newFarmData.penDetails?.[index] || {
+                      penNumber: index + 1,
+                      length: 0,
+                      width: 0,
+                      area: 0,
+                      minBirds: 0,
+                      maxBirds: 0
+                    };
+                    
+                    const area = penDetail.length * penDetail.width;
+                    const minBirds = Math.round(area * 0.090918367);
+                    const maxBirds = Math.round(area * 0.83326531);
+                    
+                    return (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <h5 className="text-md font-medium text-gray-700 mb-3">Pen {index + 1}</h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600">Length (m)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={penDetail.length || ''}
+                              onChange={(e) => {
+                                const length = parseFloat(e.target.value) || 0;
+                                const width = penDetail.width || 0;
+                                const newArea = length * width;
+                                const newMinBirds = Math.round(newArea * 0.090918367);
+                                const newMaxBirds = Math.round(newArea * 0.83326531);
+                                
+                                setNewFarmData(prev => ({
+                                  ...prev,
+                                  penDetails: prev.penDetails?.map((pen, i) => 
+                                    i === index 
+                                      ? { ...pen, length, area: newArea, minBirds: newMinBirds, maxBirds: newMaxBirds }
+                                      : pen
+                                  )
+                                }));
+                              }}
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                              placeholder="0.0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600">Width (m)</label>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              value={penDetail.width || ''}
+                              onChange={(e) => {
+                                const width = parseFloat(e.target.value) || 0;
+                                const length = penDetail.length || 0;
+                                const newArea = length * width;
+                                const newMinBirds = Math.round(newArea * 0.090918367);
+                                const newMaxBirds = Math.round(newArea * 0.83326531);
+                                
+                                setNewFarmData(prev => ({
+                                  ...prev,
+                                  penDetails: prev.penDetails?.map((pen, i) => 
+                                    i === index 
+                                      ? { ...pen, width, area: newArea, minBirds: newMinBirds, maxBirds: newMaxBirds }
+                                      : pen
+                                  )
+                                }));
+                              }}
+                              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2"
+                              placeholder="0.0"
+                            />
+                          </div>
+                        </div>
+                        {area > 0 && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="text-sm text-gray-700">
+                              <div className="flex justify-between">
+                                <span>Surface Area:</span>
+                                <span className="font-medium">{area.toFixed(2)} m²</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Bird Capacity:</span>
+                                <span className="font-medium">{minBirds} to {maxBirds} birds</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
