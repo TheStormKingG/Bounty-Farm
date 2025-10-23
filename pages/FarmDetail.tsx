@@ -483,34 +483,26 @@ const FarmDetail: React.FC = () => {
             {/* General Info Table */}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">General Info</h2>
-            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Field</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
-                </tr>
-              </thead>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                    </tr>
+                  </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Name</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.farmName}</td>
-                    </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Address</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{farmInfo.farmName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.farmAddress}</td>
-                      </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Contact</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.contactPerson}</td>
-                            </tr>
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Phone</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.contactNumber}</td>
-                              </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
                     </div>
                     
             {/* Pen Details Table */}
