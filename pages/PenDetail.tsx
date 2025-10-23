@@ -427,7 +427,7 @@ const PenDetail: React.FC = () => {
               Testing Thursdays{testingThursdaysSubmitted && ' (Submitted)'}
             </button>
           </div>
-        )}
+        </div>
 
         {/* Today's Info Popup Modal */}
         {isTodaysInfoOpen && (
