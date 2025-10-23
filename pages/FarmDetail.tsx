@@ -617,9 +617,9 @@ const FarmDetail: React.FC = () => {
                             className="bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex flex-col items-center justify-center p-2"
                           >
                             <div className="text-center">
-                              <div className="font-bold text-lg mb-2">PEN {flock.flockNumber}</div>
+                              <div className="font-bold text-5xl mb-2">PEN {flock.flockNumber}</div>
                               {penDetail && (
-                                <div className="text-xs leading-tight space-y-1">
+                                <div className="text-sm leading-tight space-y-1 text-left">
                                   <div>• {penDetail.length_meters}m × {penDetail.width_meters}m</div>
                                   <div>• {penDetail.area_square_meters}m²</div>
                                   <div>• {penDetail.max_birds} Birds</div>
