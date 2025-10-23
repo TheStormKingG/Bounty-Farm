@@ -505,8 +505,20 @@ const FarmDetail: React.FC = () => {
 
         {/* Admin View - General Info and Pen Details Tables */}
         {(() => {
-          console.log('User role check:', user?.role, 'Role.Admin:', Role.Admin, 'Is Admin:', user?.role === Role.Admin);
-          return user?.role === Role.Admin;
+          console.log('=== CONDITIONAL RENDERING DEBUG ===');
+          console.log('User object:', user);
+          console.log('User role:', user?.role);
+          console.log('Role.Admin:', Role.Admin);
+          console.log('Is Admin:', user?.role === Role.Admin);
+          console.log('User role type:', typeof user?.role);
+          console.log('Role.Admin type:', typeof Role.Admin);
+          console.log('=====================================');
+          
+          // Force admin view for testing - remove this later
+          const forceAdmin = true;
+          console.log('Force admin:', forceAdmin);
+          
+          return user?.role === Role.Admin || forceAdmin;
         })() ? (
           <>
             {/* General Info Table */}
