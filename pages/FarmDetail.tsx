@@ -82,6 +82,17 @@ const FarmDetail: React.FC = () => {
     lengthMeters: 0,
     widthMeters: 0
   });
+  const [editFarmData, setEditFarmData] = useState({
+    farmName: '',
+    farmAddress: '',
+    contactPerson: '',
+    contactNumber: ''
+  });
+  const [editPenData, setEditPenData] = useState({
+    penNumber: 1,
+    lengthMeters: 0,
+    widthMeters: 0
+  });
 
   // Fetch farm information
   useEffect(() => {
@@ -276,20 +287,20 @@ const FarmDetail: React.FC = () => {
 
       if (existingData) {
         // Update existing record
-        const { error: updateError } = await supabase
+      const { error: updateError } = await supabase
           .from('purchase_delivery')
           .update({
             ...dataToSave,
             invoice_image_url: imageUrl
           })
           .eq('id', existingData.id);
-
-        if (updateError) {
+      
+      if (updateError) {
           console.error('Error updating Purchase Delivery data:', updateError);
           alert('Error updating Purchase Delivery data. Please try again.');
         return;
       }
-      } else {
+    } else {
         // Insert new record
         const { error: insertError } = await supabase
           .from('purchase_delivery')
@@ -326,7 +337,7 @@ const FarmDetail: React.FC = () => {
       
       const dataToSave = {
         flock_id: 'farm-wide', // Since this is farm-level, not pen-specific
-        farm_name: farmInfo.farmName,
+          farm_name: farmInfo.farmName,
         date: today,
         feed_type: feedDeliveryData.feedType,
         number_of_bags: feedDeliveryData.numberOfBags,
@@ -429,6 +440,12 @@ const FarmDetail: React.FC = () => {
 
   // Edit/Delete handlers
   const handleEditFarm = () => {
+    setEditFarmData({
+      farmName: farmInfo.farmName,
+      farmAddress: farmInfo.farmAddress,
+      contactPerson: farmInfo.contactPerson,
+      contactNumber: farmInfo.contactNumber
+    });
     setIsEditFarmOpen(true);
   };
 
@@ -439,6 +456,11 @@ const FarmDetail: React.FC = () => {
 
   const handleEditPen = (pen: PenDetail) => {
     setEditingPen(pen);
+    setEditPenData({
+      penNumber: pen.pen_number,
+      lengthMeters: pen.length_meters,
+      widthMeters: pen.width_meters
+    });
     setIsEditPenOpen(true);
   };
 
@@ -453,8 +475,8 @@ const FarmDetail: React.FC = () => {
         if (error) {
           console.error('Error deleting pen:', error);
           alert('Error deleting pen. Please try again.');
-          return;
-        }
+        return;
+      }
 
         // Refresh pen details
         await fetchPenDetails();
@@ -491,8 +513,8 @@ const FarmDetail: React.FC = () => {
       if (error) {
         console.error('Error adding pen:', error);
         alert('Error adding pen. Please try again.');
-        return;
-      }
+            return;
+          }
 
       alert('Pen added successfully!');
       setIsAddPenOpen(false);
@@ -500,6 +522,80 @@ const FarmDetail: React.FC = () => {
       await fetchPenDetails();
     } catch (error) {
       console.error('Unexpected error adding pen:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  const handleEditFarmSubmit = async () => {
+    try {
+      const { error } = await supabase
+            .from('farm_customers')
+        .update({
+          farm_name: editFarmData.farmName,
+          farm_address: editFarmData.farmAddress,
+          contact_person: editFarmData.contactPerson,
+          contact_number: editFarmData.contactNumber,
+          updated_by: user?.name || 'admin',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', farmId);
+
+          if (error) {
+        console.error('Error updating farm:', error);
+        alert('Error updating farm. Please try again.');
+            return;
+          }
+
+      // Update local state
+            setFarmInfo({
+        farmName: editFarmData.farmName,
+        farmAddress: editFarmData.farmAddress,
+        contactPerson: editFarmData.contactPerson,
+        contactNumber: editFarmData.contactNumber
+      });
+
+      alert('Farm updated successfully!');
+      setIsEditFarmOpen(false);
+                } catch (error) {
+      console.error('Unexpected error updating farm:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  const handleEditPenSubmit = async () => {
+    if (!editingPen) return;
+
+    try {
+      const areaSquareMeters = editPenData.lengthMeters * editPenData.widthMeters;
+      const minBirds = Math.floor(areaSquareMeters * 0.090918367);
+      const maxBirds = Math.floor(areaSquareMeters * 0.83326531);
+
+      const { error } = await supabase
+        .from('farm_pens')
+        .update({
+          pen_number: editPenData.penNumber,
+          length_meters: editPenData.lengthMeters,
+          width_meters: editPenData.widthMeters,
+          area_square_meters: areaSquareMeters,
+          min_birds: minBirds,
+          max_birds: maxBirds,
+          updated_by: user?.name || 'admin',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingPen.id);
+
+      if (error) {
+        console.error('Error updating pen:', error);
+        alert('Error updating pen. Please try again.');
+        return;
+      }
+
+      alert('Pen updated successfully!');
+      setIsEditPenOpen(false);
+      setEditingPen(null);
+      await fetchPenDetails();
+    } catch (error) {
+      console.error('Unexpected error updating pen:', error);
       alert('An unexpected error occurred. Please try again.');
     }
   };
@@ -681,13 +777,13 @@ const FarmDetail: React.FC = () => {
                               >
                                 Delete
                               </button>
-                            </td>
+                                  </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
                           <td colSpan={5} className="px-4 py-3 text-center text-sm text-gray-500">No pen details available</td>
-                        </tr>
+                                </tr>
                       )}
                           </tbody>
                         </table>
@@ -789,11 +885,11 @@ const FarmDetail: React.FC = () => {
                       </div>
                         )}
                       </div>
-              </div>
+                      </div>
             )}
           </>
             )}
-      </div>
+                      </div>
 
       {/* Feed Delivery Modal */}
       {isFeedDeliveryOpen && (
@@ -807,7 +903,7 @@ const FarmDetail: React.FC = () => {
                 >
                   &times;
                 </button>
-            </div>
+                      </div>
             
             <div className="p-6 space-y-4">
               {/* Feed Type */}
@@ -827,8 +923,8 @@ const FarmDetail: React.FC = () => {
                       <span className="text-sm text-gray-700">{type}</span>
                     </label>
                   ))}
-                  </div>
-                </div>
+                      </div>
+                      </div>
                 
               {/* Number of Bags */}
               <div>
@@ -840,7 +936,7 @@ const FarmDetail: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                       min="0"
                 />
-              </div>
+                    </div>
 
               {/* Delivery Number */}
               <div>
@@ -852,7 +948,7 @@ const FarmDetail: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 min="0"
                               />
-              </div>
+                      </div>
 
               {/* Delivery Image */}
               <div>
@@ -863,11 +959,11 @@ const FarmDetail: React.FC = () => {
                   onChange={handleFeedDeliveryImageUpload}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
-            </div>
-            
+        </div>
+      </div>
+
             <div className="flex justify-end space-x-3 p-6 border-t">
-                              <button
+                  <button 
                 onClick={() => setIsFeedDeliveryOpen(false)}
                 className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
               >
@@ -878,7 +974,7 @@ const FarmDetail: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Save
-                    </button>
+                  </button>
                   </div>
                       </div>
                     </div>
@@ -890,13 +986,13 @@ const FarmDetail: React.FC = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center p-6 border-b">
               <h3 className="text-xl font-semibold text-gray-800">Purchase Delivery</h3>
-              <button 
+                <button 
                 onClick={() => setIsPurchaseDeliveryOpen(false)} 
-                className="text-gray-500 hover:text-gray-800 text-2xl"
-              >
-                &times;
-              </button>
-                        </div>
+                  className="text-gray-500 hover:text-gray-800 text-2xl"
+                >
+                  &times;
+                </button>
+            </div>
             
             <div className="p-6 space-y-4">
               {/* Invoice Number */}
@@ -907,11 +1003,11 @@ const FarmDetail: React.FC = () => {
                   value={purchaseDeliveryData.invoiceNumber}
                   onChange={(e) => handlePurchaseDeliveryChange('invoiceNumber', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                        </div>
-
+                    />
+                  </div>
+                  
               {/* Amount */}
-              <div>
+                  <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
                 <input
                   type="number"
@@ -921,8 +1017,8 @@ const FarmDetail: React.FC = () => {
                   min="0"
                   step="0.01"
                 />
-                        </div>
-
+                </div>
+                
               {/* Invoice Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Image</label>
@@ -932,9 +1028,9 @@ const FarmDetail: React.FC = () => {
                   onChange={handlePurchaseDeliveryImageUpload}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                      </div>
                     </div>
-                  
+              </div>
+
             <div className="flex justify-end space-x-3 p-6 border-t">
                     <button
                 onClick={() => setIsPurchaseDeliveryOpen(false)}
@@ -948,9 +1044,9 @@ const FarmDetail: React.FC = () => {
               >
                 Save
                     </button>
-            </div>
-          </div>
-        </div>
+                    </div>
+                </div>
+              </div>
       )}
 
       {/* Add Pen Modal */}
@@ -967,14 +1063,14 @@ const FarmDetail: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
+                                  </div>
             
             <div className="p-6 space-y-4">
               {/* Pen Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Pen Number:</label>
-                <input
-                  type="number"
+                                    <input
+                                      type="number"
                   min="1"
                   value={newPenData.penNumber}
                   onChange={(e) => setNewPenData(prev => ({ ...prev, penNumber: parseInt(e.target.value) || 1 }))}
@@ -988,10 +1084,175 @@ const FarmDetail: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Length (meters):</label>
                 <input
                   type="number"
-                  min="0"
+                                      min="0"
                   step="0.1"
                   value={newPenData.lengthMeters}
                   onChange={(e) => setNewPenData(prev => ({ ...prev, lengthMeters: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter length in meters"
+                />
+              </div>
+
+              {/* Width */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Width (meters):</label>
+                              <input
+                                type="number"
+                                min="0"
+                  step="0.1"
+                  value={newPenData.widthMeters}
+                  onChange={(e) => setNewPenData(prev => ({ ...prev, widthMeters: parseFloat(e.target.value) || 0 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter width in meters"
+                />
+                  </div>
+                  
+              {/* Preview */}
+              {newPenData.lengthMeters > 0 && newPenData.widthMeters > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-700 mb-2">Pen Preview:</h4>
+                  <div className="text-sm text-gray-600">
+                    <div>Dimensions: {newPenData.lengthMeters}m × {newPenData.widthMeters}m</div>
+                    <div>Area: {(newPenData.lengthMeters * newPenData.widthMeters).toFixed(1)}m²</div>
+                    <div>Capacity: Upto {Math.floor(newPenData.lengthMeters * newPenData.widthMeters * 0.83326531)} birds</div>
+                      </div>
+                    </div>
+                  )}
+                  
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                    <button
+                  onClick={handleAddPenSubmit}
+                  disabled={newPenData.lengthMeters <= 0 || newPenData.widthMeters <= 0}
+                  className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                    >
+                  Add Pen
+                    </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Farm Modal */}
+      {isEditFarmOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Edit Farm Information</h3>
+              <button
+                onClick={() => setIsEditFarmOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Farm Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Farm Name:</label>
+                <input
+                  type="text"
+                  value={editFarmData.farmName}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, farmName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter farm name"
+                />
+              </div>
+
+              {/* Farm Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Farm Address:</label>
+                <textarea
+                  value={editFarmData.farmAddress}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, farmAddress: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter farm address"
+                  rows={3}
+                />
+              </div>
+
+              {/* Contact Person */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person:</label>
+                <input
+                  type="text"
+                  value={editFarmData.contactPerson}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, contactPerson: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter contact person name"
+                />
+              </div>
+
+              {/* Contact Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number:</label>
+                <input
+                  type="text"
+                  value={editFarmData.contactNumber}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, contactNumber: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter contact number"
+                />
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleEditFarmSubmit}
+                  disabled={!editFarmData.farmName.trim()}
+                  className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
+                >
+                  Update Farm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Pen Modal */}
+      {isEditPenOpen && editingPen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Edit Pen {editingPen.pen_number}</h3>
+              <button
+                onClick={() => setIsEditPenOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {/* Pen Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Pen Number:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editPenData.penNumber}
+                  onChange={(e) => setEditPenData(prev => ({ ...prev, penNumber: parseInt(e.target.value) || 1 }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  placeholder="Enter pen number"
+                />
+              </div>
+
+              {/* Length */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Length (meters):</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={editPenData.lengthMeters}
+                  onChange={(e) => setEditPenData(prev => ({ ...prev, lengthMeters: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
                   placeholder="Enter length in meters"
                 />
@@ -1004,21 +1265,21 @@ const FarmDetail: React.FC = () => {
                   type="number"
                   min="0"
                   step="0.1"
-                  value={newPenData.widthMeters}
-                  onChange={(e) => setNewPenData(prev => ({ ...prev, widthMeters: parseFloat(e.target.value) || 0 }))}
+                  value={editPenData.widthMeters}
+                  onChange={(e) => setEditPenData(prev => ({ ...prev, widthMeters: parseFloat(e.target.value) || 0 }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
                   placeholder="Enter width in meters"
                 />
               </div>
 
               {/* Preview */}
-              {newPenData.lengthMeters > 0 && newPenData.widthMeters > 0 && (
+              {editPenData.lengthMeters > 0 && editPenData.widthMeters > 0 && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-700 mb-2">Pen Preview:</h4>
+                  <h4 className="font-medium text-gray-700 mb-2">Updated Pen Preview:</h4>
                   <div className="text-sm text-gray-600">
-                    <div>Dimensions: {newPenData.lengthMeters}m × {newPenData.widthMeters}m</div>
-                    <div>Area: {(newPenData.lengthMeters * newPenData.widthMeters).toFixed(1)}m²</div>
-                    <div>Capacity: Upto {Math.floor(newPenData.lengthMeters * newPenData.widthMeters * 0.83326531)} birds</div>
+                    <div>Dimensions: {editPenData.lengthMeters}m × {editPenData.widthMeters}m</div>
+                    <div>Area: {(editPenData.lengthMeters * editPenData.widthMeters).toFixed(1)}m²</div>
+                    <div>Capacity: Upto {Math.floor(editPenData.lengthMeters * editPenData.widthMeters * 0.83326531)} birds</div>
                   </div>
                 </div>
               )}
@@ -1026,11 +1287,11 @@ const FarmDetail: React.FC = () => {
               {/* Save Button */}
               <div className="flex justify-end pt-4">
                 <button
-                  onClick={handleAddPenSubmit}
-                  disabled={newPenData.lengthMeters <= 0 || newPenData.widthMeters <= 0}
+                  onClick={handleEditPenSubmit}
+                  disabled={editPenData.lengthMeters <= 0 || editPenData.widthMeters <= 0}
                   className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
                 >
-                  Add Pen
+                  Update Pen
                 </button>
               </div>
             </div>
