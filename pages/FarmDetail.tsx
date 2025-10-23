@@ -80,9 +80,10 @@ const FarmDetail: React.FC = () => {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-        .select('*')
+          .select('*')
           .eq('id', user.id)
-        .single();
+          .single();
+        console.log('Fetched user profile:', profile);
         setUser(profile);
       }
     };
@@ -100,14 +101,14 @@ const FarmDetail: React.FC = () => {
         if (farmId) {
           const { data: farmData, error: farmError } = await supabase
             .from('farm_customers')
-            .select('*')
+          .select('*')
             .eq('id', farmId)
-            .single();
+          .single();
 
           if (farmError) {
             console.error('Error fetching farm info:', farmError);
             setError('Farm not found');
-            return;
+          return;
           }
 
           if (farmData) {
@@ -484,7 +485,10 @@ const FarmDetail: React.FC = () => {
         </div>
 
         {/* Admin View - General Info and Pen Details Tables */}
-        {user?.role === Role.Admin ? (
+        {(() => {
+          console.log('User role check:', user?.role, 'Role.Admin:', Role.Admin, 'Is Admin:', user?.role === Role.Admin);
+          return user?.role === Role.Admin;
+        })() ? (
           <>
             {/* General Info Table */}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
@@ -555,6 +559,7 @@ const FarmDetail: React.FC = () => {
         ) : (
           <>
             {/* Farmer View - Deliveries */}
+            {console.log('Rendering farmer view for role:', user?.role)}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Deliveries</h2>
               <div className="grid grid-cols-1 gap-4">
