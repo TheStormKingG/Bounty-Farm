@@ -97,6 +97,16 @@ const FlockDetail: React.FC = () => {
     litterMoisture: 'Dry-Dusty',
     lightIntensityLx: 0
   });
+  
+  // Feed Delivery state
+  const [isFeedDeliveryOpen, setIsFeedDeliveryOpen] = useState(false);
+  const [feedDeliverySubmitted, setFeedDeliverySubmitted] = useState(false);
+  const [feedDeliveryData, setFeedDeliveryData] = useState({
+    feedType: 'Starter',
+    numberOfBags: 0,
+    deliveryNumber: 0,
+    deliveryImage: null as File | null
+  });
 
   // Toggle week expansion
   const toggleWeekExpansion = (week: number) => {
@@ -167,6 +177,25 @@ const FlockDetail: React.FC = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Handle Feed Delivery data changes
+  const handleFeedDeliveryChange = (field: string, value: any) => {
+    setFeedDeliveryData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle Feed Delivery image upload
+  const handleFeedDeliveryImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFeedDeliveryData(prev => ({
+        ...prev,
+        deliveryImage: file
+      }));
+    }
   };
 
   // Check if today is Monday (TEMPORARILY ALWAYS TRUE FOR TESTING)
@@ -483,6 +512,111 @@ const FlockDetail: React.FC = () => {
       
     } catch (error) {
       console.error('Unexpected error saving Testing Thursdays data:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  // Save Feed Delivery data to database
+  const saveFeedDeliveryData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check for existing data
+      const { data: existingData, error: checkError } = await supabase
+        .from('feed_delivery')
+        .select('id')
+        .eq('flock_id', flockId)
+        .eq('date', today)
+        .eq('delivery_number', feedDeliveryData.deliveryNumber)
+        .single();
+
+      let dataToSave = {
+        flock_id: flockId,
+        farm_name: farmInfo.farmName,
+        date: today,
+        feed_type: feedDeliveryData.feedType,
+        number_of_bags: feedDeliveryData.numberOfBags,
+        delivery_number: feedDeliveryData.deliveryNumber,
+        delivery_image_url: null, // Will be updated after image upload
+        created_by: user?.email || 'farmer',
+        updated_by: user?.email || 'farmer'
+      };
+
+      if (existingData) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('feed_delivery')
+          .update(dataToSave)
+          .eq('id', existingData.id);
+
+        if (updateError) {
+          console.error('Error updating Feed Delivery data:', updateError);
+          alert('Error updating Feed Delivery data. Please try again.');
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('feed_delivery')
+          .insert([dataToSave]);
+
+        if (insertError) {
+          console.error('Error inserting Feed Delivery data:', insertError);
+          alert('Error saving Feed Delivery data. Please try again.');
+          return;
+        }
+      }
+
+      // Handle image upload if present
+      if (feedDeliveryData.deliveryImage) {
+        try {
+          const fileExt = feedDeliveryData.deliveryImage.name.split('.').pop();
+          const fileName = `${flockId}_${today}_delivery_${feedDeliveryData.deliveryNumber}.${fileExt}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('feed-delivery-images')
+            .upload(fileName, feedDeliveryData.deliveryImage);
+
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            alert('Feed Delivery data saved, but image upload failed. Please try uploading the image again.');
+          } else {
+            // Update the record with the image URL
+            const { data: imageData } = supabase.storage
+              .from('feed-delivery-images')
+              .getPublicUrl(fileName);
+
+            await supabase
+              .from('feed_delivery')
+              .update({ delivery_image_url: imageData.publicUrl })
+              .eq('flock_id', flockId)
+              .eq('date', today)
+              .eq('delivery_number', feedDeliveryData.deliveryNumber);
+          }
+        } catch (imageError) {
+          console.error('Error handling image upload:', imageError);
+          alert('Feed Delivery data saved, but image upload failed. Please try uploading the image again.');
+        }
+      }
+
+      console.log('Successfully saved Feed Delivery data:', dataToSave);
+      alert('Feed Delivery data saved successfully!');
+      setIsFeedDeliveryOpen(false);
+      
+      // Mark Feed Delivery as submitted
+      setFeedDeliverySubmitted(true);
+      console.log('Feed Delivery marked as submitted');
+      
+      // Reset form data
+      setFeedDeliveryData({
+        feedType: 'Starter',
+        numberOfBags: 0,
+        deliveryNumber: 0,
+        deliveryImage: null
+      });
+      
+    } catch (error) {
+      console.error('Unexpected error saving Feed Delivery data:', error);
       alert('An unexpected error occurred. Please try again.');
     }
   };
@@ -945,6 +1079,29 @@ const FlockDetail: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Feed Delivery Button - Always visible */}
+        <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+          <button
+            onClick={() => setIsFeedDeliveryOpen(true)}
+            className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
+              feedDeliverySubmitted
+                ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
+                : 'text-white'
+            }`}
+            style={feedDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+            onMouseEnter={feedDeliverySubmitted ? (e) => {
+              e.target.style.backgroundColor = '#f5f0d8';
+              e.target.style.transform = 'translateY(-2px) scale(1.02)';
+            } : (e) => e.target.style.backgroundColor = '#e67a35'}
+            onMouseLeave={feedDeliverySubmitted ? (e) => {
+              e.target.style.backgroundColor = '#fffae5';
+              e.target.style.transform = 'translateY(0) scale(1)';
+            } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+          >
+            Feed Delivery{feedDeliverySubmitted && ' (Submitted)'}
+          </button>
+        </div>
 
         {/* Week-by-Week Tracking */}
         <div className="bg-white rounded-lg shadow-md mt-6">
@@ -2022,6 +2179,142 @@ const FlockDetail: React.FC = () => {
                 </button>
                 <button
                   onClick={saveTestingThursdaysData}
+                  className="px-4 py-2 text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: '#ff8c42' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                >
+                  Save Data
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feed Delivery Popup Modal */}
+        {isFeedDeliveryOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Feed Delivery - {farmInfo.farmName}
+                </h3>
+                <button
+                  onClick={() => setIsFeedDeliveryOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Feed Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
+                  <div className="space-y-2">
+                    {['Starter', 'Grower', 'Finisher'].map((type) => (
+                      <label key={type} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="feedType"
+                          value={type}
+                          checked={feedDeliveryData.feedType === type}
+                          onChange={(e) => handleFeedDeliveryChange('feedType', e.target.value)}
+                          className="mr-2 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="text-gray-700">{type}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Number of Bags */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Number of Bags:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={feedDeliveryData.numberOfBags}
+                    onChange={(e) => handleFeedDeliveryChange('numberOfBags', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter number of bags"
+                  />
+                </div>
+
+                {/* Delivery Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Number:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={feedDeliveryData.deliveryNumber}
+                    onChange={(e) => handleFeedDeliveryChange('deliveryNumber', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter delivery number"
+                  />
+                </div>
+
+                {/* Delivery Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Image:</label>
+                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                    <div className="space-y-1 text-center">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <div className="flex text-sm text-gray-600">
+                        <label
+                          htmlFor="delivery-image"
+                          className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500"
+                        >
+                          <span>Upload an image</span>
+                          <input
+                            id="delivery-image"
+                            name="delivery-image"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFeedDeliveryImageUpload}
+                            className="sr-only"
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    </div>
+                  </div>
+                  {feedDeliveryData.deliveryImage && (
+                    <div className="mt-2">
+                      <p className="text-sm text-green-600">Selected: {feedDeliveryData.deliveryImage.name}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 p-6 border-t">
+                <button
+                  onClick={() => setIsFeedDeliveryOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveFeedDeliveryData}
                   className="px-4 py-2 text-white rounded-lg transition-colors"
                   style={{ backgroundColor: '#ff8c42' }}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
