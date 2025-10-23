@@ -1636,54 +1636,68 @@ const FarmDetail: React.FC = () => {
           ) : null;
         })()}
 
-        {/* Received Dispatches Section - Admin Only */}
-        {user?.role === Role.Admin && receivedDispatches.length > 0 && (
-          <>
-            {console.log('Received dispatches:', receivedDispatches)}
-            {console.log('Dispatches:', dispatches)}
-          <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">Received Dispatches</h2>
-            <div className="space-y-4">
-              {receivedDispatches.map((receipt, index) => {
-                const timer = dispatchTimers[receipt.id] || 0;
-                const isEditable = isFarmerView && timer > 0;
-                const isExpanded = expandedReceivedDispatches.has(receipt.id);
-                
-                return (
-                  <div key={receipt.id} className="mb-4">
-                    {/* Header with expand/collapse button */}
-                    <button
-                      onClick={() => toggleExpandedReceivedDispatch(receipt.id)}
-                      className="w-full text-white px-4 py-3 rounded-lg transition-colors flex justify-between items-center"
-                      style={{ backgroundColor: '#ff8c42' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                    >
-                      <div className="flex items-center">
-                        <h3 className="text-lg font-semibold text-white">
-                          {receipt.dispatchNumber}
-                        </h3>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <p className="text-sm text-white opacity-90">
-                          Confirmed by: {receipt.confirmedBy} • {new Date(receipt.confirmedAt).toLocaleString()}
-                        </p>
-                        <svg
-                          className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </button>
-                    
-                    {isEditable && (
-                      <div className="text-right mt-2">
-                        <div className="text-sm text-gray-600 mb-1">Edit Time Remaining:</div>
-                        <div className={`text-lg font-bold ${timer < 300 ? 'text-red-600' : 'text-green-600'}`}>
-                          {formatTimer(timer)}
+        {/* Deliveries */}
+        <div className="bg-white rounded-lg shadow-md mb-6 p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Deliveries</h2>
+          <div className="grid grid-cols-1 gap-4">
+            {/* Feed Button */}
+            <button
+              onClick={() => setIsFeedDeliveryOpen(true)}
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 h-16 flex items-center justify-center w-full ${
+                feedDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
+              }`}
+              onMouseEnter={feedDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67e22'}
+              onMouseLeave={feedDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            >
+              Feed{feedDeliverySubmitted && ' ✓'}
+            </button>
+
+            {/* Purchase Delivery Button */}
+            <button
+              onClick={() => setIsPurchaseDeliveryOpen(true)}
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 h-16 flex items-center justify-center w-full ${
+                purchaseDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
+              }`}
+              onMouseEnter={purchaseDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67e22'}
+              onMouseLeave={purchaseDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            >
+              Purchase{purchaseDeliverySubmitted && ' ✓'}
+            </button>
+          </div>
+        </div>
+
+        {/* Pens */}
+        <div className="bg-white rounded-lg shadow-md">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">Pens</h2>
+            </div>
+          </div>
+
+          {/* Pen Cards Grid */}
+          <div className="p-6">
+            {flocks.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-gray-400 text-4xl">🐔</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Pens Found</h3>
+                <p className="text-gray-500 mb-6">
+                  Add your first pen to start tracking poultry operations.
+                </p>
+              </div>
                         </div>
                       </div>
                     )}
