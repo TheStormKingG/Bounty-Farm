@@ -184,7 +184,7 @@ const Farm: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {farmCustomers.map(farm => (
-              <div key={farm.id} className="bg-[#fffae5] rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
+              <div key={farm.id} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
                 {/* Clickable Header */}
                 <button 
                   onClick={() => handleFarmClick(farm)}
