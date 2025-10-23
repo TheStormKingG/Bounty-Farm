@@ -1103,7 +1103,35 @@ const FlockDetail: React.FC = () => {
           </button>
         </div>
 
-        {/* Week-by-Week Tracking */}
+        {/* Pen Management */}
+        <div className="bg-white rounded-lg shadow-md mt-6">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">Pen Management</h2>
+            </div>
+          </div>
+
+          {/* Pen Cards Grid */}
+          <div className="p-6">
+            <div className="text-center py-12">
+              <div className="w-24 h-24 mx-auto mb-6 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-400 text-4xl">🏠</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">Pen Management</h3>
+              <p className="text-gray-500 mb-6">
+                Manage and track individual pens within this flock.
+              </p>
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-lg max-w-md mx-auto">
+                <p className="text-blue-800 font-semibold mb-2">Coming Soon...</p>
+                <p className="text-blue-700">
+                  Pen management features will be available in the next update.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Week-by-Week Tracking - MOVED TO GROW-OUT PAGE */}
         <div className="bg-white rounded-lg shadow-md mt-6">
           <div className="p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800">Week-by-Week Tracking</h2>
@@ -1252,175 +1280,91 @@ const FlockDetail: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => setIsTodaysInfoOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  ×
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
                 </div>
               
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-6">
                 {/* Culls */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleItemExpansion('culls')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Culls</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedItems.has('culls') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedItems.has('culls') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={todaysData.culls}
-                        onChange={(e) => handleTodaysDataChange('culls', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter number of culls"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-                </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Culls:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={todaysData.culls}
+                    onChange={(e) => handleTodaysDataChange('culls', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter number of culls"
+                  />
                 </div>
 
                 {/* Runts */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleItemExpansion('runts')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Runts</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedItems.has('runts') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedItems.has('runts') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={todaysData.runts}
-                        onChange={(e) => handleTodaysDataChange('runts', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter number of runts"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-              </div>
-                  )}
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Runts:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={todaysData.runts}
+                    onChange={(e) => handleTodaysDataChange('runts', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter number of runts"
+                  />
+                </div>
 
                 {/* Deaths */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleItemExpansion('deaths')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Deaths</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedItems.has('deaths') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedItems.has('deaths') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={todaysData.deaths}
-                        onChange={(e) => handleTodaysDataChange('deaths', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter number of deaths"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-                </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Deaths:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={todaysData.deaths}
+                    onChange={(e) => handleTodaysDataChange('deaths', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter number of deaths"
+                  />
                 </div>
 
-                {/* Feed Used */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleItemExpansion('feedUsed')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Feed Used</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedItems.has('feedUsed') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedItems.has('feedUsed') && (
-                    <div className="p-4 border-t border-gray-200 space-y-4">
-                      {/* Feed Type Radio Options */}
+                {/* Feed Type */}
                 <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
-                        <div className="space-y-2">
-                          {['Starter', 'Grower', 'Finisher'].map((type) => (
-                            <label key={type} className="flex items-center">
-                              <input
-                                type="radio"
-                                name="feedType"
-                                value={type}
-                                checked={todaysData.feedType === type}
-                                onChange={(e) => handleTodaysDataChange('feedType', e.target.value)}
-                                className="mr-2 text-green-600 focus:ring-green-500"
-                              />
-                              <span className="text-gray-700">{type}</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Feed Type:</label>
+                  <div className="space-y-2">
+                    {['Starter', 'Grower', 'Finisher'].map((type) => (
+                      <label key={type} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="feedType"
+                          value={type}
+                          checked={todaysData.feedType === type}
+                          onChange={(e) => handleTodaysDataChange('feedType', e.target.value)}
+                          className="mr-2 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="text-gray-700">{type}</span>
                       </label>
-                          ))}
-                </div>
-                </div>
-                      
-                      {/* Feed Amount */}
-                <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Amount Used:</label>
-                      <input
-                          type="number"
-                          value={todaysData.feedUsed}
-                          onChange={(e) => handleTodaysDataChange('feedUsed', parseInt(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                          placeholder="Enter amount of feed used"
-                          min="0"
-                          step="1"
-                          onFocus={(e) => e.target.select()}
-                      />
-                </div>
-                </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
 
+                {/* Feed Amount */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Amount Used:</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={todaysData.feedUsed}
+                    onChange={(e) => handleTodaysDataChange('feedUsed', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter amount of feed used"
+                  />
                 </div>
+              </div>
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 p-6 border-t">
@@ -2007,165 +1951,79 @@ const FlockDetail: React.FC = () => {
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
               <div className="flex justify-between items-center p-6 border-b">
                 <h3 className="text-xl font-semibold text-gray-800">
-                  Testing Thursdays - {new Date().toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
+                  Testing Thursdays - {farmInfo.farmName}
                 </h3>
                 <button
                   onClick={() => setIsTestingThursdaysOpen(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  ×
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-              
-              <div className="p-6 space-y-4">
+
+              <div className="p-6 space-y-6">
                 {/* Ammonia Levels */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleTestingItemExpansion('ammoniaLevels')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Ammonia Levels (PPM)</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('ammoniaLevels') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedTestingItems.has('ammoniaLevels') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={testingThursdaysData.ammoniaLevelsPpm}
-                        onChange={(e) => handleTestingThursdaysChange('ammoniaLevelsPpm', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter ammonia levels in PPM"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ammonia Levels (PPM):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={testingThursdaysData.ammoniaLevelsPpm}
+                    onChange={(e) => handleTestingThursdaysChange('ammoniaLevelsPpm', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter ammonia levels in PPM"
+                  />
                 </div>
 
                 {/* Drinkers Flow Rate */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleTestingItemExpansion('drinkersFlowRate')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Drinkers Flow Rate (ml/min)</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('drinkersFlowRate') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedTestingItems.has('drinkersFlowRate') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={testingThursdaysData.drinkersFlowRateMlMin}
-                        onChange={(e) => handleTestingThursdaysChange('drinkersFlowRateMlMin', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter flow rate in ml/min"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Drinkers Flow Rate (ml/min):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={testingThursdaysData.drinkersFlowRateMlMin}
+                    onChange={(e) => handleTestingThursdaysChange('drinkersFlowRateMlMin', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter flow rate in ml/min"
+                  />
                 </div>
 
                 {/* Litter Moisture */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleTestingItemExpansion('litterMoisture')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Litter Moisture</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('litterMoisture') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedTestingItems.has('litterMoisture') && (
-                    <div className="p-4 border-t border-gray-200 space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Moisture Level:</label>
-                        <div className="space-y-2">
-                          {['Dry-Dusty', 'Damp-Clumpy', 'Wet-Sticky'].map((level) => (
-                            <label key={level} className="flex items-center">
-                              <input
-                                type="radio"
-                                name="litterMoisture"
-                                value={level}
-                                checked={testingThursdaysData.litterMoisture === level}
-                                onChange={(e) => handleTestingThursdaysChange('litterMoisture', e.target.value)}
-                                className="mr-2 text-green-600 focus:ring-green-500"
-                              />
-                              <span className="text-gray-700">{level}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Litter Moisture:</label>
+                  <div className="space-y-2">
+                    {['Dry-Dusty', 'Damp-Clumpy', 'Wet-Sticky'].map((level) => (
+                      <label key={level} className="flex items-center">
+                        <input
+                          type="radio"
+                          name="litterMoisture"
+                          value={level}
+                          checked={testingThursdaysData.litterMoisture === level}
+                          onChange={(e) => handleTestingThursdaysChange('litterMoisture', e.target.value)}
+                          className="mr-2 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="text-gray-700">{level}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Light Intensity */}
-                <div className="border border-gray-200 rounded-lg">
-                  <button
-                    onClick={() => toggleTestingItemExpansion('lightIntensity')}
-                    className="w-full px-4 py-3 text-left rounded-lg flex justify-between items-center transition-colors"
-                    style={{ backgroundColor: '#ff8c42' }}
-                    onMouseEnter={(e) => e.target.style.backgroundColor = '#e67e22'}
-                    onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
-                  >
-                    <span className="font-medium text-white">Light Intensity (lx)</span>
-                    <svg
-                      className={`w-5 h-5 transition-transform ${expandedTestingItems.has('lightIntensity') ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {expandedTestingItems.has('lightIntensity') && (
-                    <div className="p-4 border-t border-gray-200">
-                      <input
-                        type="number"
-                        value={testingThursdaysData.lightIntensityLx}
-                        onChange={(e) => handleTestingThursdaysChange('lightIntensityLx', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        placeholder="Enter light intensity in lux"
-                        min="0"
-                        onFocus={(e) => e.target.select()}
-                      />
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Light Intensity (lx):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={testingThursdaysData.lightIntensityLx}
+                    onChange={(e) => handleTestingThursdaysChange('lightIntensityLx', parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                    style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                    placeholder="Enter light intensity in lux"
+                  />
                 </div>
               </div>
 
