@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../src/supabase';
 import { Role } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface FarmInfo {
   farmName: string;
@@ -38,6 +39,7 @@ interface PenDetail {
 const FarmDetail: React.FC = () => {
   const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [farmInfo, setFarmInfo] = useState<FarmInfo>({
     farmName: '',
@@ -69,45 +71,6 @@ const FarmDetail: React.FC = () => {
     invoiceImage: null as File | null
   });
   const [purchaseDeliverySubmitted, setPurchaseDeliverySubmitted] = useState(false);
-  
-  // User state
-  const [user, setUser] = useState<any>(null);
-
-  // Get user info
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log('Auth user:', user);
-        if (user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-        .select('*')
-            .eq('id', user.id)
-        .single();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            // If profile doesn't exist, create a basic one from auth user
-            const basicProfile = {
-              id: user.id,
-              email: user.email,
-              role: 'Admin', // Default to Admin for now
-              name: user.email?.split('@')[0] || 'User'
-            };
-            console.log('Using basic profile:', basicProfile);
-            setUser(basicProfile);
-      } else {
-            console.log('Fetched user profile:', profile);
-            setUser(profile);
-          }
-      }
-    } catch (error) {
-        console.error('Error in getUser:', error);
-      }
-    };
-    getUser();
-  }, []);
 
   // Fetch farm information
   useEffect(() => {
@@ -127,8 +90,8 @@ const FarmDetail: React.FC = () => {
           if (farmError) {
             console.error('Error fetching farm info:', farmError);
             setError('Farm not found');
-          return;
-          }
+        return;
+      }
 
           if (farmData) {
             console.log('Farm data found:', farmData);
@@ -138,7 +101,7 @@ const FarmDetail: React.FC = () => {
               contactPerson: farmData.contact_person || '',
               contactNumber: farmData.contact_number || ''
             });
-          } else {
+      } else {
             console.log('No farm data found');
           }
         }
@@ -514,11 +477,7 @@ const FarmDetail: React.FC = () => {
           console.log('Role.Admin type:', typeof Role.Admin);
           console.log('=====================================');
           
-          // Force admin view for testing - remove this later
-          const forceAdmin = true;
-          console.log('Force admin:', forceAdmin);
-          
-          return user?.role === Role.Admin || forceAdmin;
+          return user?.role === Role.Admin;
         })() ? (
           <>
             {/* General Info Table */}
