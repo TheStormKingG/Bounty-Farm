@@ -30,6 +30,8 @@ const Farm: React.FC = () => {
       // For farmers, find their farm UUID and redirect to their specific farm detail page
       const findAndRedirectFarmer = async () => {
         try {
+          console.log('Looking for farm with name:', user.name);
+          
           const { data: farmData, error: farmError } = await supabase
             .from('farm_customers')
             .select('id, farm_name')
@@ -38,7 +40,21 @@ const Farm: React.FC = () => {
 
           if (farmError || !farmData) {
             console.error('Error finding farm customer for farmer redirect:', farmError);
-            setError(`Farm customer record not found for "${user.name}". Please contact administrator.`);
+            
+            // Try to find any farm with similar name
+            const { data: allFarms } = await supabase
+              .from('farm_customers')
+              .select('id, farm_name')
+              .ilike('farm_name', `%${user.name}%`);
+            
+            console.log('Available farms:', allFarms);
+            
+            if (allFarms && allFarms.length > 0) {
+              console.log('Found similar farm, redirecting to:', allFarms[0].id);
+              navigate(`/farm/${allFarms[0].id}`, { replace: true });
+            } else {
+              setError(`Farm customer record not found for "${user.name}". Please contact administrator.`);
+            }
             return;
           }
 
