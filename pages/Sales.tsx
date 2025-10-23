@@ -92,6 +92,9 @@ const Sales: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [invoiceDates, setInvoiceDates] = useState<{[key: string]: string}>({});
   
+  // Available hatches state
+  const [availableHatches, setAvailableHatches] = useState<any[]>([]);
+  
   // Modal states
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -183,10 +186,41 @@ const Sales: React.FC = () => {
       await fetchCustomers();
       await fetchSalesDispatch();
       await fetchInvoices();
+      await fetchAvailableHatches();
     };
 
     initializeData();
   }, []); // ✅ this closes the effect properly
+
+  const fetchAvailableHatches = async () => {
+    try {
+      const today = new Date();
+      const futureDate = new Date();
+      futureDate.setDate(today.getDate() + 21);
+      
+      const todayStr = today.toISOString().split('T')[0];
+      const futureStr = futureDate.toISOString().split('T')[0];
+      
+      const { data, error } = await supabase
+        .from('hatch_cycles')
+        .select('hatch_no, hatch_date, chicks_hatched, flocks_recvd')
+        .gte('hatch_date', todayStr)
+        .lte('hatch_date', futureStr)
+        .not('chicks_hatched', 'is', null)
+        .gt('chicks_hatched', 0)
+        .order('hatch_date', { ascending: true })
+        .limit(21);
+
+      if (error) {
+        console.error('Error fetching available hatches:', error);
+        return;
+      }
+
+      setAvailableHatches(data || []);
+    } catch (err) {
+      console.error('Unexpected error fetching available hatches:', err);
+    }
+  };
 
   const fetchInvoices = async () => {
     try {
@@ -1026,10 +1060,124 @@ const Sales: React.FC = () => {
           </div>
         )}
 
+      {/* Available Hatches Table */}
+      <div className="bg-white rounded-2xl p-6 shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-3xl font-bold text-gray-800">Available</h2>
+        </div>
+        
+        {/* Filtering Section */}
+        <div className="mb-6 mt-2">
+          {/* Date fields row */}
+          <div className="flex gap-2 mb-2">
+            <div className="w-1/2">
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                placeholder="Start Date"
+              />
+            </div>
+            <div className="w-1/2">
+              <input
+                type="date"
+                className="w-full px-3 py-2 bg-[#fffae5] rounded-2xl shadow-md text-sm"
+                placeholder="End Date"
+              />
+            </div>
+          </div>
+          {/* Search field row */}
+          <div className="w-full">
+            <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+              <input
+                type="text"
+                placeholder="Search..."
+                className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+              />
+              <button className="px-3 py-2 text-white hover:opacity-90" style={{ backgroundColor: '#ff8c42' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="M21 21l-4.35-4.35"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="mt-6" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div 
+            className="table-responsive overflow-auto flex-1" 
+            style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto' }}
+          >
+            <table className="modern-table min-w-full" style={{ tableLayout: 'auto', width: 'max-content' }}>
+              <thead className="sticky top-0 z-10" style={{
+                backgroundColor: '#ff8c42',
+                borderRadius: '8px 8px 0 0',
+                borderBottom: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <tr>
+                  {[
+                    'Hatch No.', 'Flocks', 'Total', 'File (view)'
+                  ].map((header, index) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                      style={{ 
+                        width: '150px', 
+                        minWidth: '150px',
+                        backgroundColor: '#ff8c42',
+                        color: 'white',
+                        fontWeight: '600',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="text-white font-medium text-xs">{header}</span>
+                        {header !== 'File (view)' && (
+                          <div className="ml-4 flex space-x-1">
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M8 9l4-4 4 4M8 15l4 4 4-4"/>
+                              </svg>
+                            </button>
+                            <button className="text-white hover:bg-white hover:bg-opacity-20 rounded p-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="M21 21l-4.35-4.35"/>
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {availableHatches.map((hatch) => (
+                  <tr key={hatch.hatch_no} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                    <td className="px-4 py-3 text-sm">{hatch.hatch_no}</td>
+                    <td className="px-4 py-3 text-sm">{hatch.flocks_recvd || 'N/A'}</td>
+                    <td className="px-4 py-3 text-sm">{hatch.chicks_hatched?.toLocaleString() || '0'}</td>
+                    <td className="px-4 py-3 text-sm space-x-2">
+                      <button 
+                        className="text-[#5C3A6B] hover:underline font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* Combined Filtering and Table Section */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-3xl font-bold text-gray-800">Purchase Orders</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Orders</h2>
                 <button
             onClick={async () => {
               const nextPO = await generateNextPONumber();
@@ -1238,7 +1386,7 @@ const Sales: React.FC = () => {
       {/* Invoices Table */}
       <div className="bg-white rounded-2xl p-6 shadow-md">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-3xl font-bold text-gray-800">Individual Invoices</h2>
+          <h2 className="text-3xl font-bold text-gray-800">Individual Orders</h2>
                         </div>
         
         {/* Filtering Section */}
