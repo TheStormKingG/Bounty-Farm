@@ -483,59 +483,107 @@ const FarmDetail: React.FC = () => {
             {/* General Info Table */}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">General Info</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    <tr>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{farmInfo.farmName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.farmAddress}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.contactPerson}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{farmInfo.contactNumber}</td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div className="mt-6 w-full" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+                <div 
+                  className="overflow-auto flex-1 w-full" 
+                  style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto', width: '100%' }}
+                >
+                  <table className="modern-table w-full" style={{ tableLayout: 'auto', width: '100%', minWidth: '100%' }}>
+                    <thead className="sticky top-0 z-10" style={{
+                      backgroundColor: '#ff8c42',
+                      borderRadius: '8px 8px 0 0',
+                      borderBottom: 'none',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
+                      <tr>
+                        {['Name', 'Address', 'Contact', 'Phone'].map((header, index) => (
+                          <th
+                            key={header}
+                            className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                            style={{ 
+                              width: '25%', 
+                              minWidth: '25%',
+                              backgroundColor: '#ff8c42',
+                              color: 'white',
+                              fontWeight: '600',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                            }}
+                          >
+                            <div className="flex items-center">
+                              <span className="text-white font-medium text-xs">{header}</span>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                        <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B] break-words">{farmInfo.farmName}</td>
+                        <td className="px-4 py-3 text-sm break-words">{farmInfo.farmAddress}</td>
+                        <td className="px-4 py-3 text-sm break-words">{farmInfo.contactPerson}</td>
+                        <td className="px-4 py-3 text-sm break-words">{farmInfo.contactNumber}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-                    </div>
+            </div>
                     
             {/* Pen Details Table */}
             <div className="bg-white rounded-lg shadow-md mb-6 p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Pen Details</h2>
-                      <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pen #</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Length (m)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Width (m)</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
-                            </tr>
-                          </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {penDetails.length > 0 ? (
-                      penDetails.map((pen) => (
-                        <tr key={pen.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{pen.pen_number}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{pen.length_meters}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{pen.width_meters}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Upto {pen.max_birds} birds</td>
-                        </tr>
-                      ))
-                    ) : (
+              <div className="mt-6 w-full" style={{ maxHeight: '420px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+                <div 
+                  className="overflow-auto flex-1 w-full" 
+                  style={{ maxHeight: '360px', overflowX: 'auto', overflowY: 'auto', width: '100%' }}
+                >
+                  <table className="modern-table w-full" style={{ tableLayout: 'auto', width: '100%', minWidth: '100%' }}>
+                    <thead className="sticky top-0 z-10" style={{
+                      backgroundColor: '#ff8c42',
+                      borderRadius: '8px 8px 0 0',
+                      borderBottom: 'none',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}>
                       <tr>
-                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">No pen details available</td>
-                                </tr>
-                    )}
-                          </tbody>
-                        </table>
-                      </div>
+                        {['Pen #', 'Length', 'Width', 'Capacity'].map((header, index) => (
+                          <th
+                            key={header}
+                            className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
+                            style={{ 
+                              width: '25%', 
+                              minWidth: '25%',
+                              backgroundColor: '#ff8c42',
+                              color: 'white',
+                              fontWeight: '600',
+                              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                            }}
+                          >
+                            <div className="flex items-center">
+                              <span className="text-white font-medium text-xs">{header}</span>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {penDetails.length > 0 ? (
+                        penDetails.map((pen) => (
+                          <tr key={pen.id} className="text-sm text-[#333333] hover:bg-[#FFF8F0] transition-colors">
+                            <td className="px-4 py-3 text-sm font-medium text-[#5C3A6B] break-words">{pen.pen_number}</td>
+                            <td className="px-4 py-3 text-sm break-words">{pen.length_meters}</td>
+                            <td className="px-4 py-3 text-sm break-words">{pen.width_meters}</td>
+                            <td className="px-4 py-3 text-sm break-words">Upto {pen.max_birds} birds</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-3 text-center text-sm text-gray-500">No pen details available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
                     </div>
           </>
         ) : (
