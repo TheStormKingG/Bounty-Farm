@@ -1373,7 +1373,7 @@ const FarmDetail: React.FC = () => {
   };
 
   const handleFlockClick = (flock: Flock) => {
-    navigate(`/farm/${farmId}/flock/${flock.id}`, { 
+    navigate(`/farm/${farmId}/pen/${flock.flockNumber}`, { 
       state: { 
         flockName: flock.flockName,
         breed: flock.breed,
@@ -1384,7 +1384,8 @@ const FarmDetail: React.FC = () => {
         farmName: farmInfo.farmName,
         farmAddress: farmInfo.farmAddress,
         contactPerson: farmInfo.contactPerson,
-        contactNumber: farmInfo.contactNumber
+        contactNumber: farmInfo.contactNumber,
+        penNumber: flock.flockNumber
       }
     });
   };
@@ -1793,20 +1794,17 @@ const FarmDetail: React.FC = () => {
         {/* Deliveries */}
         <div className="bg-white rounded-lg shadow-md mb-6 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Deliveries</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {/* Feed Button */}
             <button
               onClick={() => setIsFeedDeliveryOpen(true)}
-              className={`aspect-square rounded-lg transition-all duration-200 text-lg font-semibold flex items-center justify-center ${
-                feedDeliverySubmitted
-                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
-                  : 'text-white'
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center ${
+                feedDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
               }`}
-              style={feedDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
               onMouseEnter={feedDeliverySubmitted ? (e) => {
                 e.target.style.backgroundColor = '#f5f0d8';
                 e.target.style.transform = 'translateY(-2px) scale(1.02)';
-              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              } : (e) => e.target.style.backgroundColor = '#e67e22'}
               onMouseLeave={feedDeliverySubmitted ? (e) => {
                 e.target.style.backgroundColor = '#fffae5';
                 e.target.style.transform = 'translateY(0) scale(1)';
@@ -1818,16 +1816,13 @@ const FarmDetail: React.FC = () => {
             {/* Purchase Delivery Button */}
             <button
               onClick={() => setIsPurchaseDeliveryOpen(true)}
-              className={`aspect-square rounded-lg transition-all duration-200 text-lg font-semibold flex items-center justify-center ${
-                purchaseDeliverySubmitted
-                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
-                  : 'text-white'
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center ${
+                purchaseDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
               }`}
-              style={purchaseDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
               onMouseEnter={purchaseDeliverySubmitted ? (e) => {
                 e.target.style.backgroundColor = '#f5f0d8';
                 e.target.style.transform = 'translateY(-2px) scale(1.02)';
-              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              } : (e) => e.target.style.backgroundColor = '#e67e22'}
               onMouseLeave={purchaseDeliverySubmitted ? (e) => {
                 e.target.style.backgroundColor = '#fffae5';
                 e.target.style.transform = 'translateY(0) scale(1)';
