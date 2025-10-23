@@ -1666,7 +1666,7 @@ const FarmDetail: React.FC = () => {
         )}
 
         {/* Feed Delivery Button */}
-        <div className="bg-white rounded-lg shadow-md mt-6 p-6">
+        <div className="bg-white rounded-lg shadow-md mb-6 p-6">
           <button
             onClick={() => setIsFeedDeliveryOpen(true)}
             className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
@@ -1688,11 +1688,11 @@ const FarmDetail: React.FC = () => {
           </button>
         </div>
 
-        {/* Pen Management */}
+        {/* Pens */}
         <div className="bg-white rounded-lg shadow-md">
           <div className="p-6 border-b border-gray-200">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-800">Pen Management</h2>
+              <h2 className="text-xl font-semibold text-gray-800">Pens</h2>
             </div>
           </div>
 
@@ -1709,83 +1709,15 @@ const FarmDetail: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {flocks.map(flock => (
-                  <div key={flock.id} className="bg-[#fffae5] rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
-                    {/* Clickable Header */}
-                    <button 
-                      onClick={() => handleFlockClick(flock)}
-                      className="w-full bg-[#ff8c42] rounded-xl px-4 py-3 mb-4 flex justify-between items-center shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-[#e67e22] cursor-pointer"
-                    >
-                      <span className="font-bold text-white uppercase text-sm tracking-wider">Pen {flock.flockNumber}</span>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                        <path d="M9 18l6-6-6-6"/>
-                      </svg>
-                    </button>
-
-                    {/* Flock Details */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Breed:</span>
-                        <span className="text-gray-800 text-sm flex-1">{flock.breed}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Date Started:</span>
-                        <span className="text-gray-800 text-sm flex-1">{new Date(flock.startDate).toLocaleDateString()}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Flock Age:</span>
-                        <span className="text-gray-800 text-sm flex-1">
-                          {(() => {
-                            const age = calculateFlockAge(flock.startDate);
-                            return `${age.weeks} weeks ${age.days} days`;
-                          })()}
-                        </span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Weight:</span>
-                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Mortality:</span>
-                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Starting Qty:</span>
-                        <span className="text-gray-800 text-sm flex-1">{flock.quantity.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Current Qty:</span>
-                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Current FCR:</span>
-                        <span className="text-gray-500 text-sm flex-1 italic">Coming Soon</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-gray-600 font-medium w-24 text-sm">Status:</span>
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          flock.status === 'Active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : flock.status === 'Completed'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {flock.status}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="pt-3 border-t border-gray-200">
-                      <div className="text-xs text-gray-500">
-                        <div>Created: {new Date(flock.createdAt).toLocaleDateString()}</div>
-                        {flock.updatedAt && (
-                          <div>Updated: {new Date(flock.updatedAt).toLocaleDateString()}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <button 
+                    key={flock.id}
+                    onClick={() => handleFlockClick(flock)}
+                    className="bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center"
+                  >
+                    Pen {flock.flockNumber}
+                  </button>
                 ))}
               </div>
             )}
