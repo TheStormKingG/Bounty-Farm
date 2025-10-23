@@ -21,6 +21,21 @@ interface Flock {
   updatedAt?: string;
 }
 
+interface PenDetail {
+  id: string;
+  farm_id: string;
+  pen_number: number;
+  length_meters: number;
+  width_meters: number;
+  area_square_meters: number;
+  min_birds: number;
+  max_birds: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
 interface Dispatch {
   id: string;
   invoiceId: string;
@@ -86,6 +101,7 @@ const FarmDetail: React.FC = () => {
   });
   
   const [flocks, setFlocks] = useState<Flock[]>([]);
+  const [penDetails, setPenDetails] = useState<PenDetail[]>([]);
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1077,8 +1093,31 @@ const FarmDetail: React.FC = () => {
     
     if (farmInfo.farmName && receivedDispatchesLoaded) {
       fetchFlocks();
+      fetchPenDetails();
     }
   }, [farmInfo.farmName, receivedDispatchesLoaded, farmId]);
+
+  // Fetch pen details
+  const fetchPenDetails = async () => {
+    try {
+      if (!farmId) return;
+      
+      const { data: penData, error } = await supabase
+        .from('farm_pens')
+        .select('*')
+        .eq('farm_id', farmId)
+        .order('pen_number', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching pen details:', error);
+        return;
+      }
+
+      setPenDetails(penData || []);
+    } catch (error) {
+      console.error('Error fetching pen details:', error);
+    }
+  };
 
   // Fetch dispatches when farm info is available
   useEffect(() => {
@@ -1794,11 +1833,11 @@ const FarmDetail: React.FC = () => {
         {/* Deliveries */}
         <div className="bg-white rounded-lg shadow-md mb-6 p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Deliveries</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Feed Button */}
             <button
               onClick={() => setIsFeedDeliveryOpen(true)}
-              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center ${
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 h-16 flex items-center justify-center w-full ${
                 feedDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
               }`}
               onMouseEnter={feedDeliverySubmitted ? (e) => {
@@ -1816,7 +1855,7 @@ const FarmDetail: React.FC = () => {
             {/* Purchase Delivery Button */}
             <button
               onClick={() => setIsPurchaseDeliveryOpen(true)}
-              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center ${
+              className={`bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 h-16 flex items-center justify-center w-full ${
                 purchaseDeliverySubmitted ? 'bg-[#fffae5] text-gray-800' : ''
               }`}
               onMouseEnter={purchaseDeliverySubmitted ? (e) => {
@@ -1855,15 +1894,29 @@ const FarmDetail: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {flocks.map(flock => (
-                  <button 
-                    key={flock.id}
-                    onClick={() => handleFlockClick(flock)}
-                    className="bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex items-center justify-center"
-                  >
-                    Pen {flock.flockNumber}
-                  </button>
-                ))}
+                {flocks.map(flock => {
+                  // Find pen details for this flock
+                  const penDetail = penDetails.find(pen => pen.pen_number === flock.flockNumber);
+                  
+                  return (
+                    <button 
+                      key={flock.id}
+                      onClick={() => handleFlockClick(flock)}
+                      className="bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex flex-col items-center justify-center p-2"
+                    >
+                      <div className="text-center">
+                        <div className="font-bold text-lg mb-1">Pen {flock.flockNumber}</div>
+                        {penDetail && (
+                          <div className="text-xs leading-tight">
+                            <div>{penDetail.length_meters}m × {penDetail.width_meters}m</div>
+                            <div>{penDetail.area_square_meters}m²</div>
+                            <div>Holds {penDetail.min_birds} to {penDetail.max_birds} Birds</div>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

@@ -21,6 +21,21 @@ interface Flock {
   notes?: string;
 }
 
+interface PenDetail {
+  id: string;
+  farm_id: string;
+  pen_number: number;
+  length_meters: number;
+  width_meters: number;
+  area_square_meters: number;
+  min_birds: number;
+  max_birds: number;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  updated_by: string;
+}
+
 const PenPage: React.FC = () => {
   const { farmId, penNumber } = useParams<{ farmId: string; penNumber: string }>();
   const location = useLocation();
@@ -35,6 +50,7 @@ const PenPage: React.FC = () => {
   });
   
   const [flocks, setFlocks] = useState<Flock[]>([]);
+  const [penDetails, setPenDetails] = useState<PenDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -70,6 +86,22 @@ const PenPage: React.FC = () => {
   const loadFlocks = async () => {
     try {
       setLoading(true);
+      
+      // Fetch pen details
+      if (farmId && penNumber) {
+        const { data: penData, error: penError } = await supabase
+          .from('farm_pens')
+          .select('*')
+          .eq('farm_id', farmId)
+          .eq('pen_number', parseInt(penNumber))
+          .single();
+
+        if (penError) {
+          console.error('Error fetching pen details:', penError);
+        } else {
+          setPenDetails(penData);
+        }
+      }
       
       // For now, we'll create mock flocks for the pen
       // In a real implementation, you'd fetch from the database
@@ -238,6 +270,22 @@ const PenPage: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Pen {penNumber}</h1>
               <p className="text-gray-600 mt-1">{farmInfo.farmName}</p>
+              {penDetails && (
+                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="font-semibold text-gray-700">Dimensions</div>
+                    <div className="text-gray-600">{penDetails.length_meters}m × {penDetails.width_meters}m</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="font-semibold text-gray-700">Surface Area</div>
+                    <div className="text-gray-600">{penDetails.area_square_meters}m²</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="font-semibold text-gray-700">Max Birds</div>
+                    <div className="text-gray-600">{penDetails.min_birds} to {penDetails.max_birds} birds</div>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               onClick={() => navigate(`/farm/${farmId}`)}

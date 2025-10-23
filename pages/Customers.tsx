@@ -83,7 +83,8 @@ const Customers: React.FC = () => {
   const handleAddFarmCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
+      // First, insert the farm customer
+      const { data: farmData, error } = await supabase
         .from('farm_customers')
         .insert([{
           farm_name: newFarmData.farmName,
@@ -91,27 +92,53 @@ const Customers: React.FC = () => {
           contact_person: newFarmData.contactPerson,
           contact_number: newFarmData.contactNumber,
           created_by: user?.email || 'admin'
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error adding farm customer:', error);
         setError('Failed to add farm customer: ' + error.message);
-      } else {
-        // Automatically create user for the farm customer
-        const userResult = await createFarmCustomerUser(newFarmData.farmName);
-        
-        if (userResult.success) {
-          console.log('Farm customer user created:', userResult.message);
-          alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nUser account created:\nEmail: ${userResult.email}\nPassword: ${userResult.password}`);
-        } else {
-          console.log('Farm customer user creation failed:', userResult.message);
-          alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nNote: User account creation failed - ${userResult.message}`);
-        }
-        
-        setIsFarmModalVisible(false);
-        setNewFarmData({});
-        fetchFarmCustomers(); // Refresh the table
+        return;
       }
+
+      // Then, insert pen details if they exist
+      if (newFarmData.penDetails && newFarmData.penDetails.length > 0) {
+        const penInserts = newFarmData.penDetails.map(pen => ({
+          farm_id: farmData.id,
+          pen_number: pen.penNumber,
+          length_meters: pen.length,
+          width_meters: pen.width,
+          area_square_meters: pen.area,
+          min_birds: pen.minBirds,
+          max_birds: pen.maxBirds,
+          created_by: user?.email || 'admin'
+        }));
+
+        const { error: penError } = await supabase
+          .from('farm_pens')
+          .insert(penInserts);
+
+        if (penError) {
+          console.error('Error adding pen details:', penError);
+          // Don't fail the entire operation, just log the error
+        }
+      }
+
+      // Automatically create user for the farm customer
+      const userResult = await createFarmCustomerUser(newFarmData.farmName);
+      
+      if (userResult.success) {
+        console.log('Farm customer user created:', userResult.message);
+        alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nUser account created:\nEmail: ${userResult.email}\nPassword: ${userResult.password}`);
+      } else {
+        console.log('Farm customer user creation failed:', userResult.message);
+        alert(`Farm customer "${newFarmData.farmName}" added successfully!\n\nNote: User account creation failed - ${userResult.message}`);
+      }
+      
+      setIsFarmModalVisible(false);
+      setNewFarmData({});
+      fetchFarmCustomers(); // Refresh the table
     } catch (err) {
       console.error('Unexpected error:', err);
       setError('An unexpected error occurred.');
@@ -821,7 +848,7 @@ const Customers: React.FC = () => {
       {/* Add Farm Modal */}
       {isFarmModalVisible && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 border-b pb-2">
               <h3 className="text-xl font-semibold text-gray-800">Add New Farm</h3>
               <button 
