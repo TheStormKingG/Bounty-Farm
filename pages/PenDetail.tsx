@@ -108,7 +108,7 @@ const PenDetail: React.FC = () => {
   const loadSubmittedDates = async () => {
     try {
       const { data, error } = await supabase
-        .from('todays_info')
+        .from('daily_flock_data')
         .select('date')
         .eq('flock_id', flockId);
 
@@ -128,7 +128,7 @@ const PenDetail: React.FC = () => {
     try {
       const dateStr = date.toISOString().split('T')[0];
       const { data, error } = await supabase
-        .from('todays_info')
+        .from('daily_flock_data')
         .select('*')
         .eq('flock_id', flockId)
         .eq('date', dateStr)
@@ -166,7 +166,7 @@ const PenDetail: React.FC = () => {
 
       // Check if data already exists for this date
       const { data: existingData } = await supabase
-        .from('todays_info')
+        .from('daily_flock_data')
         .select('id')
         .eq('flock_id', flockId)
         .eq('date', dateStr)
@@ -175,7 +175,7 @@ const PenDetail: React.FC = () => {
       if (existingData) {
         // Update existing record
         const { error: updateError } = await supabase
-          .from('todays_info')
+          .from('daily_flock_data')
           .update(dataToSave)
           .eq('id', existingData.id);
 
@@ -187,7 +187,7 @@ const PenDetail: React.FC = () => {
       } else {
         // Insert new record
         const { error: insertError } = await supabase
-          .from('todays_info')
+          .from('daily_flock_data')
           .insert([dataToSave]);
 
         if (insertError) {

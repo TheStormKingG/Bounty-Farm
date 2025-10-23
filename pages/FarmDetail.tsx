@@ -118,6 +118,15 @@ const FarmDetail: React.FC = () => {
     deliveryImage: null as File | null
   });
   
+  // Purchase Delivery state
+  const [isPurchaseDeliveryOpen, setIsPurchaseDeliveryOpen] = useState(false);
+  const [purchaseDeliverySubmitted, setPurchaseDeliverySubmitted] = useState(false);
+  const [purchaseDeliveryData, setPurchaseDeliveryData] = useState({
+    invoiceNumber: '',
+    amount: 0,
+    invoiceImage: null as File | null
+  });
+  
   // Modal states
 
   // Get farm info from navigation state
@@ -1166,6 +1175,113 @@ const FarmDetail: React.FC = () => {
     }
   };
 
+  // Handle Purchase Delivery data changes
+  const handlePurchaseDeliveryChange = (field: string, value: any) => {
+    setPurchaseDeliveryData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle Purchase Delivery image upload
+  const handlePurchaseDeliveryImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPurchaseDeliveryData(prev => ({
+        ...prev,
+        invoiceImage: file
+      }));
+    }
+  };
+
+  // Save Purchase Delivery data to database
+  const savePurchaseDeliveryData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      const dataToSave = {
+        farm_name: farmInfo.farmName,
+        date: today,
+        invoice_number: purchaseDeliveryData.invoiceNumber,
+        amount: purchaseDeliveryData.amount,
+        created_by: user?.name || 'farmer',
+        updated_by: user?.name || 'farmer'
+      };
+
+      // Check if data already exists for today with same invoice number
+      const { data: existingData } = await supabase
+        .from('purchase_delivery')
+        .select('id')
+        .eq('farm_name', farmInfo.farmName)
+        .eq('date', today)
+        .eq('invoice_number', purchaseDeliveryData.invoiceNumber)
+        .single();
+
+      let imageUrl = null;
+
+      // Upload image if provided
+      if (purchaseDeliveryData.invoiceImage) {
+        const fileExt = purchaseDeliveryData.invoiceImage.name.split('.').pop();
+        const fileName = `purchase-delivery-${farmInfo.farmName}-${today}-${purchaseDeliveryData.invoiceNumber}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('purchase-delivery-images')
+          .upload(fileName, purchaseDeliveryData.invoiceImage);
+
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          alert('Error uploading image. Please try again.');
+          return;
+        }
+
+        imageUrl = uploadData.path;
+      }
+
+      if (existingData) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('purchase_delivery')
+          .update({
+            ...dataToSave,
+            invoice_image_url: imageUrl
+          })
+          .eq('id', existingData.id);
+
+        if (updateError) {
+          console.error('Error updating Purchase Delivery data:', updateError);
+          alert('Error updating Purchase Delivery data. Please try again.');
+          return;
+        }
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('purchase_delivery')
+          .insert([{
+            ...dataToSave,
+            invoice_image_url: imageUrl
+          }]);
+
+        if (insertError) {
+          console.error('Error inserting Purchase Delivery data:', insertError);
+          alert('Error saving Purchase Delivery data. Please try again.');
+          return;
+        }
+      }
+
+      console.log('Successfully saved Purchase Delivery data:', dataToSave);
+      alert('Purchase Delivery data saved successfully!');
+      
+      // Mark Purchase Delivery as submitted
+      setPurchaseDeliverySubmitted(true);
+      console.log('Purchase Delivery marked as submitted');
+      
+      setIsPurchaseDeliveryOpen(false);
+    } catch (error) {
+      console.error('Unexpected error saving Purchase Delivery data:', error);
+      alert('An unexpected error occurred. Please try again.');
+    }
+  };
+
   // Save Feed Delivery data to database
   const saveFeedDeliveryData = async () => {
     try {
@@ -1324,7 +1440,14 @@ const FarmDetail: React.FC = () => {
         </div>
 
         {/* Incoming Dispatches Section - Different views for Admin vs Farmer */}
-        <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
+        {(() => {
+          const incomingDispatches = dispatches.filter(dispatch => 
+            !receivedDispatches.some(received => 
+              received.dispatch_id === dispatch.id && received.status === 'Confirmed'
+            )
+          );
+          return incomingDispatches.length > 0 ? (
+            <div className="bg-white rounded-2xl p-6 shadow-md mb-6">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">Incoming Dispatches</h2>
           
           {isFarmerView ? (
@@ -1469,7 +1592,9 @@ const FarmDetail: React.FC = () => {
               </table>
             </div>
           )}
-        </div>
+            </div>
+          ) : null;
+        })()}
 
         {/* Received Dispatches Section - Admin Only */}
         {user?.role === Role.Admin && receivedDispatches.length > 0 && (
@@ -1665,27 +1790,52 @@ const FarmDetail: React.FC = () => {
           </>
         )}
 
-        {/* Feed Delivery Button */}
+        {/* Deliveries */}
         <div className="bg-white rounded-lg shadow-md mb-6 p-6">
-          <button
-            onClick={() => setIsFeedDeliveryOpen(true)}
-            className={`w-full px-6 py-4 rounded-lg transition-all duration-200 text-lg font-semibold ${
-              feedDeliverySubmitted
-                ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
-                : 'text-white'
-            }`}
-            style={feedDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
-            onMouseEnter={feedDeliverySubmitted ? (e) => {
-              e.target.style.backgroundColor = '#f5f0d8';
-              e.target.style.transform = 'translateY(-2px) scale(1.02)';
-            } : (e) => e.target.style.backgroundColor = '#e67a35'}
-            onMouseLeave={feedDeliverySubmitted ? (e) => {
-              e.target.style.backgroundColor = '#fffae5';
-              e.target.style.transform = 'translateY(0) scale(1)';
-            } : (e) => e.target.style.backgroundColor = '#ff8c42'}
-          >
-            Feed Delivery{feedDeliverySubmitted && ' (Submitted)'}
-          </button>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Deliveries</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Feed Button */}
+            <button
+              onClick={() => setIsFeedDeliveryOpen(true)}
+              className={`aspect-square rounded-lg transition-all duration-200 text-lg font-semibold flex items-center justify-center ${
+                feedDeliverySubmitted
+                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
+                  : 'text-white'
+              }`}
+              style={feedDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+              onMouseEnter={feedDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              onMouseLeave={feedDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            >
+              Feed{feedDeliverySubmitted && ' ✓'}
+            </button>
+
+            {/* Purchase Delivery Button */}
+            <button
+              onClick={() => setIsPurchaseDeliveryOpen(true)}
+              className={`aspect-square rounded-lg transition-all duration-200 text-lg font-semibold flex items-center justify-center ${
+                purchaseDeliverySubmitted
+                  ? 'text-gray-800 shadow-md hover:shadow-lg hover:scale-105'
+                  : 'text-white'
+              }`}
+              style={purchaseDeliverySubmitted ? { backgroundColor: '#fffae5' } : { backgroundColor: '#ff8c42' }}
+              onMouseEnter={purchaseDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#f5f0d8';
+                e.target.style.transform = 'translateY(-2px) scale(1.02)';
+              } : (e) => e.target.style.backgroundColor = '#e67a35'}
+              onMouseLeave={purchaseDeliverySubmitted ? (e) => {
+                e.target.style.backgroundColor = '#fffae5';
+                e.target.style.transform = 'translateY(0) scale(1)';
+              } : (e) => e.target.style.backgroundColor = '#ff8c42'}
+            >
+              Purchase{purchaseDeliverySubmitted && ' ✓'}
+            </button>
+          </div>
         </div>
 
         {/* Pens */}
@@ -2213,6 +2363,111 @@ const FarmDetail: React.FC = () => {
               <div className="flex justify-end pt-4">
                 <button
                   onClick={saveFeedDeliveryData}
+                  className="px-6 py-3 text-white rounded-lg transition-all duration-200 text-lg font-semibold"
+                  style={{ backgroundColor: '#ff8c42' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#ff8c42'}
+                >
+                  Save Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Purchase Delivery Popup Modal */}
+      {isPurchaseDeliveryOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">
+                Purchase Delivery - {farmInfo.farmName}
+              </h3>
+              <button
+                onClick={() => setIsPurchaseDeliveryOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Invoice Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Invoice #:</label>
+                <input
+                  type="text"
+                  value={purchaseDeliveryData.invoiceNumber}
+                  onChange={(e) => handlePurchaseDeliveryChange('invoiceNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                  placeholder="Enter invoice number"
+                />
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Amount $:</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={purchaseDeliveryData.amount}
+                  onChange={(e) => handlePurchaseDeliveryChange('amount', parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                  style={{ '--tw-ring-color': '#ff8c42' } as React.CSSProperties}
+                  placeholder="Enter amount"
+                />
+              </div>
+
+              {/* Invoice Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Image:</label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg">
+                  <div className="space-y-1 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="invoice-image"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500"
+                      >
+                        <span>Upload an image</span>
+                        <input
+                          id="invoice-image"
+                          name="invoice-image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePurchaseDeliveryImageUpload}
+                          className="sr-only"
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={savePurchaseDeliveryData}
                   className="px-6 py-3 text-white rounded-lg transition-all duration-200 text-lg font-semibold"
                   style={{ backgroundColor: '#ff8c42' }}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#e67a35'}
