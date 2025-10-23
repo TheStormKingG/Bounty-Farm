@@ -665,7 +665,7 @@ const FarmDetail: React.FC = () => {
                             className="bg-[#ff8c42] hover:bg-[#e67e22] text-white font-bold text-lg rounded-lg shadow-md hover:shadow-lg transition-all duration-200 aspect-square flex flex-col items-center justify-center p-2"
                           >
                             <div className="text-center">
-                              <div className="font-bold text-5xl mb-2 whitespace-nowrap">PEN {flock.flockNumber}</div>
+                              <div className="font-bold text-5xl md:text-5xl text-3xl mb-2 whitespace-nowrap">PEN {flock.flockNumber}</div>
                               {penDetail && (
                                 <div className="text-sm leading-tight space-y-1 text-left inline-block">
                                   <div>• {penDetail.length_meters}m × {penDetail.width_meters}m</div>
