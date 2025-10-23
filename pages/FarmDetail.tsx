@@ -152,9 +152,9 @@ const FarmDetail: React.FC = () => {
         ];
         
         setFlocks(sampleFlocks);
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred.');
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('An unexpected error occurred.');
         setFlocks([]);
       } finally {
         setLoading(false);
