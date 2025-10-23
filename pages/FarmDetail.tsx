@@ -533,7 +533,7 @@ const FarmDetail: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{pen.pen_number}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{pen.length_meters}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{pen.width_meters}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{pen.min_birds} - {pen.max_birds} birds</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Upto {pen.max_birds} birds</td>
                         </tr>
                       ))
                     ) : (
@@ -630,8 +630,8 @@ const FarmDetail: React.FC = () => {
                                 <div className="text-xs leading-tight">
                                   <div>{penDetail.length_meters}m × {penDetail.width_meters}m</div>
                                   <div>{penDetail.area_square_meters}m²</div>
-                                  <div>Holds {penDetail.min_birds} to {penDetail.max_birds} Birds</div>
-                      </div>
+                                  <div>Holds upto {penDetail.max_birds} Birds</div>
+                                </div>
                               )}
                       </div>
                           </button>
