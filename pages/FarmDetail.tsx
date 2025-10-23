@@ -36,7 +36,7 @@ interface PenDetail {
 }
 
 const FarmDetail: React.FC = () => {
-  const { farmId, farmName } = useParams<{ farmId: string; farmName: string }>();
+  const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
   
   const [farmInfo, setFarmInfo] = useState<FarmInfo>({
@@ -93,21 +93,21 @@ const FarmDetail: React.FC = () => {
   useEffect(() => {
     const fetchFarmInfo = async () => {
       try {
-        console.log('Fetching farm info for farmName:', farmName);
+        console.log('Fetching farm info for farmId:', farmId);
         setLoading(true);
         setError(null);
         
-        if (farmName) {
+        if (farmId) {
           const { data: farmData, error: farmError } = await supabase
             .from('farm_customers')
-          .select('*')
-            .eq('farm_name', farmName)
-          .single();
+            .select('*')
+            .eq('id', farmId)
+            .single();
 
           if (farmError) {
             console.error('Error fetching farm info:', farmError);
             setError('Farm not found');
-          return;
+            return;
           }
 
           if (farmData) {
@@ -131,7 +131,7 @@ const FarmDetail: React.FC = () => {
     };
 
     fetchFarmInfo();
-  }, [farmId, farmName]);
+  }, [farmId]);
 
   // Fetch flocks for this farm
   useEffect(() => {
