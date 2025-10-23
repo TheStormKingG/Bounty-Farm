@@ -17,7 +17,7 @@ import Customers from './pages/Customers';
 import Delivery from './pages/Delivery';
 import Farm from './pages/Farm';
 import FarmDetail from './pages/FarmDetail';
-import FlockDetail from './pages/FlockDetail';
+import PenDetail from './pages/PenDetail';
 import GrowOut from './pages/GrowOut';
 import Catching from './pages/Catching';
 import Plant from './pages/Plant';
@@ -103,7 +103,7 @@ const App: React.FC = () => {
 
         <Route element={<ProtectedRoute allowedRoles={[Role.Admin, Role.Farmer]} />}>
           <Route path="/farm/:farmId" element={<FarmDetail />} />
-          <Route path="/farm/:farmId/flock/:flockId" element={<FlockDetail />} />
+          <Route path="/farm/:farmId/flock/:flockId" element={<PenDetail />} />
         </Route>
 
         <Route path="/login" element={<Navigate to={getHomeRouteForRole(user.role)} />} />

@@ -233,10 +233,12 @@ const HatchCycleList: React.FC = () => {
   const [cycles, setCycles] = useState<HatchCycle[]>([]);
   const [vaccineProfiles, setVaccineProfiles] = useState<{id: string, name: string}[]>([]);
     const [isNewCycleModalVisible, setIsNewCycleModalVisible] = useState(false);
-  const [newCycleData, setNewCycleData] = useState<Partial<HatchCycle>>({
+  const [newCycleData, setNewCycleData] = useState<Partial<HatchCycle> & { numFlocks?: number }>({
     status: 'OPEN',
     candling: {},
     outcome: {},
+    numFlocks: 0,
+    flocksRecd: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1703,20 +1705,49 @@ const HatchCycleList: React.FC = () => {
                                 {/* Column 2 */}
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block font-bold text-gray-700 mb-2">Flocks Received</label>
+                                        <label className="block font-bold text-gray-700 mb-2">Number of Flocks</label>
                                         <input
-                                            type="text"
-                                            name="flocksRecd"
-                                            onChange={(e) =>
+                                            type="number"
+                                            min="1"
+                                            max="10"
+                                            onChange={(e) => {
+                                                const numFlocks = parseInt(e.target.value) || 0;
                                                 setNewCycleData((p) => ({
                                                     ...p,
-                                                    flocksRecd: e.target.value.split(',').map((f) => f.trim()),
-                                                }))
-                                            }
+                                                    numFlocks: numFlocks,
+                                                    flocksRecd: Array(numFlocks).fill('')
+                                                }));
+                                            }}
                                             className="modern-input w-full"
-                                            placeholder="Comma separated"
+                                            placeholder="Enter Number"
                                         />
                                     </div>
+                                    
+                                    {/* Dynamic Flock Number Fields */}
+                                    {newCycleData.numFlocks > 0 && (
+                                        <div>
+                                            <label className="block font-bold text-gray-700 mb-2">Flock Numbers</label>
+                                            <div className="space-y-2">
+                                                {Array.from({ length: newCycleData.numFlocks }, (_, index) => (
+                                                    <input
+                                                        key={index}
+                                                        type="text"
+                                                        placeholder={`Flock ${index + 1} Number`}
+                                                        value={newCycleData.flocksRecd[index] || ''}
+                                                        onChange={(e) => {
+                                                            const newFlocks = [...newCycleData.flocksRecd];
+                                                            newFlocks[index] = e.target.value;
+                                                            setNewCycleData((p) => ({
+                                                                ...p,
+                                                                flocksRecd: newFlocks
+                                                            }));
+                                                        }}
+                                                        className="modern-input w-full"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Egg Weight</label>
                                         <input
