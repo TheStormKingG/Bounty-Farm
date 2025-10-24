@@ -1825,19 +1825,48 @@ const HatchCycleList: React.FC = () => {
 
             return (
               <div key={cycle.id} className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300 text-sm" style={{ tableLayout: 'fixed' }}>
-                  {/* Header Row - Individual Numbers with Flock Count */}
-                  <thead>
-                    <tr>
-                      <th className="border border-gray-300 bg-[#ff8c42] text-white p-2 text-center font-semibold h-10">Flock Count</th>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <th key={i} className="border border-gray-300 bg-blue-50 p-2 text-center font-semibold h-10">
-                          {i + 1}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
+                <style jsx>{`
+                  .spreadsheet-table {
+                    table-layout: fixed;
+                  }
+                  .spreadsheet-table th:first-child,
+                  .spreadsheet-table td:first-child {
+                    width: 200px;
+                    min-width: 200px;
+                  }
+                  .spreadsheet-table th:not(:first-child),
+                  .spreadsheet-table td:not(:first-child) {
+                    width: 60px;
+                    min-width: 60px;
+                  }
+                  .card-section {
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    border-radius: 8px;
+                    margin-bottom: 8px;
+                    overflow: hidden;
+                  }
+                `}</style>
+                {/* Header Card */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    {/* Header Row - Individual Numbers with Flock Count */}
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-300 bg-[#ff8c42] text-white p-2 text-center font-semibold h-10">Flock Count</th>
+                        {Array.from({ length: 20 }, (_, i) => (
+                          <th key={i} className="border border-gray-300 bg-[#ff8c42] text-white p-2 text-center font-semibold h-10">
+                            {i + 1}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                  </table>
+                </div>
+
+                {/* Section 1: Flock Info */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    <tbody>
                     {/* Flock # Row - Editable */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Flock #</td>
@@ -1874,15 +1903,14 @@ const HatchCycleList: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                    
-                    {/* Spacing Row */}
-                    <tr>
-                      <td className="border border-gray-300 bg-black h-10"></td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 bg-black h-10"></td>
-                      ))}
-                    </tr>
-                    
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Section 2: Egg Details */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    <tbody>
                     {/* Case per Flock Row - Editable */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Case per Flock</td>
@@ -1922,15 +1950,14 @@ const HatchCycleList: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                    
-                    {/* Spacing Row */}
-                    <tr>
-                      <td className="border border-gray-300 bg-black h-10"></td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 bg-black h-10"></td>
-                      ))}
-                    </tr>
-                    
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Section 3: Calculations */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    <tbody>
                     {/* Total Eggs Recvd Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Total Eggs Recvd</td>
@@ -1970,15 +1997,14 @@ const HatchCycleList: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                    
-                    {/* Spacing Row */}
-                    <tr>
-                      <td className="border border-gray-300 bg-black h-10"></td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 bg-black h-10"></td>
-                      ))}
-                    </tr>
-                    
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Section 4: Results */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    <tbody>
                     {/* Hatch per flock Row - Editable */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Hatch per flock</td>
@@ -2001,9 +2027,9 @@ const HatchCycleList: React.FC = () => {
                     
                     {/* Spacing Row */}
                     <tr>
-                      <td className="border border-gray-300 bg-black h-10"></td>
+                      <td className="h-10 bg-white"></td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 bg-black h-10"></td>
+                        <td key={i} className="h-10 bg-white"></td>
                       ))}
                     </tr>
                     
@@ -2036,8 +2062,9 @@ const HatchCycleList: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             );
           })}
