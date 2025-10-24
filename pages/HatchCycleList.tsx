@@ -549,12 +549,12 @@ const HatchCycleList: React.FC = () => {
         try {
           const { data: flockData, error: flockError } = await supabase
             .from('flocks')
-            .select('supplier_name')
+            .select('supplier')
             .eq('flock_number', convertedValue)
             .single();
 
           if (!flockError && flockData) {
-            supplierName = flockData.supplier_name;
+            supplierName = flockData.supplier;
             updateData.supplier_name = supplierName;
             console.log('Auto-updated supplier name:', supplierName);
           } else {
@@ -1093,7 +1093,7 @@ const HatchCycleList: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('flocks')
-        .select('flock_number, supplier_name, breed')
+        .select('flock_number, supplier, breed')
         .order('flock_number');
 
       if (error) {
@@ -1169,8 +1169,8 @@ const HatchCycleList: React.FC = () => {
     validFlocks.forEach(flockNumber => {
       const flock = flocks.find(f => f.flock_number === flockNumber);
       console.log(`Looking for flock ${flockNumber}:`, flock);
-      if (flock && flock.supplier_name) {
-        suppliers.add(flock.supplier_name);
+      if (flock && flock.supplier) {
+        suppliers.add(flock.supplier);
       }
     });
 
