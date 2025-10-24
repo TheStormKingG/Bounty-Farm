@@ -1842,7 +1842,7 @@ const HatchCycleList: React.FC = () => {
                   .card-section {
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                     border-radius: 8px;
-                    margin-bottom: 8px;
+                    margin-bottom: 16px;
                     overflow: hidden;
                   }
                 `}</style>
@@ -1867,39 +1867,35 @@ const HatchCycleList: React.FC = () => {
                 <div className="card-section">
                   <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
                     <tbody>
-                    {/* Flock # Row - Editable */}
+                    {/* Flock # Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Flock #</td>
                       {Array.from({ length: 20 }, (_, i) => {
                         const flockNumbers = cycle.supplierFlockNumber ? cycle.supplierFlockNumber.split(',').map(n => n.trim()) : [];
                         return (
-                          <td key={i} className="border border-gray-300 p-2 text-center h-10" style={{ backgroundColor: '#fffae5' }}>
-                            <input 
-                              type="text" 
-                              className="w-full text-center bg-transparent border-none focus:outline-none h-full" 
-                              defaultValue={flockNumbers[i] || ''}
-                            />
+                          <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
+                            {flockNumbers[i] || ''}
                           </td>
                         );
                       })}
                     </tr>
                     
-                    {/* Breed Row - Editable */}
+                    {/* Breed Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Breed</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10" style={{ backgroundColor: '#fffae5' }}>
-                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none h-full" />
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
+                          {/* This would be populated with actual breed data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Hen's Age Row - Editable */}
+                    {/* Hen's Age Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Hen's Age</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10" style={{ backgroundColor: '#fffae5' }}>
-                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none h-full" />
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
+                          {/* This would be populated with actual hen age data */}
                         </td>
                       ))}
                     </tr>
@@ -1962,7 +1958,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Total Eggs Recvd</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual eggs received data */}
                         </td>
                       ))}
@@ -1972,7 +1968,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">% per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual percentage data */}
                         </td>
                       ))}
@@ -1982,7 +1978,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Total set per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual set data */}
                         </td>
                       ))}
@@ -1992,7 +1988,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Expected</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual expected data */}
                         </td>
                       ))}
@@ -2037,7 +2033,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Culls</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual cull data */}
                         </td>
                       ))}
@@ -2047,7 +2043,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Sold per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual sold data */}
                         </td>
                       ))}
@@ -2057,7 +2053,7 @@ const HatchCycleList: React.FC = () => {
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">% Hatch per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-blue-100">
+                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                           {/* This would be populated with actual hatch percentage data */}
                         </td>
                       ))}
