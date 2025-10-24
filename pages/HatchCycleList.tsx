@@ -1483,7 +1483,7 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="mt-6" style={{ height: '540px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
             <div 
               ref={headerScrollRef}
@@ -1610,7 +1610,7 @@ const HatchCycleList: React.FC = () => {
             <div 
               ref={bodyScrollRef}
               className="overflow-auto flex-1" 
-              style={{ height: '480px', overflowX: 'auto', overflowY: 'auto' }}
+              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
               onScroll={handleBodyScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
@@ -1824,82 +1824,189 @@ const HatchCycleList: React.FC = () => {
             if (!isActive) return null;
 
             return (
-              <div key={cycle.id} className="space-y-6">
-                {/* Basic Information */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">Basic Information</h3>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Hatch Number:</span> {cycle.hatchNo}</div>
-                      <div><span className="font-medium">Hatch Colour:</span> {cycle.colourCode || '-'}</div>
-                      <div><span className="font-medium">Status:</span> 
-                        <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                          cycle.status === 'OPEN' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {cycle.status}
-                        </span>
-                      </div>
-                      <div><span className="font-medium">Created By:</span> {cycle.createdBy || '-'}</div>
-                      <div><span className="font-medium">Created At:</span> {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">Flock Information</h3>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Flocks Received:</span> {cycle.flocksRecd?.join(', ') || '-'}</div>
-                      <div><span className="font-medium">Supplier Flock Number:</span> {cycle.supplierFlockNumber || '-'}</div>
-                      <div><span className="font-medium">Supplier Name:</span> {cycle.supplierName || '-'}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Egg Information */}
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">Egg Details</h3>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Cases Received:</span> {cycle.casesRecd?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Eggs Received:</span> {cycle.eggsRecd?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Eggs Cracked:</span> {cycle.eggsCracked?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Eggs Set:</span> {cycle.eggsSet?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Avg Egg Weight:</span> {cycle.avgEggWgt ? `${cycle.avgEggWgt}g` : '-'}</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">Dates</h3>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Date Packed:</span> {cycle.datePacked || '-'}</div>
-                      <div><span className="font-medium">Date Set:</span> {cycle.setDate || '-'}</div>
-                      <div><span className="font-medium">Date Candled:</span> {cycle.dateCandled || '-'}</div>
-                      <div><span className="font-medium">Hatch Date:</span> {cycle.hatchDate || '-'}</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">Results</h3>
-                    <div className="space-y-2 text-sm">
-                      <div><span className="font-medium">Expected Hatch Qty:</span> {cycle.expHatchQty?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">% Adjustment:</span> {cycle.pctAdj ? `${cycle.pctAdj}%` : '-'}</div>
-                      <div><span className="font-medium">Adj Expected Qty:</span> {cycle.expHatchQtyAdj?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Chicks Hatched:</span> {cycle.outcome?.hatched?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Chicks Culled:</span> {cycle.outcome?.culled?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Chicks Sold:</span> {cycle.chicksSold?.toLocaleString() || '-'}</div>
-                      <div><span className="font-medium">Avg Chicks Weight:</span> {cycle.avgChicksWgt ? `${cycle.avgChicksWgt}g` : '-'}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Additional Information */}
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-3">Additional Information</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><span className="font-medium">Vaccination Profile:</span> {cycle.vaccinationProfile || '-'}</div>
-                    <div><span className="font-medium">Updated By:</span> {cycle.updatedBy || '-'}</div>
-                    <div><span className="font-medium">Updated At:</span> {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}</div>
-                  </div>
-                </div>
+              <div key={cycle.id} className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300 text-sm">
+                  {/* Header Row 1 - Flock Count Groups */}
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-300 bg-gray-100 p-2 text-left font-semibold"></th>
+                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
+                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
+                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
+                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
+                    </tr>
+                    {/* Header Row 2 - Individual Numbers */}
+                    <tr>
+                      <th className="border border-gray-300 bg-gray-100 p-2 text-left font-semibold"></th>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <th key={i} className="border border-gray-300 bg-blue-50 p-2 text-center font-semibold">
+                          {i + 1}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* Flock # Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Flock #</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual flock data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Breed Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Breed</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual breed data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Hen's Age Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Hen's Age</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual hen age data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Case per Flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Case per Flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual case data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Weight of Egg (g) Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Weight of Egg (g)</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual egg weight data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Total crack per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total crack per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual crack data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Candle % Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Candle %</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual candle percentage data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Total Eggs Recvd Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total Eggs Recvd</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual eggs received data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* % per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">% per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual percentage data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Total set per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total set per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual set data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Expected Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Expected</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual expected data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Hatch per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Hatch per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual hatch data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Weight of Chicks (g) Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Weight of Chicks (g)</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual chick weight data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Culls Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Culls</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual cull data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* Sold per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Sold per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual sold data */}
+                        </td>
+                      ))}
+                    </tr>
+                    
+                    {/* % Hatch per flock Row */}
+                    <tr>
+                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">% Hatch per flock</td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="border border-gray-300 p-2 text-center">
+                          {/* This would be populated with actual hatch percentage data */}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             );
           })}
