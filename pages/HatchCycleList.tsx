@@ -1099,6 +1099,7 @@ const HatchCycleList: React.FC = () => {
       if (error) {
         console.error('Error fetching flocks:', error);
       } else {
+        console.log('Fetched flocks data:', data);
         setFlocks(data || []);
       }
     } catch (err) {
@@ -2034,6 +2035,10 @@ const HatchCycleList: React.FC = () => {
                         const flockNumber = flockNumbers[i];
                         const flock = flocks.find(f => f.flock_number === flockNumber);
                         console.log(`Breed lookup for flock ${flockNumber}:`, flock);
+                        console.log(`Available flocks:`, flocks);
+                        console.log(`Cycle supplierFlockNumber:`, cycle.supplierFlockNumber);
+                        console.log(`Parsed flock numbers:`, flockNumbers);
+                        console.log(`Flocks array length:`, flocks.length);
                         return (
                           <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                             {flock ? flock.breed || '' : ''}
