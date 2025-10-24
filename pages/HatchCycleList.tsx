@@ -1093,7 +1093,7 @@ const HatchCycleList: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('flocks')
-        .select('flock_number')
+        .select('flock_number, supplier_name, breed')
         .order('flock_number');
 
       if (error) {
@@ -1150,6 +1150,28 @@ const HatchCycleList: React.FC = () => {
         searchTerm: flockNumber
       }
     }));
+
+    // Auto-fill supplier names based on selected flock numbers
+    autoFillSupplierNames([...newFlocks]);
+  };
+
+  const autoFillSupplierNames = (flockNumbers: string[]) => {
+    const validFlocks = flockNumbers.filter(flock => flock && flock.trim() !== '');
+    if (validFlocks.length === 0) {
+      setNewCycleData(prev => ({ ...prev, supplierName: '' }));
+      return;
+    }
+
+    const suppliers = new Set<string>();
+    validFlocks.forEach(flockNumber => {
+      const flock = flocks.find(f => f.flock_number === flockNumber);
+      if (flock && flock.supplier_name) {
+        suppliers.add(flock.supplier_name);
+      }
+    });
+
+    const supplierNames = Array.from(suppliers).join(', ');
+    setNewCycleData(prev => ({ ...prev, supplierName: supplierNames }));
   };
 
   const toggleDropdown = (index: number) => {
@@ -1918,7 +1940,9 @@ const HatchCycleList: React.FC = () => {
                         backgroundColor: isActive ? '#fffae5' : 'transparent',
                         clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 100%, 15px 100%)',
                         marginRight: '-15px',
-                        zIndex: isActive ? 10 : 1
+                        zIndex: isActive ? 10 : 1,
+                        boxShadow: isActive ? '0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)' : 'none',
+                        transform: isActive ? 'translateY(-2px)' : 'translateY(0)'
                       }}
                     >
                       {tabNumber}
@@ -2000,11 +2024,16 @@ const HatchCycleList: React.FC = () => {
                     {/* Breed Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Breed</td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
-                          {/* This would be populated with actual breed data */}
-                        </td>
-                      ))}
+                      {Array.from({ length: 20 }, (_, i) => {
+                        const flockNumbers = cycle.supplierFlockNumber ? cycle.supplierFlockNumber.split(',').map(n => n.trim()) : [];
+                        const flockNumber = flockNumbers[i];
+                        const flock = flocks.find(f => f.flock_number === flockNumber);
+                        return (
+                          <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
+                            {flock ? flock.breed || '' : ''}
+                          </td>
+                        );
+                      })}
                     </tr>
                     
                     {/* Hen's Age Row - Read Only */}
