@@ -273,6 +273,11 @@ const HatchCycleList: React.FC = () => {
   const [isHatchNumberEditable, setIsHatchNumberEditable] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   
+  // Tab search state
+  const [tabStartDate, setTabStartDate] = useState<string>('2025-09-08');
+  const [tabEndDate, setTabEndDate] = useState<string>('2025-11-07');
+  const [tabSearchTerm, setTabSearchTerm] = useState<string>('');
+  
   // Breeds state for dropdown
   const [breeds, setBreeds] = useState<any[]>([]);
   
@@ -942,6 +947,41 @@ const HatchCycleList: React.FC = () => {
 
     return filtered;
   }, [cycles, startDate, endDate, searchTerm, filters, sortColumn, sortDirection]);
+
+  // Process tab data with filtering
+  const processedTabCycles = React.useMemo(() => {
+    let filtered = [...cycles];
+
+    // Date range filtering for tabs
+    if (tabStartDate && tabEndDate) {
+      const start = new Date(tabStartDate);
+      const end = new Date(tabEndDate);
+      
+      filtered = filtered.filter(cycle => {
+        const cycleDate = new Date(cycle.setDate);
+        return cycleDate >= start && cycleDate <= end;
+      });
+    }
+
+    // Search filtering for tabs
+    if (tabSearchTerm.trim()) {
+      const searchLower = tabSearchTerm.toLowerCase();
+      filtered = filtered.filter(cycle => {
+        return (
+          cycle.hatchNo?.toLowerCase().includes(searchLower) ||
+          cycle.colourCode?.toLowerCase().includes(searchLower) ||
+          cycle.flocksRecd?.join(', ').toLowerCase().includes(searchLower) ||
+          cycle.supplierFlockNumber?.toLowerCase().includes(searchLower) ||
+          cycle.supplierName?.toLowerCase().includes(searchLower) ||
+          cycle.vaccinationProfile?.toLowerCase().includes(searchLower) ||
+          cycle.createdBy?.toLowerCase().includes(searchLower) ||
+          cycle.updatedBy?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    return filtered;
+  }, [cycles, tabStartDate, tabEndDate, tabSearchTerm]);
 
   // Fetch vaccine profiles from Supabase
   useEffect(() => {
@@ -1686,14 +1726,71 @@ const HatchCycleList: React.FC = () => {
       )}
 
       {/* Tabbed Hatch Cycle Details */}
-      {processedCycles.length > 0 && (
+      {processedTabCycles.length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Hatch Cycle Details</h2>
+          
+          {/* Tab Search Filters */}
+          <div className="mb-6 mt-2">
+            {/* Date fields row */}
+            <div className="flex gap-2 mb-2">
+              <div className="w-1/2">
+                <input
+                  id="tab-start"
+                  type="date"
+                  className="w-full px-3 py-2 rounded-2xl shadow-md"
+                  style={{ backgroundColor: '#fffae5' }}
+                  value={tabStartDate}
+                  onChange={(e) => setTabStartDate(e.target.value)}
+                  title="Start Date"
+                  placeholder="Start Date"
+                />
+              </div>
+              <div className="w-1/2">
+                <input
+                  id="tab-end"
+                  type="date"
+                  className="w-full px-3 py-2 rounded-2xl shadow-md"
+                  style={{ backgroundColor: '#fffae5' }}
+                  value={tabEndDate}
+                  onChange={(e) => setTabEndDate(e.target.value)}
+                  title="End Date"
+                  placeholder="End Date"
+                />
+              </div>
+            </div>
+            {/* Search field row */}
+            <div className="w-full">
+              <div className="relative flex rounded-2xl shadow-md overflow-hidden" style={{ backgroundColor: '#fffae5' }}>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="flex-1 px-3 py-2 bg-transparent border-none focus:ring-0 text-gray-900"
+                  value={tabSearchTerm}
+                  onChange={(e) => setTabSearchTerm(e.target.value)}
+                />
+                <button className="px-4 py-2 text-white transition-colors hover:opacity-90" style={{ backgroundColor: '#ff8c42' }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
           
           {/* Tabs */}
           <div className="relative mb-6">
             <div className="flex overflow-x-auto" style={{ backgroundColor: '#ff8c42' }}>
-              {processedCycles.map((cycle, index) => {
+              {processedTabCycles.map((cycle, index) => {
                 const tabNumber = extractHatchNumber(cycle.hatchNo);
                 const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
                 
@@ -1702,12 +1799,13 @@ const HatchCycleList: React.FC = () => {
                     key={cycle.id}
                     onClick={() => setActiveTab(cycle.id)}
                     className={`
-                      relative px-6 py-3 text-white font-semibold transition-all duration-200
-                      ${isActive ? 'bg-white text-[#ff8c42]' : 'hover:bg-white hover:bg-opacity-20'}
+                      relative px-6 py-3 font-semibold transition-all duration-200
+                      ${isActive ? 'text-black' : 'text-white hover:bg-white hover:bg-opacity-20'}
                       ${index === 0 ? 'rounded-tl-lg' : ''}
-                      ${index === processedCycles.length - 1 ? 'rounded-tr-lg' : ''}
+                      ${index === processedTabCycles.length - 1 ? 'rounded-tr-lg' : ''}
                     `}
                     style={{
+                      backgroundColor: isActive ? '#fffae5' : 'transparent',
                       clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 100%, 15px 100%)',
                       marginRight: '-15px',
                       zIndex: isActive ? 10 : 1
@@ -1721,7 +1819,7 @@ const HatchCycleList: React.FC = () => {
           </div>
 
           {/* Tab Content */}
-          {processedCycles.map((cycle, index) => {
+          {processedTabCycles.map((cycle, index) => {
             const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
             if (!isActive) return null;
 
