@@ -1436,7 +1436,7 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
 
-          <div className="mt-6" style={{ maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+          <div className="mt-6" style={{ height: '540px', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
             {/* Fixed Header */}
             <div 
               ref={headerScrollRef}
@@ -1563,7 +1563,7 @@ const HatchCycleList: React.FC = () => {
             <div 
               ref={bodyScrollRef}
               className="overflow-auto flex-1" 
-              style={{ maxHeight: 'calc(70vh - 60px)', overflowX: 'auto', overflowY: 'auto' }}
+              style={{ height: '480px', overflowX: 'auto', overflowY: 'auto' }}
               onScroll={handleBodyScroll}
             >
               <table className="modern-table min-w-full" style={{ tableLayout: 'fixed', width: '100%' }}>
@@ -1703,7 +1703,7 @@ const HatchCycleList: React.FC = () => {
                                                 onClick={() => setIsHatchNumberEditable(!isHatchNumberEditable)}
                                                 className="text-[#ff8c42] hover:text-[#e67e22] text-sm underline transition-colors"
                                             >
-                                                Edit
+                                                {isHatchNumberEditable ? 'Ok' : 'Edit'}
                                             </button>
                                         </div>
                                         <input
