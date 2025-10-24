@@ -2029,6 +2029,14 @@ const HatchCycleList: React.FC = () => {
                       ))}
                     </tr>
                     
+                    {/* Spacing Row */}
+                    <tr>
+                      <td className="h-10 bg-white"></td>
+                      {Array.from({ length: 20 }, (_, i) => (
+                        <td key={i} className="h-10 bg-white"></td>
+                      ))}
+                    </tr>
+                    
                     {/* Culls Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Culls</td>
