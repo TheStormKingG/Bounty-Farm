@@ -1750,7 +1750,12 @@ const HatchCycleList: React.FC = () => {
                                 {/* Column 3 */}
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block font-bold text-gray-700 mb-2">Flock Numbers</label>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="font-bold text-gray-700">Flock Numbers</label>
+                                            <span className="text-sm text-gray-600">
+                                                {newCycleData.flocksRecd ? newCycleData.flocksRecd.filter(f => f.trim()).length : 0} entered
+                                            </span>
+                                        </div>
                                         <button
                                             type="button"
                                             onClick={() => setIsFlockNumbersModalVisible(true)}
@@ -1761,13 +1766,6 @@ const HatchCycleList: React.FC = () => {
                                             </svg>
                                             Enter Flock Numbers
                                         </button>
-                                        {newCycleData.flocksRecd && newCycleData.flocksRecd.length > 0 && (
-                                            <div className="mt-2 p-2 bg-gray-50 rounded-lg">
-                                                <div className="text-sm text-gray-600">
-                                                    {newCycleData.flocksRecd.filter(f => f.trim()).length} flock(s) entered
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Eggs Set</label>
