@@ -1826,18 +1826,10 @@ const HatchCycleList: React.FC = () => {
             return (
               <div key={cycle.id} className="overflow-x-auto">
                 <table className="w-full border-collapse border border-gray-300 text-sm">
-                  {/* Header Row 1 - Flock Count Groups */}
+                  {/* Header Row - Individual Numbers with Flock Count */}
                   <thead>
                     <tr>
-                      <th className="border border-gray-300 bg-gray-100 p-2 text-left font-semibold"></th>
-                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
-                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
-                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
-                      <th className="border border-gray-300 bg-blue-100 p-2 text-center font-semibold" colSpan={5}>Flock Count</th>
-                    </tr>
-                    {/* Header Row 2 - Individual Numbers */}
-                    <tr>
-                      <th className="border border-gray-300 bg-gray-100 p-2 text-left font-semibold"></th>
+                      <th className="border border-gray-300 bg-[#ff8c42] text-white p-2 text-center font-semibold">Flock Count</th>
                       {Array.from({ length: 20 }, (_, i) => (
                         <th key={i} className="border border-gray-300 bg-blue-50 p-2 text-center font-semibold">
                           {i + 1}
@@ -1846,161 +1838,161 @@ const HatchCycleList: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {/* Flock # Row */}
+                    {/* Flock # Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Flock #</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Flock #</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual flock data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Breed Row */}
+                    {/* Breed Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Breed</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Breed</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual breed data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Hen's Age Row */}
+                    {/* Hen's Age Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Hen's Age</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Hen's Age</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual hen age data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Case per Flock Row */}
+                    {/* Case per Flock Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Case per Flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Case per Flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual case data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Weight of Egg (g) Row */}
+                    {/* Weight of Egg (g) Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Weight of Egg (g)</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Weight of Egg (g)</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual egg weight data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Total crack per flock Row */}
+                    {/* Total crack per flock Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total crack per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Total crack per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual crack data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Candle % Row */}
+                    {/* Candle % Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Candle %</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Candle %</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual candle percentage data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Total Eggs Recvd Row */}
+                    {/* Total Eggs Recvd Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total Eggs Recvd</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Total Eggs Recvd</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual eggs received data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* % per flock Row */}
+                    {/* % per flock Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">% per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">% per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual percentage data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Total set per flock Row */}
+                    {/* Total set per flock Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Total set per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Total set per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual set data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Expected Row */}
+                    {/* Expected Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Expected</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Expected</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual expected data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Hatch per flock Row */}
+                    {/* Hatch per flock Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Hatch per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Hatch per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual hatch data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Weight of Chicks (g) Row */}
+                    {/* Weight of Chicks (g) Row - Editable */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Weight of Chicks (g)</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Weight of Chicks (g)</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
-                          {/* This would be populated with actual chick weight data */}
+                        <td key={i} className="border border-gray-300 p-2 text-center" style={{ backgroundColor: '#fffae5' }}>
+                          <input type="text" className="w-full text-center bg-transparent border-none focus:outline-none" />
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Culls Row */}
+                    {/* Culls Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Culls</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Culls</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual cull data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* Sold per flock Row */}
+                    {/* Sold per flock Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">Sold per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">Sold per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual sold data */}
                         </td>
                       ))}
                     </tr>
                     
-                    {/* % Hatch per flock Row */}
+                    {/* % Hatch per flock Row - Read Only */}
                     <tr>
-                      <td className="border border-gray-300 bg-gray-100 p-2 font-medium">% Hatch per flock</td>
+                      <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium">% Hatch per flock</td>
                       {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="border border-gray-300 p-2 text-center">
+                        <td key={i} className="border border-gray-300 p-2 text-center bg-gray-50">
                           {/* This would be populated with actual hatch percentage data */}
                         </td>
                       ))}
