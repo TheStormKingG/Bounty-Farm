@@ -1398,7 +1398,6 @@ const HatchCycleList: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in-up">
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-800">Hatch Cycles</h1>
                  <button 
                     onClick={async () => {
                       const nextHatch = await generateNextHatchNumber();
@@ -1426,6 +1425,7 @@ const HatchCycleList: React.FC = () => {
                             </div>
       ) : (
             <div className="bg-white rounded-2xl p-6 shadow-md">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6">Hatch Cycles</h2>
                 {/* Filters */}
                 <div className="mb-6 mt-2">
                   {/* Date fields row */}
@@ -1726,9 +1726,8 @@ const HatchCycleList: React.FC = () => {
       )}
 
       {/* Tabbed Hatch Cycle Details */}
-      {processedTabCycles.length > 0 && (
-        <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Hatch Cycle Details</h2>
+      <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Hatch Details</h2>
           
           {/* Tab Search Filters */}
           <div className="mb-6 mt-2">
@@ -1819,7 +1818,13 @@ const HatchCycleList: React.FC = () => {
           </div>
 
           {/* Tab Content */}
-          {processedTabCycles.map((cycle, index) => {
+          {processedTabCycles.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p>No hatch cycles found for the selected date range.</p>
+              <p className="text-sm mt-2">Try adjusting the start and end dates to see hatch cycle details.</p>
+            </div>
+          ) : (
+            processedTabCycles.map((cycle, index) => {
             const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
             if (!isActive) return null;
 
@@ -2064,7 +2069,6 @@ const HatchCycleList: React.FC = () => {
             );
           })}
         </div>
-      )}
 
              {/* New Hatch Cycle Modal */}
             {isNewCycleModalVisible && (
