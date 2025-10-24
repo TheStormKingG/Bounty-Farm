@@ -273,6 +273,9 @@ const HatchCycleList: React.FC = () => {
   const [isHatchNumberEditable, setIsHatchNumberEditable] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>(null);
   
+  // Dropdown state for flock numbers
+  const [flockDropdownStates, setFlockDropdownStates] = useState<{[key: number]: {isOpen: boolean, searchTerm: string, filteredFlocks: any[]}}>({});
+  
   // Tab search state
   const [tabStartDate, setTabStartDate] = useState<string>('2025-09-08');
   const [tabEndDate, setTabEndDate] = useState<string>('2025-11-07');
@@ -1085,6 +1088,109 @@ const HatchCycleList: React.FC = () => {
     fetchBreeds();
   }, []);
 
+  // Dropdown functions for flock numbers
+  const fetchFlocks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flocks')
+        .select('flock_number')
+        .order('flock_number');
+
+      if (error) {
+        console.error('Error fetching flocks:', error);
+      } else {
+        setFlocks(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching flocks:', err);
+    }
+  };
+
+  const initializeDropdownState = (index: number) => {
+    if (!flockDropdownStates[index]) {
+      setFlockDropdownStates(prev => ({
+        ...prev,
+        [index]: {
+          isOpen: false,
+          searchTerm: '',
+          filteredFlocks: flocks
+        }
+      }));
+    }
+  };
+
+  const handleFlockSearch = (index: number, searchTerm: string) => {
+    const filteredFlocks = flocks.filter(flock => 
+      flock.flock_number.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFlockDropdownStates(prev => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        searchTerm,
+        filteredFlocks
+      }
+    }));
+  };
+
+  const handleFlockSelect = (index: number, flockNumber: string) => {
+    const newFlocks = [...newCycleData.flocksRecd];
+    newFlocks[index] = flockNumber;
+    setNewCycleData(prev => ({
+      ...prev,
+      flocksRecd: newFlocks
+    }));
+
+    setFlockDropdownStates(prev => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        isOpen: false,
+        searchTerm: flockNumber
+      }
+    }));
+  };
+
+  const toggleDropdown = (index: number) => {
+    setFlockDropdownStates(prev => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        isOpen: !prev[index]?.isOpen
+      }
+    }));
+  };
+
+  // Fetch flocks when component mounts
+  useEffect(() => {
+    fetchFlocks();
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setFlockDropdownStates(prev => {
+          const newState = { ...prev };
+          Object.keys(newState).forEach(key => {
+            newState[parseInt(key)] = {
+              ...newState[parseInt(key)],
+              isOpen: false
+            };
+          });
+          return newState;
+        });
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const isNumber = type === 'number';
@@ -1789,31 +1895,37 @@ const HatchCycleList: React.FC = () => {
           {/* Tabs */}
           <div className="relative mb-6">
             <div className="flex overflow-x-auto" style={{ backgroundColor: '#ff8c42' }}>
-              {processedTabCycles.map((cycle, index) => {
-                const tabNumber = extractHatchNumber(cycle.hatchNo);
-                const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
-                
-                return (
-                  <button
-                    key={cycle.id}
-                    onClick={() => setActiveTab(cycle.id)}
-                    className={`
-                      relative px-6 py-3 font-semibold transition-all duration-200
-                      ${isActive ? 'text-black' : 'text-white hover:bg-white hover:bg-opacity-20'}
-                      ${index === 0 ? 'rounded-tl-lg' : ''}
-                      ${index === processedTabCycles.length - 1 ? 'rounded-tr-lg' : ''}
-                    `}
-                    style={{
-                      backgroundColor: isActive ? '#fffae5' : 'transparent',
-                      clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 100%, 15px 100%)',
-                      marginRight: '-15px',
-                      zIndex: isActive ? 10 : 1
-                    }}
-                  >
-                    {tabNumber}
-                  </button>
-                );
-              })}
+              {processedTabCycles.length === 0 ? (
+                <div className="px-6 py-3 text-white text-center">
+                  No tabs available
+                </div>
+              ) : (
+                processedTabCycles.map((cycle, index) => {
+                  const tabNumber = extractHatchNumber(cycle.hatchNo);
+                  const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
+                  
+                  return (
+                    <button
+                      key={cycle.id}
+                      onClick={() => setActiveTab(cycle.id)}
+                      className={`
+                        relative px-6 py-3 font-semibold transition-all duration-200
+                        ${isActive ? 'text-black' : 'text-white hover:bg-white hover:bg-opacity-20'}
+                        ${index === 0 ? 'rounded-tl-lg' : ''}
+                        ${index === processedTabCycles.length - 1 ? 'rounded-tr-lg' : ''}
+                      `}
+                      style={{
+                        backgroundColor: isActive ? '#fffae5' : 'transparent',
+                        clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 100%, 15px 100%)',
+                        marginRight: '-15px',
+                        zIndex: isActive ? 10 : 1
+                      }}
+                    >
+                      {tabNumber}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -2270,27 +2382,75 @@ const HatchCycleList: React.FC = () => {
             <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
               {newCycleData.numFlocks > 0 ? (
                 <div className="space-y-3">
-                  {Array.from({ length: newCycleData.numFlocks }, (_, index) => (
-                    <div key={index}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Flock {index + 1} Number:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={`Enter flock ${index + 1} number`}
-                        value={newCycleData.flocksRecd[index] || ''}
-                        onChange={(e) => {
-                          const newFlocks = [...newCycleData.flocksRecd];
-                          newFlocks[index] = e.target.value;
-                          setNewCycleData((p) => ({
-                            ...p,
-                            flocksRecd: newFlocks
-                          }));
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
-                      />
-                    </div>
-                  ))}
+                  {Array.from({ length: newCycleData.numFlocks }, (_, index) => {
+                    initializeDropdownState(index);
+                    const dropdownState = flockDropdownStates[index] || { isOpen: false, searchTerm: '', filteredFlocks: flocks };
+                    
+                    return (
+                      <div key={index} className="relative dropdown-container">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Flock {index + 1} Number:
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder={`Search flock ${index + 1} number`}
+                            value={dropdownState.searchTerm}
+                            onChange={(e) => {
+                              handleFlockSearch(index, e.target.value);
+                              setFlockDropdownStates(prev => ({
+                                ...prev,
+                                [index]: {
+                                  ...prev[index],
+                                  isOpen: true
+                                }
+                              }));
+                            }}
+                            onFocus={() => {
+                              setFlockDropdownStates(prev => ({
+                                ...prev,
+                                [index]: {
+                                  ...prev[index],
+                                  isOpen: true
+                                }
+                              }));
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => toggleDropdown(index)}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                          
+                          {dropdownState.isOpen && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              {dropdownState.filteredFlocks.length > 0 ? (
+                                dropdownState.filteredFlocks.map((flock, flockIndex) => (
+                                  <button
+                                    key={flockIndex}
+                                    type="button"
+                                    onClick={() => handleFlockSelect(index, flock.flock_number)}
+                                    className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                                  >
+                                    {flock.flock_number}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-3 py-2 text-gray-500 text-sm">
+                                  No flocks found
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center text-gray-500 py-8">
