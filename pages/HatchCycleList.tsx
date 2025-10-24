@@ -1997,7 +1997,7 @@ const HatchCycleList: React.FC = () => {
                   </table>
                 </div>
 
-                {/* Section 4: Results */}
+                {/* Section 4: Hatch Results */}
                 <div className="card-section">
                   <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
                     <tbody>
@@ -2020,23 +2020,14 @@ const HatchCycleList: React.FC = () => {
                         </td>
                       ))}
                     </tr>
-                    
-                    {/* Spacing Row */}
-                    <tr>
-                      <td className="h-10 bg-white"></td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="h-10 bg-white"></td>
-                      ))}
-                    </tr>
-                    
-                    {/* Spacing Row */}
-                    <tr>
-                      <td className="h-10 bg-white"></td>
-                      {Array.from({ length: 20 }, (_, i) => (
-                        <td key={i} className="h-10 bg-white"></td>
-                      ))}
-                    </tr>
-                    
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Section 5: Culling & Sales */}
+                <div className="card-section">
+                  <table className="w-full border-collapse border border-gray-300 text-sm spreadsheet-table">
+                    <tbody>
                     {/* Culls Row - Read Only */}
                     <tr>
                       <td className="border border-gray-300 bg-[#ff8c42] text-white p-2 font-medium h-10 whitespace-nowrap">Culls</td>
