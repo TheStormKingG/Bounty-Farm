@@ -1503,7 +1503,7 @@ const HatchCycleList: React.FC = () => {
 
     return (
         <div className="space-y-8 animate-fade-in-up">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-end items-center">
                  <button 
                     onClick={async () => {
                       const nextHatch = await generateNextHatchNumber();
@@ -1513,7 +1513,7 @@ const HatchCycleList: React.FC = () => {
                     }}
                     className="btn-primary px-6 py-3"
                 >
-                    <span>+</span> Add Hatch Cycle
+                    <span>+</span> Add Hatch
                  </button>
             </div>
 
@@ -2379,7 +2379,7 @@ const HatchCycleList: React.FC = () => {
               </button>
             </div>
             
-            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+            <div className="p-6 space-y-4" style={{ minHeight: '320px' }}>
               {newCycleData.numFlocks > 0 ? (
                 <div className="space-y-3">
                   {Array.from({ length: newCycleData.numFlocks }, (_, index) => {
