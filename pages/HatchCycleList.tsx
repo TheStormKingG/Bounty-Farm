@@ -2179,7 +2179,7 @@ const HatchCycleList: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+          }))}
         </div>
 
              {/* New Hatch Cycle Modal */}
