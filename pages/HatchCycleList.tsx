@@ -208,7 +208,7 @@ const toBaseTablePayload = (c: HatchCycle, currentUser?: string) => ({
   cases_recvd: c.casesRecd ?? null,
   eggs_recvd: c.eggsRecd ?? null, // Auto-calculated (cases recd × 360)
   avg_egg_wgt: c.avgEggWgt ?? null,
-  eggs_cracked: c.eggsCracked ?? null, // Auto-calculated (eggs recd - eggs set)
+  eggs_cracked: c.eggsCracked ?? null, // User input
   eggs_set: c.eggsSet ?? 0,
   date_packed: c.datePacked ?? null,
   date_set: c.setDate ?? null,
@@ -492,14 +492,14 @@ const HatchCycleList: React.FC = () => {
         updateData.eggs_recvd = eggsRecd;
       }
 
-      // Special handling for EGGS SET - also update EGGS CRACKED
-      if (column === 'EGGS SET' && convertedValue !== null) {
+      // Special handling for EGGS CRACKED - also update EGGS SET
+      if (column === 'EGGS CRACKED' && convertedValue !== null) {
         // Get the current eggs received value for this cycle
         const currentCycle = cycles.find(c => c.id === cycleId);
         if (currentCycle?.eggsRecd) {
-          const eggsCracked = currentCycle.eggsRecd - convertedValue;
-          updateData.eggs_cracked = eggsCracked;
-          console.log('Auto-calculated eggs cracked:', eggsCracked);
+          const eggsSet = currentCycle.eggsRecd - convertedValue;
+          updateData.eggs_set = eggsSet;
+          console.log('Auto-calculated eggs set:', eggsSet);
         }
       }
 
@@ -620,12 +620,12 @@ const HatchCycleList: React.FC = () => {
             console.log('Updated EGGS RECVD in local state:', eggsRecd);
           }
           
-          // Special handling for EGGS SET - also update EGGS CRACKED in local state
-          if (column === 'EGGS SET' && convertedValue !== null) {
+          // Special handling for EGGS CRACKED - also update EGGS SET in local state
+          if (column === 'EGGS CRACKED' && convertedValue !== null) {
             if (updatedCycle.eggsRecd) {
-              const eggsCracked = updatedCycle.eggsRecd - convertedValue;
-              updatedCycle.eggsCracked = eggsCracked;
-              console.log('Updated EGGS CRACKED in local state:', eggsCracked);
+              const eggsSet = updatedCycle.eggsRecd - convertedValue;
+              updatedCycle.eggsSet = eggsSet;
+              console.log('Updated EGGS SET in local state:', eggsSet);
             }
           }
           
@@ -1233,8 +1233,8 @@ const HatchCycleList: React.FC = () => {
         // Calculate auto-filled values
         const casesRecd = newCycleData.casesRecd ?? 0;
         const eggsRecd = casesRecd * 360; // Auto-calculate eggs recd
-        const eggsSet = newCycleData.eggsSet ?? 0;
-        const eggsCracked = eggsRecd - eggsSet; // Auto-calculate eggs cracked
+        const eggsCracked = newCycleData.eggsCracked ?? 0;
+        const eggsSet = eggsRecd - eggsCracked; // Auto-calculate eggs set (eggs recd - eggs cracked)
         const expHatchQty = Math.round(eggsSet * 0.8); // Auto-calculate exp hatch qty (80% of eggs set)
         const chicksHatched = 0; // Submitted as blank
         const chicksSold = newCycleData.chicksSold ?? 0;
@@ -1258,8 +1258,8 @@ const HatchCycleList: React.FC = () => {
         flocksRecd: [newCycleData.numFlocks?.toString() || '0'], // Number of flocks goes to flocks_recvd
         supplierFlockNumber: newCycleData.supplierFlockNumber || '', // Comma-separated flock numbers
         eggsRecd, // Auto-calculated
-        eggsCracked, // Auto-calculated
-        eggsSet: eggsSet,
+        eggsCracked, // User input
+        eggsSet: eggsSet, // Auto-calculated (eggs recd - eggs cracked)
         expHatchQty, // Auto-calculated
         hatchDate: undefined, // Submitted as blank
         avgChicksWgt: undefined, // Submitted as blank
@@ -1768,13 +1768,12 @@ const HatchCycleList: React.FC = () => {
                                         </button>
                                     </div>
                                     <div>
-                                        <label className="block font-bold text-gray-700 mb-2">Eggs Set</label>
+                                        <label className="block font-bold text-gray-700 mb-2">Eggs Cracked</label>
                                         <input
                                             type="number"
-                                            name="eggsSet"
+                                            name="eggsCracked"
                                             onChange={handleFormChange}
                                             className="modern-input w-full"
-                                            required
                                         />
                                     </div>
                                     <div>
