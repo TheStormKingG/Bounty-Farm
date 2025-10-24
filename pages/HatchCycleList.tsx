@@ -256,6 +256,7 @@ const HatchCycleList: React.FC = () => {
   const [flockSuggestions, setFlockSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddFlockModalVisible, setIsAddFlockModalVisible] = useState(false);
+  const [isFlockNumbersModalVisible, setIsFlockNumbersModalVisible] = useState(false);
   
   // Breeds state for dropdown
   const [breeds, setBreeds] = useState<any[]>([]);
@@ -1772,43 +1773,24 @@ const HatchCycleList: React.FC = () => {
                                 {/* Column 3 */}
                                 <div className="space-y-4">
                                     <div>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <label className="font-bold text-gray-700">Flock Number</label>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsAddFlockModalVisible(true)}
-                                                className="w-6 h-6 bg-[#ff8c42] hover:bg-[#e67a35] text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm"
-                                                title="Add New Flock"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                name="supplierFlockNumber"
-                                                value={newCycleData.supplierFlockNumber || ''}
-                                                onChange={handleSupplierFlockNumberChange}
-                                                className="modern-input w-full"
-                                                placeholder="Enter flock number"
-                                            />
-                                            
-                                            {/* Suggestions Dropdown */}
-                                            {showSuggestions && flockSuggestions.length > 0 && (
-                                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto modern-card">
-                                                    {flockSuggestions.map((flock, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100"
-                                                            onClick={() => handleSuggestionSelect(flock)}
-                                                        >
-                                                            <div className="font-medium text-gray-900">{flock.flock_number}</div>
-                                                            <div className="text-sm text-gray-500">{flock.supplier}</div>
-                                                        </div>
-                                                    ))}
+                                        <label className="block font-bold text-gray-700 mb-2">Flock Numbers</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsFlockNumbersModalVisible(true)}
+                                            className="w-full px-4 py-3 bg-[#ff8c42] hover:bg-[#e67a35] text-white rounded-lg font-medium transition-colors shadow-sm flex items-center justify-center gap-2"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                            Enter Flock Numbers
+                                        </button>
+                                        {newCycleData.flocksRecd && newCycleData.flocksRecd.length > 0 && (
+                                            <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                                                <div className="text-sm text-gray-600">
+                                                    {newCycleData.flocksRecd.filter(f => f.trim()).length} flock(s) entered
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Eggs Set</label>
@@ -1856,6 +1838,67 @@ const HatchCycleList: React.FC = () => {
                     </div>
                 </div>
             )}
+
+      {/* Flock Numbers Modal (Secondary Modal) */}
+      {isFlockNumbersModalVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">Enter Flock Numbers</h3>
+              <button
+                onClick={() => setIsFlockNumbersModalVisible(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
+              {newCycleData.numFlocks > 0 ? (
+                <div className="space-y-3">
+                  {Array.from({ length: newCycleData.numFlocks }, (_, index) => (
+                    <div key={index}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Flock {index + 1} Number:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={`Enter flock ${index + 1} number`}
+                        value={newCycleData.flocksRecd[index] || ''}
+                        onChange={(e) => {
+                          const newFlocks = [...newCycleData.flocksRecd];
+                          newFlocks[index] = e.target.value;
+                          setNewCycleData((p) => ({
+                            ...p,
+                            flocksRecd: newFlocks
+                          }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-orange-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  <p>Please enter the number of flocks first.</p>
+                  <p className="text-sm mt-2">Go back and fill in the "Number of Flocks" field.</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end p-6 border-t">
+              <button
+                onClick={() => setIsFlockNumbersModalVisible(false)}
+                className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] text-white rounded-lg transition-colors font-medium"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add New Flock Modal */}
       <AddFlockForm
