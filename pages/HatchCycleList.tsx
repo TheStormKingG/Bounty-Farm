@@ -549,12 +549,12 @@ const HatchCycleList: React.FC = () => {
         try {
           const { data: flockData, error: flockError } = await supabase
             .from('flocks')
-            .select('supplier')
+            .select('supplier_name')
             .eq('flock_number', convertedValue)
             .single();
 
           if (!flockError && flockData) {
-            supplierName = flockData.supplier;
+            supplierName = flockData.supplier_name;
             updateData.supplier_name = supplierName;
             console.log('Auto-updated supplier name:', supplierName);
           } else {
@@ -1157,6 +1157,9 @@ const HatchCycleList: React.FC = () => {
 
   const autoFillSupplierNames = (flockNumbers: string[]) => {
     const validFlocks = flockNumbers.filter(flock => flock && flock.trim() !== '');
+    console.log('Auto-filling supplier names for flocks:', validFlocks);
+    console.log('Available flocks data:', flocks);
+    
     if (validFlocks.length === 0) {
       setNewCycleData(prev => ({ ...prev, supplierName: '' }));
       return;
@@ -1165,12 +1168,14 @@ const HatchCycleList: React.FC = () => {
     const suppliers = new Set<string>();
     validFlocks.forEach(flockNumber => {
       const flock = flocks.find(f => f.flock_number === flockNumber);
+      console.log(`Looking for flock ${flockNumber}:`, flock);
       if (flock && flock.supplier_name) {
         suppliers.add(flock.supplier_name);
       }
     });
 
     const supplierNames = Array.from(suppliers).join(', ');
+    console.log('Final supplier names:', supplierNames);
     setNewCycleData(prev => ({ ...prev, supplierName: supplierNames }));
   };
 
@@ -2028,6 +2033,7 @@ const HatchCycleList: React.FC = () => {
                         const flockNumbers = cycle.supplierFlockNumber ? cycle.supplierFlockNumber.split(',').map(n => n.trim()) : [];
                         const flockNumber = flockNumbers[i];
                         const flock = flocks.find(f => f.flock_number === flockNumber);
+                        console.log(`Breed lookup for flock ${flockNumber}:`, flock);
                         return (
                           <td key={i} className="border border-gray-300 p-2 text-center h-10 bg-white">
                             {flock ? flock.breed || '' : ''}
@@ -2498,6 +2504,10 @@ const HatchCycleList: React.FC = () => {
                     ...p,
                     supplierFlockNumber: flockNumbers
                   }));
+                  
+                  // Auto-fill supplier names based on selected flock numbers
+                  autoFillSupplierNames(newCycleData.flocksRecd.filter(f => f.trim()));
+                  
                   setIsFlockNumbersModalVisible(false);
                 }}
                 className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] text-white rounded-lg transition-colors font-medium"
