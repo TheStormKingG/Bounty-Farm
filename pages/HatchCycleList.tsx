@@ -131,11 +131,10 @@ const generateNextHatchNumber = async (): Promise<string> => {
     const { data, error } = await supabase
       .from('hatch_cycles')
       .select('hatch_no')
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching last hatch number:', error);
+      console.error('Error fetching hatch numbers:', error);
       return '2025-001-BFL';
     }
 
@@ -143,16 +142,24 @@ const generateNextHatchNumber = async (): Promise<string> => {
       return '2025-001-BFL';
     }
 
-    const lastHatchNumber = data[0].hatch_no;
-    const match = lastHatchNumber.match(/2025-(\d+)-BFL/);
+    // Extract all hatch numbers and find the highest number
+    let maxNumber = 0;
+    const currentYear = new Date().getFullYear();
     
-    if (match) {
-      const lastNumber = parseInt(match[1]);
-      const nextNumber = lastNumber + 1;
-      return `2025-${nextNumber.toString().padStart(3, '0')}-BFL`;
-    }
+    data.forEach((row: any) => {
+      const hatchNo = row.hatch_no;
+      // Match pattern: YYYY-XXX-BFL
+      const match = hatchNo.match(new RegExp(`${currentYear}-(\\d+)-BFL`));
+      if (match) {
+        const number = parseInt(match[1]);
+        if (number > maxNumber) {
+          maxNumber = number;
+        }
+      }
+    });
 
-    return '2025-001-BFL';
+    const nextNumber = maxNumber + 1;
+    return `${currentYear}-${nextNumber.toString().padStart(3, '0')}-BFL`;
   } catch (error) {
     console.error('Error generating hatch number:', error);
     return '2025-001-BFL';
@@ -257,6 +264,7 @@ const HatchCycleList: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAddFlockModalVisible, setIsAddFlockModalVisible] = useState(false);
   const [isFlockNumbersModalVisible, setIsFlockNumbersModalVisible] = useState(false);
+  const [isHatchNumberEditable, setIsHatchNumberEditable] = useState(false);
   
   // Breeds state for dropdown
   const [breeds, setBreeds] = useState<any[]>([]);
@@ -1222,9 +1230,37 @@ const HatchCycleList: React.FC = () => {
     }
   };
 
+  // Validate hatch number uniqueness
+  const validateHatchNumber = async (hatchNo: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('hatch_cycles')
+        .select('hatch_no')
+        .eq('hatch_no', hatchNo);
+
+      if (error) {
+        console.error('Error validating hatch number:', error);
+        return false;
+      }
+
+      return data && data.length === 0; // Returns true if no existing hatch number found
+    } catch (error) {
+      console.error('Unexpected error validating hatch number:', error);
+      return false;
+    }
+  };
+
   const handleAddNewCycle = async (e: React.FormEvent) => {
         e.preventDefault();
     try {
+      // Validate hatch number uniqueness if manually edited
+      if (isHatchNumberEditable && newCycleData.hatchNo) {
+        const isUnique = await validateHatchNumber(newCycleData.hatchNo);
+        if (!isUnique) {
+          setError('Hatch number already exists. Please choose a different number.');
+          return;
+        }
+      }
       const nextIndex = cycles.length + 1;
       const hatchNo =
         newCycleData.hatchNo ||
@@ -1320,6 +1356,7 @@ const HatchCycleList: React.FC = () => {
                     onClick={async () => {
                       const nextHatch = await generateNextHatchNumber();
                       setNewCycleData({ ...newCycleData, hatchNo: nextHatch });
+                      setIsHatchNumberEditable(false); // Reset to read-only by default
                       setIsNewCycleModalVisible(true);
                     }}
                     className="btn-primary px-6 py-3"
@@ -1659,15 +1696,24 @@ const HatchCycleList: React.FC = () => {
                                 {/* Column 1 */}
                                 <div className="space-y-4">
                                 <div>
-                                        <label className="block font-bold text-gray-700 mb-2">Hatch Number</label>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <label className="font-bold text-gray-700">Hatch Number</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsHatchNumberEditable(!isHatchNumberEditable)}
+                                                className="text-[#ff8c42] hover:text-[#e67e22] text-sm underline transition-colors"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
                                         <input
                                             type="text"
                                             name="hatchNo"
                                             value={newCycleData.hatchNo || ''}
                                             onChange={handleFormChange}
-                                            className="modern-input w-full bg-gray-100"
+                                            className={`modern-input w-full ${isHatchNumberEditable ? 'bg-white' : 'bg-gray-100'}`}
                                             placeholder="Auto-generated"
-                                            readOnly
+                                            readOnly={!isHatchNumberEditable}
                                         />
                                 </div>
                                 <div>
