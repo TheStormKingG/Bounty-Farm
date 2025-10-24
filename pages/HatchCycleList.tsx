@@ -202,8 +202,8 @@ const mapTableRowToCycle = (r: any): HatchCycle => ({
 const toBaseTablePayload = (c: HatchCycle, currentUser?: string) => ({
   hatch_no: c.hatchNo,
   hatch_colour: c.colourCode ?? null, // Store full format (1-BLUE, 2-ORANGE, etc.)
-  flocks_recvd: (c.flocksRecd ?? []).join(', '),
-  supplier_flock_number: c.supplierFlockNumber ?? null,
+  flocks_recvd: (c.flocksRecd ?? []).join(', '), // Number of flocks
+  supplier_flock_number: c.supplierFlockNumber ?? null, // Comma-separated flock numbers
   supplier_name: c.supplierName ?? null,
   cases_recvd: c.casesRecd ?? null,
   eggs_recvd: c.eggsRecd ?? null, // Auto-calculated (cases recd × 360)
@@ -1255,6 +1255,8 @@ const HatchCycleList: React.FC = () => {
         id: hatchNo, // use hatchNo as stable id (base table has no id)
         hatchNo,
             ...newCycleData,
+        flocksRecd: [newCycleData.numFlocks?.toString() || '0'], // Number of flocks goes to flocks_recvd
+        supplierFlockNumber: newCycleData.supplierFlockNumber || '', // Comma-separated flock numbers
         eggsRecd, // Auto-calculated
         eggsCracked, // Auto-calculated
         eggsSet: eggsSet,
@@ -1724,31 +1726,6 @@ const HatchCycleList: React.FC = () => {
                                         />
                                     </div>
                                     
-                                    {/* Dynamic Flock Number Fields */}
-                                    {newCycleData.numFlocks > 0 && (
-                                        <div>
-                                            <label className="block font-bold text-gray-700 mb-2">Flock Numbers</label>
-                                            <div className="space-y-2">
-                                                {Array.from({ length: newCycleData.numFlocks }, (_, index) => (
-                                                    <input
-                                                        key={index}
-                                                        type="text"
-                                                        placeholder={`Flock ${index + 1} Number`}
-                                                        value={newCycleData.flocksRecd[index] || ''}
-                                                        onChange={(e) => {
-                                                            const newFlocks = [...newCycleData.flocksRecd];
-                                                            newFlocks[index] = e.target.value;
-                                                            setNewCycleData((p) => ({
-                                                                ...p,
-                                                                flocksRecd: newFlocks
-                                                            }));
-                                                        }}
-                                                        className="modern-input w-full"
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
                                     <div>
                                         <label className="block font-bold text-gray-700 mb-2">Egg Weight</label>
                                         <input
@@ -1890,7 +1867,15 @@ const HatchCycleList: React.FC = () => {
             
             <div className="flex justify-end p-6 border-t">
               <button
-                onClick={() => setIsFlockNumbersModalVisible(false)}
+                onClick={() => {
+                  // Consolidate flock numbers into comma-separated string for supplier_flock_number
+                  const flockNumbers = newCycleData.flocksRecd.filter(f => f.trim()).join(', ');
+                  setNewCycleData((p) => ({
+                    ...p,
+                    supplierFlockNumber: flockNumbers
+                  }));
+                  setIsFlockNumbersModalVisible(false);
+                }}
                 className="px-6 py-3 bg-[#ff8c42] hover:bg-[#e67e22] text-white rounded-lg transition-colors font-medium"
               >
                 Done
