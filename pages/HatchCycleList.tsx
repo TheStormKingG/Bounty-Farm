@@ -125,6 +125,12 @@ if (typeof document !== 'undefined') {
 // --- helpers to keep UI <> DB clean -----------------------------------------
 const colourLabel = (v?: string) => (v ? String(v).split('-').pop() ?? v : '-');
 
+// Extract number from hatch number (e.g., "2025-075-BFL" -> "75")
+const extractHatchNumber = (hatchNo: string): string => {
+  const match = hatchNo.match(/\d+-(\d+)-/);
+  return match ? parseInt(match[1]).toString() : '0';
+};
+
 // Generate next Hatch Number
 const generateNextHatchNumber = async (): Promise<string> => {
   try {
@@ -265,6 +271,7 @@ const HatchCycleList: React.FC = () => {
   const [isAddFlockModalVisible, setIsAddFlockModalVisible] = useState(false);
   const [isFlockNumbersModalVisible, setIsFlockNumbersModalVisible] = useState(false);
   const [isHatchNumberEditable, setIsHatchNumberEditable] = useState(false);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
   
   // Breeds state for dropdown
   const [breeds, setBreeds] = useState<any[]>([]);
@@ -1676,6 +1683,129 @@ const HatchCycleList: React.FC = () => {
                     </table>
                 </div>
             </div>
+      )}
+
+      {/* Tabbed Hatch Cycle Details */}
+      {processedCycles.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-md mt-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Hatch Cycle Details</h2>
+          
+          {/* Tabs */}
+          <div className="relative mb-6">
+            <div className="flex overflow-x-auto" style={{ backgroundColor: '#ff8c42' }}>
+              {processedCycles.map((cycle, index) => {
+                const tabNumber = extractHatchNumber(cycle.hatchNo);
+                const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
+                
+                return (
+                  <button
+                    key={cycle.id}
+                    onClick={() => setActiveTab(cycle.id)}
+                    className={`
+                      relative px-6 py-3 text-white font-semibold transition-all duration-200
+                      ${isActive ? 'bg-white text-[#ff8c42]' : 'hover:bg-white hover:bg-opacity-20'}
+                      ${index === 0 ? 'rounded-tl-lg' : ''}
+                      ${index === processedCycles.length - 1 ? 'rounded-tr-lg' : ''}
+                    `}
+                    style={{
+                      clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 100%, 15px 100%)',
+                      marginRight: '-15px',
+                      zIndex: isActive ? 10 : 1
+                    }}
+                  >
+                    {tabNumber}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tab Content */}
+          {processedCycles.map((cycle, index) => {
+            const isActive = activeTab === cycle.id || (activeTab === null && index === 0);
+            if (!isActive) return null;
+
+            return (
+              <div key={cycle.id} className="space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3">Basic Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Hatch Number:</span> {cycle.hatchNo}</div>
+                      <div><span className="font-medium">Hatch Colour:</span> {cycle.colourCode || '-'}</div>
+                      <div><span className="font-medium">Status:</span> 
+                        <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                          cycle.status === 'OPEN' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {cycle.status}
+                        </span>
+                      </div>
+                      <div><span className="font-medium">Created By:</span> {cycle.createdBy || '-'}</div>
+                      <div><span className="font-medium">Created At:</span> {cycle.createdAt ? new Date(cycle.createdAt).toLocaleDateString() : '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3">Flock Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Flocks Received:</span> {cycle.flocksRecd?.join(', ') || '-'}</div>
+                      <div><span className="font-medium">Supplier Flock Number:</span> {cycle.supplierFlockNumber || '-'}</div>
+                      <div><span className="font-medium">Supplier Name:</span> {cycle.supplierName || '-'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Egg Information */}
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3">Egg Details</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Cases Received:</span> {cycle.casesRecd?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Eggs Received:</span> {cycle.eggsRecd?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Eggs Cracked:</span> {cycle.eggsCracked?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Eggs Set:</span> {cycle.eggsSet?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Avg Egg Weight:</span> {cycle.avgEggWgt ? `${cycle.avgEggWgt}g` : '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3">Dates</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Date Packed:</span> {cycle.datePacked || '-'}</div>
+                      <div><span className="font-medium">Date Set:</span> {cycle.setDate || '-'}</div>
+                      <div><span className="font-medium">Date Candled:</span> {cycle.dateCandled || '-'}</div>
+                      <div><span className="font-medium">Hatch Date:</span> {cycle.hatchDate || '-'}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 mb-3">Results</h3>
+                    <div className="space-y-2 text-sm">
+                      <div><span className="font-medium">Expected Hatch Qty:</span> {cycle.expHatchQty?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">% Adjustment:</span> {cycle.pctAdj ? `${cycle.pctAdj}%` : '-'}</div>
+                      <div><span className="font-medium">Adj Expected Qty:</span> {cycle.expHatchQtyAdj?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Chicks Hatched:</span> {cycle.outcome?.hatched?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Chicks Culled:</span> {cycle.outcome?.culled?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Chicks Sold:</span> {cycle.chicksSold?.toLocaleString() || '-'}</div>
+                      <div><span className="font-medium">Avg Chicks Weight:</span> {cycle.avgChicksWgt ? `${cycle.avgChicksWgt}g` : '-'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Information */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">Additional Information</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Vaccination Profile:</span> {cycle.vaccinationProfile || '-'}</div>
+                    <div><span className="font-medium">Updated By:</span> {cycle.updatedBy || '-'}</div>
+                    <div><span className="font-medium">Updated At:</span> {cycle.updatedAt ? new Date(cycle.updatedAt).toLocaleDateString() : '-'}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
              {/* New Hatch Cycle Modal */}
