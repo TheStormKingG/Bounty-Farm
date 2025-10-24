@@ -230,12 +230,6 @@ const BreedManagement: React.FC = () => {
         <h1 className="heading-primary">Breed Management</h1>
         <div className="flex space-x-4">
           <button 
-            onClick={refreshData} 
-            className="btn-secondary px-4 py-2"
-          >
-            Refresh Data
-          </button>
-          <button 
             onClick={() => setIsModalVisible(true)} 
             className="btn-primary px-4 py-2"
           >
